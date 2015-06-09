@@ -1,0 +1,59 @@
+barclamp:
+  name: docker_swarm
+  display: Docker Swarm
+  license: "apache2"
+  copyright: "RackN, Inc 2015"
+  os_support:
+    - centos-7.1.1503
+
+crowbar:
+  layout: 2.0
+
+roles:
+  - name: docker-swarm-install
+    jig: script
+    requires:
+      - crowbar-installed-node
+    flags:
+      - implicit
+    attribs: 
+      - name: docker-swarm-version
+        description: 'The version of swarm to install'
+        map: 'docker_swarm/version'
+        default: 'v0.3.0-rc2'
+        schema:
+          type: str
+  - name: docker-swarm-member
+    jig: script
+    flags:
+      - cluster
+      - milestone
+    requires:
+      - docker-swarm-install
+      - consul
+    attribs:
+      - name: docker-swarm-cluster-port
+        description: 'The port that docker swarm ports will listen on'
+        map: 'docker_swarm/cluster_port'
+        default: 2375
+        schema:
+          type: int
+  - name: docker-swarm-manager
+    jig: script
+    requires:
+      - docker-swarm-install
+      - consul
+    flags:
+      - milestone
+    attribs:
+      - name: docker-swarm-manager-port
+        description: 'The port that swarm maangers will listen on'
+        map: 'docker_swarm/manager_port'
+        default: 2475
+        schema:
+          type: int
+    
+rpms:
+  centos-7.1.1503:
+    repos:
+      - bare centos-virt7-release 20 http://cbs.centos.org/repos/virt7-release/x86_64/os/
