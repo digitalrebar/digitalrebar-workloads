@@ -12,7 +12,7 @@ This is a proof-of-concept barclamp, and is not recommended for use in productio
 Currently, this barclamp installs:
 
 * golang version 1.4.2
-* docker version 1.5.0
+* docker version 1.6.0
 * consul version version 0.5.2
 * docker swarm version 0.3.0-rc2
 

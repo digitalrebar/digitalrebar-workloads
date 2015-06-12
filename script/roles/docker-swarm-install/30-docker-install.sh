@@ -1,3 +1,3 @@
 #!/bin/bash
 
-yum -y install docker --disablerepo=extras
+yum -y install docker

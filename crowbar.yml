@@ -52,8 +52,3 @@ roles:
         default: 2475
         schema:
           type: int
-    
-rpms:
-  centos-7.1.1503:
-    repos:
-      - bare centos-virt7-release 20 http://cbs.centos.org/repos/virt7-release/x86_64/os/
