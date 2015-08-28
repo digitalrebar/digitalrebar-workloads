@@ -1,0 +1,125 @@
+# Copyright 2015, RackN, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+barclamp:
+  name: "mesosphere"
+  parent: "core"
+  description: "Cookbooks for installing Mesosphere"
+  display: "MesosSphere"
+  version: "2.E"
+  source_url: "https://github.com/rackn/mesosphere"
+  license: "Proprietary"
+  license_url: ""
+
+roles:
+  - name: dcos
+    jig: chef
+    description: "Common settings for Mesosphere clusters"
+    flags:
+    attribs:
+      - name: "dcos-cluster-name"
+        description: "The name of the Mesos cluster"
+        map: 'dcos/cluster_name'
+        default: 'DCOS'
+        schema:
+          type: str
+          required: true
+      - name: dcos-cluster-quorum
+        description: "The number of masters that must be up to achieve quorum"
+        map: 'dcos/quorum'
+        default: 2
+        schema:
+          type: int
+          required: true
+      - name: dcos-zookeeper-cluster-size
+        description: 'The total number of master nodes'
+        map: 'dcos/zookeeper_cluster_size'
+        default: 3
+        schema:
+          type: int
+          required: true
+      - name: dcos-master-loadbalancer
+        description: 'The FQDN or IP of the load balancer for the master nodes'
+        map: 'dcos/master_lb'
+        default: ''
+        schema:
+          type: str
+          required: true
+      - name: dcos-exhibitor-aws-s3-bucket
+        description: 'The S3 bucket that Exhibitor will use to dynamically add or remove Zookeeper nodes'
+        map: 'dcos/exhibitor/aws_s3_bucket'
+        default: ''
+        schema:
+          type: str
+          required: false
+      - name: dcos-exhibitor-aws-s3-prefix
+        description: 'The prefix that Exhibitor will use when adding or removing records.'
+        default: ''
+        schema:
+          type: str
+          required: false
+      - name: dcos-exhibitor-web-ui-port
+        description: 'The port that Exhibitor will run its wweb UI on'
+        map: 'dcos/exhibitor/web_ui_port'
+        default: 8181
+        schema:
+          type: int
+          required: false
+      - name: dcos-exhibitor-aws-region
+        description: 'The AWS region that the exhibitor S3 bucket is in'
+        map: 'dcos/aws/region'
+        schema:
+          type: str
+          required: false
+      - name: dcos-exhibitor-aws-access-key-id
+        description: 'The AWS access key that Exhibitor should use'
+        map: 'dcos/aws/access_key_id'
+        schema:
+          type: str
+          required: false
+      - name: dcos-exhibitor-aws-secret-access-key
+        description: 'The AWS secret access key that Exhibitor should use'
+        map: 'dcos/aws/secret_access_key'
+        schema:
+          type: str
+          required: false
+      - name: dcos-exhibitor-shared-fs-configdir
+        desription: 'The shared filesystem that Exhibitor will use to dynamically add or remove Zookeeper nodes'
+        map: 'dcos/exhibitor/shared_fs_configdir'
+        schema:
+          type: str
+          required: false
+      - name: dcos-dns-resolvers
+        description: 'The DNS resolvers that Mesos should use for external resolution'
+        map: 'dcos/dns/resolvers'
+        schema:
+          type: seq
+          sequence:
+            - type: str
+      - name: dcos-dns-fallback
+        description: 'The DNS server that should be used as a last-resort fallback'
+        map: 'dcos/dns/fallback'
+        schema:
+          type: str
+          required: false
+      - name: dcos-roles
+        description: 'The roles that Mesosphere should run on this particular node'
+        map: 'dcos-roles'
+        schema:
+          type: seq
+          sequence:
+            - type: str
+              required: true
+              enum: ["master","slave","slave-public"]

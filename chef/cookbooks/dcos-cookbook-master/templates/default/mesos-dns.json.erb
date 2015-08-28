@@ -1,0 +1,11 @@
+{
+  "zk": "zk://127.0.0.1:2181/mesos",
+  "refreshSeconds": 30,
+  "ttl": 60,
+  "domain": "mesos",
+  "port": 53,
+  "resolvers": <%= node['dcos']['dns']['resolvers'].to_s %>,
+  "timeout": 5,
+  "listener": "0.0.0.0",
+  "email": "root.mesos-dns.mesos"
+}

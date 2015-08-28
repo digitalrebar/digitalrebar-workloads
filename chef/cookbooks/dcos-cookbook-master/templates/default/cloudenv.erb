@@ -1,0 +1,8 @@
+AWS_REGION=<%= node['dcos']['aws']['region'] %>
+AWS_ACCESS_KEY_ID=<%= node['dcos']['aws']['access_key_id'] %>
+AWS_SECRET_ACCESS_KEY=<%= node['dcos']['aws']['secret_access_key'] %>
+ZOOKEEPER_CLUSTER_SIZE=<%= node['dcos']['zookeeper_cluster_size'] %>
+MASTER_ELB=<%= node['dcos']['master_lb'] %>
+FALLBACK_DNS=<%= node['dcos']['dns']['fallback'] %>
+EXHIBITOR_HOSTNAME=<%= node['fqdn'] %>
+MARATHON_HOSTNAME=<%= node['fqdn'] %>

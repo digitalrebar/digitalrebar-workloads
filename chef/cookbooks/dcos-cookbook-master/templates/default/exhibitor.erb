@@ -1,0 +1,7 @@
+<% unless node['dcos']['exhibitor']['shared_fs_configdir'].nil? -%>
+EXHIBITOR_FSCONFIGDIR=<%= node['dcos']['exhibitor']['shared_fs_configdir'] %>
+<% else -%>
+AWS_S3_BUCKET=<%= node['dcos']['exhibitor']['aws_s3_bucket'] %>
+AWS_S3_PREFIX=<%= node['dcos']['exhibitor']['aws_s3_prefix'] %>
+<% end -%>
+EXHIBITOR_WEB_UI_PORT=<%= node['dcos']['exhibitor']['web_ui_port'] %>

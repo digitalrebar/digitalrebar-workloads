@@ -1,0 +1,7 @@
+MESOS_LOG_DIR=<%= node['dcos']['mesos']['master']['log_dir'] %>
+MESOS_WORK_DIR=<%= node['dcos']['mesos']['master']['work_dir'] %>
+MESOS_ZK=<%= node['dcos']['mesos']['master']['zk'] %>
+MESOS_QUORUM=<%= node['dcos']['quorum'] %>
+MESOS_CLUSTER=<%= node['dcos']['cluster_name'] %>
+MESOS_HOSTNAME=<%= node['fqdn'] %>
+MESOS_ROLES=<%= node['dcos']['mesos']['master']['roles'] %>
