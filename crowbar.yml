@@ -23,11 +23,19 @@ barclamp:
   license: "Proprietary"
   license_url: ""
 
+os_support:
+  - centos-7.1-1503
+
 roles:
-  - name: dcos
-    jig: chef
+  - name: dcos-prereqs
+    jig: script
+    description: "Install prerequisites needed for a node to participate in a DCOS cluster."
+    
+  - name: dcos-config
+    jig: noop
     description: "Common settings for Mesosphere clusters"
     flags:
+      - implicit
     attribs:
       - name: "dcos-cluster-name"
         description: "The name of the Mesos cluster"
@@ -98,9 +106,10 @@ roles:
       - name: dcos-exhibitor-shared-fs-configdir
         desription: 'The shared filesystem that Exhibitor will use to dynamically add or remove Zookeeper nodes'
         map: 'dcos/exhibitor/shared_fs_configdir'
+        default: "/var/exports"
         schema:
           type: str
-          required: false
+          required: true
       - name: dcos-dns-resolvers
         description: 'The DNS resolvers that Mesos should use for external resolution'
         map: 'dcos/dns/resolvers'
@@ -123,3 +132,36 @@ roles:
             - type: str
               required: true
               enum: ["master","slave","slave-public"]
+  - name: dcos-nfs-server
+    jig: script
+    description: 'Provide an NFS share for Exhibitor'
+    provides:
+      - dcos-exhibitor-store
+    conflicts:
+      - dcos-nfs-client
+    wants-attribs:
+      - dcos-exhibitor-shared-fs-configdir
+    attribs:
+      - name: dcos-nfs-server-ip
+        description: "The IP address of the NFS server"
+        map: 'dcos/exhibitor/nfs_server_addr'
+      - name: dcos-nfs-network
+        description: "The network that we should allow clients to attach from"
+        map: 'dcos/exhibitor/nfs_network'
+        schema:
+          type: str
+          required: true
+  - name: dcos-nfs-client
+    jig: script
+    description: 'Mount an NFS share for Exhibitor'
+    provides:
+      - dcos-exhibitor-store
+    conflicts:
+      - dcos-nfs-server
+    requries:
+      - dcos-nfs-server
+    flags:
+      - implicit
+    wants-attribs:
+      - dcos-exhibitor-path
+      - dcos-nfs-server-ip
