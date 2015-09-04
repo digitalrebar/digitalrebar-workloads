@@ -30,44 +30,38 @@ roles:
   - name: dcos-prereqs
     jig: script
     description: "Install prerequisites needed for a node to participate in a DCOS cluster."
-    
+    flags:
+      - implicit
+    requires:
+      - crowbar-installed-node
   - name: dcos-config
     jig: noop
     description: "Common settings for Mesosphere clusters"
     flags:
       - implicit
+    requires:
+      - dcos-prereqs
     attribs:
-      - name: "dcos-cluster-name"
-        description: "The name of the Mesos cluster"
-        map: 'dcos/cluster_name'
-        default: 'DCOS'
+      - name: "dcos-config"
+        description: 'All config for DCOS'
+        map: 'dcos/config'
+      - name: dcos-bootstrap-url
+        description: "The URL that should be used to bootstrap DCOS from"
+        map: 'dcos/config/bootstrap_url'
+        default: "https://downloads.mesosphere.com/dcos/testing/continuous"
         schema:
           type: str
           required: true
-      - name: dcos-cluster-quorum
-        description: "The number of masters that must be up to achieve quorum"
-        map: 'dcos/quorum'
-        default: 2
-        schema:
-          type: int
-          required: true
-      - name: dcos-zookeeper-cluster-size
-        description: 'The total number of master nodes'
-        map: 'dcos/zookeeper_cluster_size'
-        default: 3
-        schema:
-          type: int
-          required: true
-      - name: dcos-master-loadbalancer
-        description: 'The FQDN or IP of the load balancer for the master nodes'
-        map: 'dcos/master_lb'
-        default: ''
+      - name: dcos-cluster-name
+        description: "The name of the Mesos cluster"
+        map: 'dcos/config/cluster_name'
+        default: 'DCOS'
         schema:
           type: str
           required: true
       - name: dcos-exhibitor-aws-s3-bucket
         description: 'The S3 bucket that Exhibitor will use to dynamically add or remove Zookeeper nodes'
-        map: 'dcos/exhibitor/aws_s3_bucket'
+        map: 'dcos/config/exhibitor_aws_s3_bucket'
         default: ''
         schema:
           type: str
@@ -78,63 +72,86 @@ roles:
         schema:
           type: str
           required: false
-      - name: dcos-exhibitor-web-ui-port
-        description: 'The port that Exhibitor will run its wweb UI on'
-        map: 'dcos/exhibitor/web_ui_port'
-        default: 8181
-        schema:
-          type: int
-          required: false
       - name: dcos-exhibitor-aws-region
         description: 'The AWS region that the exhibitor S3 bucket is in'
-        map: 'dcos/aws/region'
+        map: 'dcos/config/exhibitor_aws_region'
         schema:
           type: str
           required: false
       - name: dcos-exhibitor-aws-access-key-id
         description: 'The AWS access key that Exhibitor should use'
-        map: 'dcos/aws/access_key_id'
+        map: 'dcos/config/exhibitor_aws_access_key_id'
         schema:
           type: str
           required: false
       - name: dcos-exhibitor-aws-secret-access-key
         description: 'The AWS secret access key that Exhibitor should use'
-        map: 'dcos/aws/secret_access_key'
+        map: 'dcos/config/exhibitor_aws_secret_access_key'
         schema:
           type: str
           required: false
       - name: dcos-exhibitor-shared-fs-configdir
         desription: 'The shared filesystem that Exhibitor will use to dynamically add or remove Zookeeper nodes'
-        map: 'dcos/exhibitor/shared_fs_configdir'
+        map: 'dcos/config/exhibitor_fs_config_dir'
         default: "/var/exports"
+        schema:
+          type: str
+          required: true
+      - name: dcos-ip-detect-filename
+        description: "The script used to detect the IP address to use"
+        map: 'dcos/config/ip_detect_filename'
+        default: "/genconf/ip-detect.sh"
+        schema:
+          type: str
+          required: true
+      - name: dcos-master-loadbalancer
+        description: 'The FQDN or IP of the load balancer for the master nodes'
+        map: 'dcos/config/master_lb'
+        default: ''
+        schema:
+          type: str
+          required: true
+      - name: dcos-zookeeper-cluster-size
+        description: 'The total number of master nodes'
+        map: 'dcos/config/num_masters'
+        default: 3
+        schema:
+          type: int
+          required: true
+      - name: dcos-repository-url
+        description: 'The URL of the repostiroy that DCOS should download from'
+        map: 'dcos/config/repository_url'
+        default: 'https://downloads.mesosphere.com/dcos/{release_name}'
         schema:
           type: str
           required: true
       - name: dcos-dns-resolvers
         description: 'The DNS resolvers that Mesos should use for external resolution'
-        map: 'dcos/dns/resolvers'
+        map: 'dcos/config/resolvers'
+        default: [ "8.8.8.8", "8.8.4.4"]
         schema:
           type: seq
           sequence:
             - type: str
-      - name: dcos-dns-fallback
-        description: 'The DNS server that should be used as a last-resort fallback'
-        map: 'dcos/dns/fallback'
-        schema:
-          type: str
-          required: false
       - name: dcos-roles
         description: 'The roles that Mesosphere should run on this particular node'
-        map: 'dcos-roles'
+        map: 'dcos/config/roles'
+        default: 'slave_public'
         schema:
-          type: seq
-          sequence:
-            - type: str
-              required: true
-              enum: ["master","slave","slave-public"]
+          type: str
+          required: true
+          enum: ["master","slave","slave-public"]
+      - name: dcos-weights
+        description: 'The weights to assign to Mesos roles'
+        schema:
+          type: str
+          required: true
+        default: 'slave_public=1'
   - name: dcos-nfs-server
     jig: script
     description: 'Provide an NFS share for Exhibitor'
+    requires:
+      - dcos-config
     provides:
       - dcos-exhibitor-store
     conflicts:
@@ -145,6 +162,9 @@ roles:
       - name: dcos-nfs-server-ip
         description: "The IP address of the NFS server"
         map: 'dcos/exhibitor/nfs_server_addr'
+        schema:
+          type: str
+          required: true
       - name: dcos-nfs-network
         description: "The network that we should allow clients to attach from"
         map: 'dcos/exhibitor/nfs_network'
@@ -158,10 +178,46 @@ roles:
       - dcos-exhibitor-store
     conflicts:
       - dcos-nfs-server
-    requries:
+    requires:
+      - dcos-config
       - dcos-nfs-server
     flags:
       - implicit
     wants-attribs:
-      - dcos-exhibitor-path
+      - dcos-exhibitor-shared-fs-configdir
       - dcos-nfs-server-ip
+  - name: dcos-genconf
+    jig: script
+    description: 'Generate a DCOS cluster configuration'
+    requires:
+      - dcos-config
+      - dcos-nfs-server
+    wants-attribs:
+      - dcos-exhibitor-shared-fs-configdir
+    attribs:
+      - name: dcos-docker-genconf-user
+        description: 'Name of a user with access to the DCOS genconf Docker image'
+        map: 'dcos/genconf/docker_user'
+        schema:
+          type: str
+          required: true
+      - name: dcos-docker-genconf-password
+        description: 'Password for the user with access to the DCOS genconf Docker image'
+        map: 'dcos/genconf/docker_password'
+        schema:
+          type: str
+          required: true
+      - name: dcos-docker-genconf-email
+        description: 'Email address of the user with access to the DCOS genconf Docker image'
+        map: 'dcos/genconf/docker_email'
+        schema:
+          type: str
+          required: true
+      - name: dcos-docker-genconf-image
+        description: 'The DCOS genconf Docker image to use to generate the cluster config.'
+        map: 'dcos/genconf/docker_image'
+        schema:
+          type: str
+          required: true
+        default: 'mesosphere/dcos-genconf:db5602952daa-92358639efe9-671d4b52b24e'
+        
