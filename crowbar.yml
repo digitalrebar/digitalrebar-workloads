@@ -126,7 +126,7 @@ roles:
       - name: dcos-repository-url
         description: 'The URL of the repostiroy that DCOS should download from'
         map: 'dcos/config/repository_url'
-        default: 'https://downloads.mesosphere.com/dcos/{release_name}'
+        default: 'file:///var/exports/genconf/serve'
         schema:
           type: str
           required: true
@@ -240,4 +240,12 @@ roles:
           type: str
           required: true
         default: 'mesosphere/dcos-genconf:db5602952daa-92358639efe9-671d4b52b24e'
-        
+  - name: dcos-member
+    description: 'A member of a DCOS cluster'
+    jig: script
+    requires:
+      - dcos-exhibitor-store
+      - dcos-config
+    wants-attribs:
+      - dcos-exhibitor-shared-fs-configdir
+      - dcos-roles
