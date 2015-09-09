@@ -24,8 +24,10 @@ In another tmux window or SSH session, run the following commands:
 
 1. Click Deployments, and add a new deployment named default.  This will take yo2 to the freshly-created default deployment.
 3. In the role drop-down menu, select dcos-genconf, then click ```Add Role```.
-4. Click ```Add Nodes```.  This will take you to the bulk edit screen.  Select a node besides the admin node, change its deployment to default, and click ```Save```.
-5.  Click deployments -> default. You will notice that the nodes and roles form a grid.  Hover your mouse over the intersection of the node you selected and the ```dcos-genconf``` role.  A green + will appear, click it.  This will bind the ```dcos-genconf``` role and all its unbound prerequisites to the node.
+4. In the role drop-down menu, select dcos-member, then click ```Add Role```
+4. Click ```Add Nodes```.  This will take you to the bulk edit screen.  Select all nodes besides the admin node, change their deployments to default, and click ```Save```.
+5.  Click deployments -> default. You will notice that the nodes and roles form a grid.  Hover your mouse over the intersection of one of the nodes you selected and the ```dcos-genconf``` role.  A green + will appear, click it.  This will bind the ```dcos-genconf``` role and all its unbound prerequisites to the node.
+6. Hover the mouse over the intersection of ```dcos-member``` and each of the nodes in the ```default``` deployment, and click the green +.  This will bind the ```dcos-member``` role to each of the nodes.
 
 ### Set up some required attributes for NFS server and client configuration.
 
@@ -44,7 +46,13 @@ In another tmux window or SSH session, run the following commands:
 3. ```crowbar deployments set default attrib dcos-docker-genconf-password to '{"value": "password-of-user"}'```
 4. ```crowbar deployments set default attrib dcos-docker-genconf-email to '{"value": "email@user"}'```
 
-# Commit the deployment
+### Set up dcos-members on the current nodes to run as masters
+
+For each node in the ```default``` deployment, run the following command:
+
+```crowbar nodes set $nodename attrib dcos-member-roles to '{"value": ["master"]}'```
+
+### Commit the deployment
 
 1. ```crowbar deployments commit default```
 

@@ -25,5 +25,12 @@ docker run -i -v "$share/genconf.working:/genconf" \
        mesosphere/dcos-genconf:db5602952daa-92358639efe9-671d4b52b24e \
        non-interactive
 
+if ! [[ -f $share/genconf.working/config-final.json ]]; then
+    echo "Could not find $share/genconf/config-final.json"
+    exit 1
+fi
+
 mv "$share/genconf.working" "$share/genconf"
+
+write_attribute 'dcos/bootstrap_id' "$(jq -r '.bootstrap_id' "$share/genconf/config-final.json").bootstrap.tar.xz"
 

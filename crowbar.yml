@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 barclamp:
   name: "mesosphere"
   parent: "core"
@@ -45,7 +44,7 @@ roles:
       - name: dcos-bootstrap-url
         description: "The URL that should be used to bootstrap DCOS from"
         map: 'dcos/config/bootstrap_url'
-        default: "https://downloads.mesosphere.com/dcos/testing/continuous"
+        default: 'file:///var/exports/genconf/serve'
         schema:
           type: str
           required: true
@@ -156,10 +155,6 @@ roles:
     description: 'Provide an NFS share for Exhibitor'
     requires:
       - dcos-config
-    provides:
-      - dcos-exhibitor-store
-    conflicts:
-      - dcos-nfs-client
     wants-attribs:
       - dcos-exhibitor-shared-fs-configdir
     attribs:
@@ -178,10 +173,6 @@ roles:
   - name: dcos-nfs-client
     jig: script
     description: 'Mount an NFS share for Exhibitor'
-    provides:
-      - dcos-exhibitor-store
-    conflicts:
-      - dcos-nfs-server
     requires:
       - dcos-config
       - dcos-nfs-server
@@ -240,12 +231,28 @@ roles:
           type: str
           required: true
         default: 'mesosphere/dcos-genconf:db5602952daa-92358639efe9-671d4b52b24e'
+      - name: dcos-bootstrap-id
+        description: 'The bootstrap ID that genconf retrieved from Mesosphere'
+        map: 'dcos/bootstrap_id'
+        schema:
+          type: str
+          required: true
   - name: dcos-member
     description: 'A member of a DCOS cluster'
     jig: script
     requires:
-      - dcos-exhibitor-store
       - dcos-config
+      - dcos-nfs-client
     wants-attribs:
       - dcos-exhibitor-shared-fs-configdir
-      - dcos-roles
+      - dcos-bootstrap-id
+    attribs:
+      - name: dcos-member-roles
+        description: "The roles to run on this node"
+        map: 'dcos/member_roles'
+        schema:
+          type: seq
+          sequence:
+            - type: str
+              required: true
+              enum: ["master","slave","slave-public"]

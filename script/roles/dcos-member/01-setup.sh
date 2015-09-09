@@ -1,19 +1,29 @@
 #!/bin/bash
 
-# Untar the bootstrap tarball ourselves to alleviate the need for setting up an http server
+# Untar the most recentbootstrap tarball ourselves to
+# alleviate the need for setting up an http server
 share="$(read_attribute 'dcos/config/exhibitor_fs_config_dir')"
-
-
+bootstrap="$(read_attribute 'dcos/bootstrap_id')"
 mkdir -p /opt/mesosphere
-latest="$(ls -cN1 "$share/genconf/serve/bootstrap/"*.tar.xz |head -1)"
+latest="$share/genconf/serve/bootstrap/$bootstrap"
 
-if ! [[ -f $share/genconf/serve/bootstrap/$latest ]]; then
+if ! [[ -f $latest ]]; then
     echo "Could not find latest bootstrap tarball!"
     exit 1
 fi
 
-tar -axf "$share/genconf/serve/bootstrap/$latest" -C /opt/mesosphere
+tar -axf "$latest" -C /opt/mesosphere
+
+# Allow writes to resolv.conf
+chattr -i /etc/resolv.conf
 
 # Bootstrap!
-roles="$(read_attribute 'dcos/config/roles' |jq -r '.[]')"
+roles="$(read_attribute 'dcos/member_roles' |jq -r '.[]')"
+if [[ ! $roles ]]; then
+    echo "No DCOS roles assigned for this node!"
+    exit 1
+fi
+
+# dcos_install.sh is a little too paranoid, so...
+export PS4='${BASH_SOURCE}@${LINENO}(${FUNCNAME[0]:-toplevel}): '
 bash -x /var/exports/genconf/serve/dcos_install.sh $roles
