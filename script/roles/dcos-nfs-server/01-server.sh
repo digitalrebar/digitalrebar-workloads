@@ -1,6 +1,6 @@
 #!/bin/bash
 # Set up a stupid NFS server for DCOS
-share=$(read_attribute 'dcos/exhibitor/shared_fs_configdir')
+share=$(read_attribute 'dcos/config/exhibitor_fs_config_dir')
 network=$(read_attribute 'dcos/exhibitor/nfs_network')
 mkdir -p "$share"
 chmod 0777 "$share"

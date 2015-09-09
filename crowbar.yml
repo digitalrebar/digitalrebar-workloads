@@ -42,9 +42,6 @@ roles:
     requires:
       - dcos-prereqs
     attribs:
-      - name: "dcos-config"
-        description: 'All config for DCOS'
-        map: 'dcos/config'
       - name: dcos-bootstrap-url
         description: "The URL that should be used to bootstrap DCOS from"
         map: 'dcos/config/bootstrap_url'
@@ -59,34 +56,42 @@ roles:
         schema:
           type: str
           required: true
+      - name: dcos-exhibitor-storage-backend
+        description: 'The backend that Exhibitor should use for Zookeeper.'
+        map: 'dcos/config/exhibitor_storage_backend'
+        default: 'shared_filesystem'
+        schema:
+          type: str
+          required: true
       - name: dcos-exhibitor-aws-s3-bucket
         description: 'The S3 bucket that Exhibitor will use to dynamically add or remove Zookeeper nodes'
-        map: 'dcos/config/exhibitor_aws_s3_bucket'
+        map: 'dcos/config/s3_bucket'
         default: ''
         schema:
           type: str
           required: false
       - name: dcos-exhibitor-aws-s3-prefix
         description: 'The prefix that Exhibitor will use when adding or removing records.'
+        map: 'dcos/config/s3_prefix'
         default: ''
         schema:
           type: str
           required: false
       - name: dcos-exhibitor-aws-region
         description: 'The AWS region that the exhibitor S3 bucket is in'
-        map: 'dcos/config/exhibitor_aws_region'
+        map: 'dcos/config/aws_region'
         schema:
           type: str
           required: false
       - name: dcos-exhibitor-aws-access-key-id
         description: 'The AWS access key that Exhibitor should use'
-        map: 'dcos/config/exhibitor_aws_access_key_id'
+        map: 'dcos/config/aws_access_key_id'
         schema:
           type: str
           required: false
       - name: dcos-exhibitor-aws-secret-access-key
         description: 'The AWS secret access key that Exhibitor should use'
-        map: 'dcos/config/exhibitor_aws_secret_access_key'
+        map: 'dcos/config/aws_secret_access_key'
         schema:
           type: str
           required: false
@@ -128,11 +133,9 @@ roles:
       - name: dcos-dns-resolvers
         description: 'The DNS resolvers that Mesos should use for external resolution'
         map: 'dcos/config/resolvers'
-        default: [ "8.8.8.8", "8.8.4.4"]
+        default: "[ \"8.8.8.8\", \"8.8.4.4\"]"
         schema:
-          type: seq
-          sequence:
-            - type: str
+          type: str
       - name: dcos-roles
         description: 'The roles that Mesosphere should run on this particular node'
         map: 'dcos/config/roles'
@@ -143,10 +146,11 @@ roles:
           enum: ["master","slave","slave-public"]
       - name: dcos-weights
         description: 'The weights to assign to Mesos roles'
+        default: 'slave_public=1'
+        map: 'dcos/config/weights'
         schema:
           type: str
           required: true
-        default: 'slave_public=1'
   - name: dcos-nfs-server
     jig: script
     description: 'Provide an NFS share for Exhibitor'
@@ -194,6 +198,22 @@ roles:
       - dcos-nfs-server
     wants-attribs:
       - dcos-exhibitor-shared-fs-configdir
+      - dcos-bootstrap-url
+      - dcos-cluster-name
+      - dcos-exhibitor-storage-backend
+      # Ignore the S3 parameters for now.
+      # - dcos-exhibitor-aws-s3-bucket
+      # - dcos-exhibitor-aws-s3-prefix
+      # - dcos-exhibitor-aws-region
+      # - dcos-exhibitor-aws-access-key-id
+      # - dcos-exhibitor-aws-secret-access-key
+      - dcos-ip-detect-filename
+      - dcos-master-loadbalancer
+      - dcos-zookeeper-cluster-size
+      - dcos-repository-url
+      - dcos-dns-resolvers
+      - dcos-roles
+      - dcos-weights
     attribs:
       - name: dcos-docker-genconf-user
         description: 'Name of a user with access to the DCOS genconf Docker image'
