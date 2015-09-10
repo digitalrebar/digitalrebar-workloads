@@ -12,7 +12,14 @@ fi
 mkdir "$share/genconf.working"
     
 # This needs to be updated to use the actual IP address we want.
-echo '#!/bin/true' > "$share/genconf.working/ip-detect.sh"
+cat > "$share/genconf.working/ip-detect.sh" <<EOF
+#!/bin/bash
+if ! [[ -f /tmp/dcos_ip ]]; then
+    echo "IP not recorded!"
+    exit 1
+fi
+cat /tmp/dcos_ip
+EOF
 
 # Extract the DCOS config using jq
 jq '.dcos.config' <"$TMPDIR/attrs.json" >"$share/genconf.working/config-user.json"
