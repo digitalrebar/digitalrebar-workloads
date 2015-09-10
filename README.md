@@ -18,8 +18,8 @@ Currently, this barclamp installs:
 
 ## Quick start instructions ##
 
-1. Clone this barclamp to a Crowbar admin node.
-2. Install it with ```crowbar barclamps install /path/to/docker-swarm```
+1. Clone this barclamp to a Rebar admin node.
+2. Install it with ```rebar barclamps install /path/to/docker-swarm```
 3. Create a new deployment for the swarm, and move the machines you want to be swarm members over to it.
 4. Install Centos 7.1 on them.
 5. Once the OS has finished installing, and the nodes have finished annealing, add the ```docker-swarm-member``` role to all of the nodes.  This will also pull in the ```consul``` and ```docker-swarm-install``` roles.
@@ -51,7 +51,7 @@ The ```docker-swarm-manager``` role is responsible for exposing the Swarm API to
 
 ## Future work ##
 
-* Allow for customizable networking.  Right now, everything runs over the crowbar admin network, which is fine for a proof of concept, but not for production workloads.  RackN has a robust per-host physical network management story, which we can tie Swarm into for providing a scalable backend network for the swarm members along with a secure frontend network for the swarm managers.
+* Allow for customizable networking.  Right now, everything runs over the rebar admin network, which is fine for a proof of concept, but not for production workloads.  RackN has a robust per-host physical network management story, which we can tie Swarm into for providing a scalable backend network for the swarm members along with a secure frontend network for the swarm managers.
 * Perform automated per-node storage discovery management.  Right now, we let Docker default to devicemapper on a loopback file for per-node container image storage.  Setting up more advanced devicemapper configurations or using btrfs witn multiple devices is an obvious next step in handling per-node storage.
 * Detect and assign labels to nodes based on interesting detected hardware and local node capabilities.
 * Keep up with swarm development and expand our capabilities to match it.

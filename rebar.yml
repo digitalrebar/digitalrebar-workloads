@@ -6,14 +6,14 @@ barclamp:
   os_support:
     - centos-7.1.1503
 
-crowbar:
+rebar:
   layout: 2.0
 
 roles:
   - name: docker-swarm-install
     jig: script
     requires:
-      - crowbar-installed-node
+      - rebar-installed-node
     flags:
       - implicit
     attribs: 
