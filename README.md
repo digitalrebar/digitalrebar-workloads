@@ -12,9 +12,9 @@ This is a proof-of-concept barclamp, and is not recommended for use in productio
 Currently, this barclamp installs:
 
 * golang version 1.4.2
-* docker version 1.6.0
+* docker version 1.7.1
 * consul version version 0.5.2
-* docker swarm version 0.3.0-rc2
+* docker swarm version 0.4.0-rc2
 
 ## Quick start instructions ##
 
@@ -34,8 +34,8 @@ Currently, this barclamp installs:
 The ```docker-swarm-install``` role is responsible for installing the packages and programs that each node in the cluster will need.  It currently installs:
 
 * Go version 1.4.2 from the centos virt repo @ http://cbs.centos.org/repos/virt7-release/
-* Docker version 1.5.0 from the same repository
-* Swarm version 0.3.0-rc2 from source @ https://github.com/docker/swarm
+* Docker version 1.7.1 from the same repository
+* Swarm version 0.4.0-rc2 from source @ https://github.com/docker/swarm
 
 It has a single attribute named ```docker-swarm-version```, which controls what tag will be checked out and built from Github.
 
