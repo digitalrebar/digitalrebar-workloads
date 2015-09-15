@@ -12,7 +12,7 @@ else
     git clone https://github.com/docker/swarm
     cd swarm
 fi
-git checkout -f "$(read_attribute 'docker-swarm/version')"
+git checkout -f "$(read_attribute 'docker_swarm/version')"
 godep go install
 cp "$GOPATH/bin/swarm" /usr/local/bin/swarm
 
