@@ -21,7 +21,7 @@ fi
 cat /tmp/dcos_ip
 EOF
 
-addrs=$(read_attribute 'hints/crowbar/network/the_admin/addresses')
+addrs=$(read_attribute 'hints/rebar/network/the_admin/addresses')
 ip_re='"(([0-9]+\.){3}[0-9]+)/[0-9]+"'
 if [[ $addrs =~ $ip_re ]] ; then
     addr="${BASH_REMATCH[1]}"

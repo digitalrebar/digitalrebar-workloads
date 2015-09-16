@@ -32,7 +32,7 @@ roles:
     flags:
       - implicit
     requires:
-      - crowbar-installed-node
+      - rebar-installed-node
   - name: dcos-config
     jig: noop
     description: "Common settings for Mesosphere clusters"

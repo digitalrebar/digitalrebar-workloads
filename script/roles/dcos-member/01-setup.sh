@@ -24,7 +24,7 @@ if [[ ! $roles ]]; then
     exit 1
 fi
 
-addrs=$(read_attribute 'hints/crowbar/network/the_admin/addresses')
+addrs=$(read_attribute 'hints/rebar/network/the_admin/addresses')
 ip_re='"(([0-9]+\.){3}[0-9]+)/[0-9]+"'
 if [[ $addrs =~ $ip_re ]] ; then
     echo "${BASH_REMATCH[1]}" >/tmp/dcos_ip
