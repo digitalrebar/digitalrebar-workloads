@@ -1,6 +1,8 @@
 #!/bin/bash
 image=$(read_attribute 'dcos/genconf/docker_image')
 share=$(read_attribute 'dcos/config/exhibitor_fs_config_dir')
+nameservers="$(jq -c '[.[] |.address]' < <(read_attribute 'rebar/dns/nameservers'))"
+nameservers="${nameservers//\"/\\\"}"
 if [[ ! -d $share ]]; then
     echo "Mounted NFS filesystem at $share does not exist!"
     exit 1
@@ -31,7 +33,8 @@ fi
 
 # Extract the DCOS config using jq
 jq '.dcos.config' <"$TMPDIR/attrs.json" | \
-    jq ".master_lb = \"$addr\"" >"$share/genconf.working/config-user.json"
+    jq ".master_lb = \"$addr\"" |
+    jq ".resolvers = \"$nameservers\"" >"$share/genconf.working/config-user.json" 
 
 # Build out the config we care about
 docker run -i -v "$share/genconf.working:/genconf" \

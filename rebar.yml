@@ -129,12 +129,6 @@ roles:
         schema:
           type: str
           required: true
-      - name: dcos-dns-resolvers
-        description: 'The DNS resolvers that Mesos should use for external resolution'
-        map: 'dcos/config/resolvers'
-        default: "[ \"8.8.8.8\", \"8.8.4.4\"]"
-        schema:
-          type: str
       - name: dcos-roles
         description: 'The roles that Mesosphere should run on this particular node'
         map: 'dcos/config/roles'
@@ -188,6 +182,7 @@ roles:
       - dcos-config
       - dcos-nfs-server
     wants-attribs:
+      - dns_servers
       - dcos-exhibitor-shared-fs-configdir
       - dcos-bootstrap-url
       - dcos-cluster-name
@@ -202,7 +197,6 @@ roles:
       - dcos-master-loadbalancer
       - dcos-zookeeper-cluster-size
       - dcos-repository-url
-      - dcos-dns-resolvers
       - dcos-roles
       - dcos-weights
     attribs:
@@ -230,7 +224,7 @@ roles:
         schema:
           type: str
           required: true
-        default: 'mesosphere/dcos-genconf:db5602952daa-92358639efe9-671d4b52b24e'
+        default: 'mesosphere/dcos-genconf:e895853ee949-f35f33575eb6-7f1b6eaa4c10'
       - name: dcos-bootstrap-id
         description: 'The bootstrap ID that genconf retrieved from Mesosphere'
         map: 'dcos/bootstrap_id'
