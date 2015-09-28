@@ -4,28 +4,29 @@ services=($(cd /etc/systemd/system/dcos.target.wants; echo *.service))
 
 finshed=false
 
-while [[ $finished != true ]]; do
+timeout=600
+
+while (( timeout > 0 )); do
+    outlog=()
+    [[ $finished = true ]] && break
     finished=true
     for service in "${services[@]}"; do
-        if ! systemctl is-enabled --quiet $service; then
-            echo "Skipping disabled service $service"
-            continue
-        fi
+        systemctl is-enabled --quiet $service || continue
         status=$(systemctl is-active $service || :)
         case $status in
             failed)
-                failed=true
-                echo "Failed to start a required DCOS service: $service";;
-            active)
-                echo "Required DCOS service started: $service";;
+                finished=false
+                outlog+=("Failed to start a required DCOS service: $service");;
+            *active)
+                outlog+=("Required DCOS service started: $service");;
             *)
                 finished=false
-                echo "Waiting on required DCOS service: $service. Status: $status";;
+                outlog+=("Waiting on required DCOS service: $service. Status: $status");;
         esac
     done
-    if [[ $finished != true ]]; then
-        echo "Waiting 5 seconds"
-        sleep 5
-    fi
-    [[ $failed ]] && exit 1
+    [[ $finished == true ]] && break
+    sleep 5
+    timeout=$((timeout - 5))
 done
+printf '%s\n' "${outlog[@]}"
+[[ $finished == true ]]
