@@ -51,6 +51,9 @@ trap cleanup 0 INT QUIT TERM
 bring_up_admin_containers && wait_for_admin_containers || \
         die "Failed to deploy admin node"
 
+echo "Creating DCOS deployment"
+depl_id=$(rebar deployments create '{"name": "dcos"}'|jq -r '.id')
+
 echo "Spawning 3 nodes for the DCOS Masters"
 
 for n in 1 2 3; do
@@ -60,11 +63,12 @@ for n in 1 2 3; do
 done
 
 echo "Waiting on spawned nodes to become alive and available"
-rebar converge
-spawned_nodes=( $(rebar nodes list |jq -r 'map(select(.["bootenv"] == "sledgehammer")) | .[] | .["name"]') )
+while true; do
+    spawned_nodes=( $(rebar nodes list |jq -r 'map(select(.["bootenv"] == "sledgehammer")) | .[] | .["name"]') )
+    [[ ${#spawned_nodes[@]} == 3 ]] && break
+done
 
-echo "Creating DCOS deployment"
-depl_id=$(rebar deployments create '{"name": "dcos"}'|jq -r '.id')
+rebar converge
 
 echo "Moving nodes to DCOS deployment"
 
