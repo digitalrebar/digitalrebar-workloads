@@ -17,6 +17,9 @@ tar -axf "$latest" -C /opt/mesosphere
 # Allow writes to resolv.conf
 chattr -i /etc/resolv.conf
 
+# Create the 'nogroup' group for the installer.
+groupadd -f -r nogroup
+
 # Bootstrap!
 roles="$(read_attribute 'dcos/member_roles' |jq -r '.[]')"
 if [[ ! $roles ]]; then
@@ -24,12 +27,12 @@ if [[ ! $roles ]]; then
     exit 1
 fi
 
-addrs=$(read_attribute 'hints/rebar/network/the_admin/addresses')
+addrs=$(read_attribute 'hints/rebar/network/admin-internal/addresses')
 ip_re='"(([0-9]+\.){3}[0-9]+)/[0-9]+"'
 if [[ $addrs =~ $ip_re ]] ; then
     echo "${BASH_REMATCH[1]}" >/tmp/dcos_ip
 else
-    echo "Cannot find IP address of the_admin network!"
+    echo "Cannot find IP address of admin-internal network!"
 fi
 # dcos_install.sh is a little too paranoid, so...
 export PS4='${BASH_SOURCE}@${LINENO}(${FUNCNAME[0]:-toplevel}): '

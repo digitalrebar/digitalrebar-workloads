@@ -108,24 +108,17 @@ roles:
         schema:
           type: str
           required: true
-      - name: dcos-master-loadbalancer
+      - name: dcos-master-list
         description: 'The FQDN or IP of the load balancer for the master nodes'
-        map: 'dcos/config/master_lb'
+        map: 'dcos/config/master_list'
         default: ''
         schema:
           type: str
           required: true
-      - name: dcos-zookeeper-cluster-size
-        description: 'The total number of master nodes'
-        map: 'dcos/config/num_masters'
-        default: 3
-        schema:
-          type: int
-          required: true
-      - name: dcos-repository-url
-        description: 'The URL of the repostiroy that DCOS should download from'
-        map: 'dcos/config/repository_url'
-        default: 'file:///var/exports/genconf/serve'
+      - name: dcos-master-discovery
+        description: 'The master discovery mode to use.'
+        map: 'dcos/config/master_discovery'
+        default: 'static'
         schema:
           type: str
           required: true
@@ -194,11 +187,10 @@ roles:
       # - dcos-exhibitor-aws-access-key-id
       # - dcos-exhibitor-aws-secret-access-key
       - dcos-ip-detect-filename
-      - dcos-master-loadbalancer
-      - dcos-zookeeper-cluster-size
-      - dcos-repository-url
+      - dcos-master-list
       - dcos-roles
       - dcos-weights
+      - dcos-master-discovery
     attribs:
       - name: dcos-docker-genconf-user
         description: 'Name of a user with access to the DCOS genconf Docker image'
@@ -224,7 +216,7 @@ roles:
         schema:
           type: str
           required: true
-        default: 'mesosphere/dcos-genconf:e895853ee949-f35f33575eb6-7f1b6eaa4c10'
+        default: 'mesosphere/dcos-genconf:443f224da64a-2e597dd4a6f6-99cf2431ce80'
       - name: dcos-bootstrap-id
         description: 'The bootstrap ID that genconf retrieved from Mesosphere'
         map: 'dcos/bootstrap_id'

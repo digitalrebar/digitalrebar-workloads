@@ -23,6 +23,8 @@ while [[ ! -x $mountdir/core/tools/docker-admin-up ]]; do
     fi
 done
 
+. "$mountdir/core/tools/da-lib.sh"
+
 if ! [[ $GENCONF_USER && $GENCONF_EMAIL && $GENCONF_PASSWORD ]]; then
     echo "GENCONF_USER, GENCONF_EMAIL, and GENCONF_PASSWORD must be set"
     echo "They are required to allow the dcos-genconf role to download the"
@@ -38,85 +40,28 @@ if ! which rebar &>/dev/null; then
 fi
 
 cleanup() {
+    res=$?
     set +e
-    "$mountdir/core/tools/docker-admin-down"
     pkill kvm-slave
+    tear_down_admin_containers
+    exit $res
 }
 trap cleanup 0 INT QUIT TERM
 
-"$mountdir/core/tools/docker-admin-up"
-export REBAR_KEY=rebar:rebar1
-export REBAR_ENDPOINT=http://127.0.0.1:3000
-
-echo "Waiting for rebar to come up (1 or 2 minutes)"
-
-count=240
-while ! rebar ping &>/dev/null; do
-    count=$((count - 1))
-    if (( count == 0 )); then
-        echo "Took too long for rebar to come up"
-        exit 1
-    fi
-    sleep 1
-done
-echo "Waiting on the mesosphere barclamp to show up (30 seconds or so)"
-count=120
-while ! rebar barclamps show mesosphere &>/dev/null; do
-    count=$((count - 1))
-    if (( count == 0 )); then
-        echo "Took too long for mesosphere to show up"
-        exit 1
-    fi
-    sleep 1
-done
-echo "Waiting for provisioner (1 or 2 minutes)"
-count=240
-while ! rebar nodes show provisioner.local.neode.org &>/dev/null; do
-    count=$((count - 1))
-    if (( count == 0 )); then
-        echo "Took too long for provisioner to show up"
-        exit 1
-    fi
-    sleep 1
-done
-
-sleep 5
-echo "Waiting for rebar to converge (up to 10 minutes)"
-if ! rebar converge; then
-    echo "Rebar failed to converge!"
-    exit 1
-fi
+bring_up_admin_containers && wait_for_admin_containers || \
+        die "Failed to deploy admin node"
 
 echo "Spawning 3 nodes for the DCOS Masters"
-
-spawned_nodes=()
 
 for n in 1 2 3; do
     pre_nodes="$(rebar nodes list |jq -r '.[] | .name' |sort)"
     SLAVE_MEM=8G "$mountdir/core/tools/kvm-slave" &
-    echo "Waiting for node to appear in Rebar"
-    while post_nodes="$(rebar nodes list |jq -r '.[] | .name' |sort)" && [[ $pre_nodes == $post_nodes ]]; do
-        sleep 1
-    done
-    spawned_nodes+=($(sort <(echo "$pre_nodes") <(echo "$post_nodes") |uniq -u))
+    sleep 15
 done
 
 echo "Waiting on spawned nodes to become alive and available"
-all_alive=false
-while [[ $all_alive != true ]]; do
-    all_alive=true
-    for node in "${spawned_nodes[@]}"; do
-        json="$(rebar nodes show "$node")"
-        if jq '.alive, .available' <<< "$json" |grep -q "false"; then
-            all_alive=false
-            break
-        fi
-    done
-    sleep 5
-done
-
-echo "Waiting on spawned nodes to finish Sledgehammer"
 rebar converge
+spawned_nodes=( $(rebar nodes list |jq -r 'map(select(.["bootenv"] == "sledgehammer")) | .[] | .["name"]') )
 
 echo "Creating DCOS deployment"
 depl_id=$(rebar deployments create '{"name": "dcos"}'|jq -r '.id')
@@ -142,6 +87,12 @@ for node in "${spawned_nodes[@]}"; do
     rebar nodes bind "$node" to dcos-member
     rebar nodes set "$node" attrib dcos-member-roles to '{"value": ["master"]}'
 done
+
+echo "Recording masters"
+masters="$(printf "\\\\\"%s\\\\\"," "${spawned_nodes[@]}")"
+masters="[${masters%,}]"
+rebar deployments set dcos attrib dcos-master-list to "{\"value\": \"$masters\"}"
+
 
 echo "Waiting for masters to deploy"
 rebar deployments commit dcos

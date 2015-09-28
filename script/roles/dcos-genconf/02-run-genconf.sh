@@ -23,17 +23,16 @@ fi
 cat /tmp/dcos_ip
 EOF
 
-addrs=$(read_attribute 'hints/rebar/network/the_admin/addresses')
+addrs=$(read_attribute 'hints/rebar/network/admin-internal/addresses')
 ip_re='"(([0-9]+\.){3}[0-9]+)/[0-9]+"'
 if [[ $addrs =~ $ip_re ]] ; then
     addr="${BASH_REMATCH[1]}"
 else
-    echo "Cannot find IP address of the_admin network!"
+    echo "Cannot find IP address of admin-internal network!"
 fi
 
 # Extract the DCOS config using jq
 jq '.dcos.config' <"$TMPDIR/attrs.json" | \
-    jq ".master_lb = \"$addr\"" |
     jq ".resolvers = \"$nameservers\"" >"$share/genconf.working/config-user.json" 
 
 # Build out the config we care about
@@ -41,7 +40,7 @@ docker run -i -v "$share/genconf.working:/genconf" \
        -e "http_proxy=$http_proxy" \
        -e "https_proxy=$https_proxy" \
        -e "no_proxy=$no_proxy" \
-       mesosphere/dcos-genconf:db5602952daa-92358639efe9-671d4b52b24e \
+       "$image" \
        non-interactive
 
 if ! [[ -f $share/genconf.working/config-final.json ]]; then
