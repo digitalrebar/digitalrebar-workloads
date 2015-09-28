@@ -6,7 +6,7 @@ mkdir -p "$share"
 chmod 0777 "$share"
 yum -y install nfs-utils
 cat >/etc/exports <<EOF
-$share $network(rw,no_subtree_check)
+$share $network(rw,no_subtree_check,no_root_squash)
 EOF
 for svc in rpcbind nfs-server; do
     systemctl enable $svc
