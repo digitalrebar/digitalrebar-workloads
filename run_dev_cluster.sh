@@ -11,6 +11,10 @@ else
     exit 1
 fi
 
+[[ $MASTER_NODES ]] || MASTER_NODES=3
+[[ $SLAVE_NODES ]] ||SLAVE_NODES=0
+[[ $SLAVE_PUBLIC_NODES ]] || SLAVE_PUBLIC_NODES=2
+
 mountdir="${mountdir%/*}"
 
 # Walk up the directory tree, and stop when we find $mountdir/core/tools/docker-admin-up
@@ -32,20 +36,18 @@ if ! [[ $GENCONF_USER && $GENCONF_EMAIL && $GENCONF_PASSWORD ]]; then
     exit 1
 fi
 
-if ! which rebar &>/dev/null; then
-    echo "Please install the rebar command with"
-    echo "   go get -u github.com/digitalrebar/rebar-api/rebar"
-    echo "and make sure $GOPATH/bin is in your \$PATH"
-    exit 1
-fi
-
 cleanup() {
     res=$?
     set +e
+    trap - 0 INT QUIT TERM
+    while read -p "Type 'done' to exit: " finished && [[ $finished != "done" ]]; do
+        sleep 5
+    done
     pkill kvm-slave
     tear_down_admin_containers
     exit $res
 }
+
 trap cleanup 0 INT QUIT TERM
 
 bring_up_admin_containers && wait_for_admin_containers || \
@@ -54,18 +56,19 @@ bring_up_admin_containers && wait_for_admin_containers || \
 echo "Creating DCOS deployment"
 depl_id=$(rebar deployments create '{"name": "dcos"}'|jq -r '.id')
 
-echo "Spawning 3 nodes for the DCOS Masters"
+TOTAL_NODES=$((MASTER_NODES + SLAVE_NODES + SLAVE_PUBLIC_NODES))
+echo "Spawning $TOTAL_NODES for DCOS ($MASTER_NODES masters, $SLAVE_NODES slaves, $SLAVE_PUBLIC_NODES public slaves)"
 
-for n in 1 2 3; do
-    pre_nodes="$(rebar nodes list |jq -r '.[] | .name' |sort)"
-    SLAVE_MEM=8G "$mountdir/core/tools/kvm-slave" &
+for ((spawned_nodes = 0; spawned_nodes < TOTAL_NODES; spawned_nodes++)); do
+    SLAVE_MEM=4G "$mountdir/core/tools/kvm-slave" &
     sleep 15
 done
 
 echo "Waiting on spawned nodes to become alive and available"
 while true; do
     spawned_nodes=( $(rebar nodes list |jq -r 'map(select(.["bootenv"] == "sledgehammer")) | .[] | .["name"]') )
-    [[ ${#spawned_nodes[@]} == 3 ]] && break
+    [[ ${#spawned_nodes[@]} = $TOTAL_NODES ]] && break
+    sleep 5
 done
 
 rebar converge
@@ -86,29 +89,33 @@ rebar deployments set dcos attrib dcos-docker-genconf-user to "{\"value\": \"$GE
 rebar deployments set dcos attrib dcos-docker-genconf-email to "{\"value\": \"$GENCONF_EMAIL\"}"
 rebar deployments set dcos attrib dcos-docker-genconf-password to "{\"value\": \"$GENCONF_PASSWORD\"}"
 
-echo "Configuring master nodes"
-for node in "${spawned_nodes[@]}"; do
-    rebar nodes bind "$node" to dcos-member
-    rebar nodes set "$node" attrib dcos-member-roles to '{"value": ["master"]}'
+masters=()
+for idx in "${!spawned_nodes[@]}"; do
+    node="${spawned_nodes[idx]}"
+    role=slave
+    if ((idx < MASTER_NODES)); then
+        role=master
+        addr="$(rebar nodes addresses "$node" on admin-internal |jq -r '.addresses | .[0]')"
+        if [[ $addr ]]; then
+            masters+=("${addr%/*}")
+        else
+            echo "Node $node has no IPv4 admin address!"
+            exit 1
+        fi
+    elif ((idx < (MASTER_NODES + SLAVE_PUBLIC_NODES) )); then
+        role=slave-public
+    fi
+    rebar nodes bind "$node" to "dcos-$role"
 done
 
-echo "Recording masters"
-masters="$(printf "\\\\\"%s\\\\\"," "${spawned_nodes[@]}")"
+masters="$(printf "\\\\\"%s\\\\\"," "${masters[@]}")"
 masters="[${masters%,}]"
 rebar deployments set dcos attrib dcos-master-list to "{\"value\": \"$masters\"}"
 
-
-echo "Waiting for masters to deploy"
+echo "Waiting for nodes to deploy"
 rebar deployments commit dcos
 sleep 5
 
 if ! rebar converge; then
     echo "Masters failed to converge!"
 fi
-
-# Add code for slave bringup here
-
-while read -p "Type 'done' to exit: " finished && [[ $finished != "done" ]]; do
-    sleep 5
-done
-

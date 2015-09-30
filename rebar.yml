@@ -223,22 +223,35 @@ roles:
         schema:
           type: str
           required: true
-  - name: dcos-member
-    description: 'A member of a DCOS cluster'
+  - name: dcos-install
+    description: "Prepares a node to be a member of a DCOS cluster"
     jig: script
+    flags:
+      - implicit
     requires:
       - dcos-config
       - dcos-nfs-client
+      - dcos-genconf
     wants-attribs:
       - dcos-exhibitor-shared-fs-configdir
       - dcos-bootstrap-id
-    attribs:
-      - name: dcos-member-roles
-        description: "The roles to run on this node"
-        map: 'dcos/member_roles'
-        schema:
-          type: seq
-          sequence:
-            - type: str
-              required: true
-              enum: ["master","slave","slave-public"]
+  - name: dcos-master
+    description: 'A DCOS master node'
+    jig: script
+    flags:
+      - cluster
+    requires:
+      - dcos-install
+  - name: dcos-slave-public
+    description: 'A DCOS slave that is publically accessible'
+    jig: script
+    requires:
+      - dcos-install
+      - dcos-master
+  - name: dcos-slave
+    description: 'A DCOS slave that is not publically accessible'
+    jig: script
+    requires:
+      - dcos-install
+      - dcos-master
+    
