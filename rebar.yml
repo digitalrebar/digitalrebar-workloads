@@ -101,13 +101,6 @@ roles:
         schema:
           type: str
           required: true
-      - name: dcos-ip-detect-filename
-        description: "The script used to detect the IP address to use"
-        map: 'dcos/config/ip_detect_filename'
-        default: "/genconf/ip-detect"
-        schema:
-          type: str
-          required: true
       - name: dcos-master-list
         description: 'The FQDN or IP of the load balancer for the master nodes'
         map: 'dcos/config/master_list'
@@ -186,7 +179,6 @@ roles:
       # - dcos-exhibitor-aws-region
       # - dcos-exhibitor-aws-access-key-id
       # - dcos-exhibitor-aws-secret-access-key
-      - dcos-ip-detect-filename
       - dcos-master-list
       - dcos-roles
       - dcos-weights

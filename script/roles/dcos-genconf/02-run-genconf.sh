@@ -44,8 +44,7 @@ if ! docker run -i -v "$share/genconf.working:/genconf" \
        -e "https_proxy=$https_proxy" \
        -e "no_proxy=$no_proxy" \
        "$image" \
-       --config=/genconf/config.json \
-       non-interactive >/tmp/genconf.out; then 
+       -c /genconf/config.json >/tmp/genconf.out; then 
     echo "Genconf failed!"
     exit 1
 fi
