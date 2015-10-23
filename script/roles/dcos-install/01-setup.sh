@@ -1,19 +1,5 @@
 #!/bin/bash
 
-# Untar the most recentbootstrap tarball ourselves to
-# alleviate the need for setting up an http server
-share="$(read_attribute 'dcos/config/exhibitor_fs_config_dir')"
-bootstrap="$(read_attribute 'dcos/bootstrap_id')"
-mkdir -p /opt/mesosphere
-latest="$share/genconf/serve/bootstrap/$bootstrap"
-
-if ! [[ -f $latest ]]; then
-    echo "Could not find latest bootstrap tarball!"
-    exit 1
-fi
-
-tar -axf "$latest" -C /opt/mesosphere
-
 # Allow writes to resolv.conf
 chattr -i /etc/resolv.conf
 
