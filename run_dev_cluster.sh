@@ -50,6 +50,9 @@ cleanup() {
 
 trap cleanup 0 INT QUIT TERM
 
+# We always want a provisioner and a forwarder
+docker_admin_default_containers
+
 bring_up_admin_containers && wait_for_admin_containers || \
         die "Failed to deploy admin node"
 
