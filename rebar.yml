@@ -208,7 +208,7 @@ roles:
         schema:
           type: str
           required: true
-        default: 'mesosphere/dcos-genconf:testing_continuous'
+        default: 'mesosphere/dcos-genconf:testing_kartic_rackn-stable'
       - name: dcos-bootstrap-id
         description: 'The bootstrap ID that genconf retrieved from Mesosphere'
         map: 'dcos/bootstrap_id'
