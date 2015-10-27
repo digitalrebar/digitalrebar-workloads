@@ -1,6 +1,6 @@
 #!/bin/bash
 
-yum -y install wget docker
+yum -y install wget docker unzip
 . /etc/profile
 cat >/etc/sysconfig/docker <<EOF
 OPTIONS='--selinux-enabled'
