@@ -27,6 +27,7 @@ The ```docker-prep``` role is responsible for actually installing docker at the 
 The ```docker-prep``` role as two attributes to set.
 
 | Attribute | Default | Notes |
+| --------- | ------- | ----- |
 | docker-version | latest | The docker version to install: latest, release-candidate, experimental |
 | docker-port | 2375 | TCP port for the docker Daemon to listen on. Set to 0 to disable. |
 | docker-cert-path | "" | The path to the docker cert directory.  Default of "" causes system defaults |
