@@ -29,15 +29,11 @@ roles:
       - cluster
       - milestone
     requires:
+      - docker-ready
       - docker-swarm-install
       - consul
-    attribs:
-      - name: docker-swarm-cluster-port
-        description: 'The port that docker swarm ports will listen on'
-        map: 'docker_swarm/cluster_port'
-        default: 2375
-        schema:
-          type: int
+    wants-attribs:
+      - docker-port
   - name: docker-swarm-manager
     jig: script
     requires:

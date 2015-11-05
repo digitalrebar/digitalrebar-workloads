@@ -4,7 +4,7 @@ ip_re='(([0-9]+\.){3}[0-9]+)/[0-9]{,2}'
 
 [[ $(ip -4 -o addr show scope global) =~ $ip_re ]] || exit 1
 swarm_addr="${BASH_REMATCH[1]}"
-PORT=$(read_attribute docker_swarm/cluster_port)
+PORT=$(read_attribute docker/port)
 
 cat >/etc/systemd/system/docker-swarm-agent.service <<EOF
 [Unit]
