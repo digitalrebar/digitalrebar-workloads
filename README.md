@@ -33,9 +33,8 @@ Currently, this barclamp installs:
 
 The ```docker-swarm-install``` role is responsible for installing the packages and programs that each node in the cluster will need.  It currently installs:
 
-* Go version 1.4.2 from the centos virt repo @ http://cbs.centos.org/repos/virt7-release/
-* Docker version 1.7.1 from the same repository
-* Swarm version 0.4.0-rc2 from source @ https://github.com/docker/swarm
+* Docker version 1.9.0 from the docker repos
+* Swarm version 1.0.0 from source @ https://github.com/docker/swarm
 
 It has a single attribute named ```docker-swarm-version```, which controls what tag will be checked out and built from Github.
 
