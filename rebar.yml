@@ -6,6 +6,9 @@ barclamp:
   os_support:
     - centos-7.1.1503
 
+wizard:
+  version: 1
+
 rebar:
   layout: 2.0
 
@@ -20,7 +23,7 @@ roles:
       - name: docker-swarm-version
         description: 'The version of swarm to install'
         map: 'docker_swarm/version'
-        default: 'v0.4.0-rc2'
+        default: 'v1.0.0'
         schema:
           type: str
   - name: docker-swarm-member
