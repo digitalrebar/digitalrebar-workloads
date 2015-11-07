@@ -6,7 +6,8 @@ ip_re='(([0-9]+\.){3}[0-9]+)/[0-9]{,2}'
 swarm_addr="${BASH_REMATCH[1]}"
 PORT=$(read_attribute docker/port)
 
-cat >/etc/systemd/system/docker-swarm-agent.service <<EOF
+if which systemctl >/dev/null 2>/dev/null ; then
+    cat >/etc/systemd/system/docker-swarm-agent.service <<EOF
 [Unit]
 Description=Docker Swarm Local Agent
 Documentation=https://docs.docker.com/swarm/
@@ -23,6 +24,85 @@ ExecStart=/usr/local/bin/swarm join \
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reload
-systemctl enable docker-swarm-agent
-systemctl restart docker-swarm-agent
+    systemctl daemon-reload
+    systemctl enable docker-swarm-agent
+    systemctl restart docker-swarm-agent
+
+elif which chkconfig >/dev/null 2>/dev/null ; then
+
+    cat >/etc/init.d/docker-swarm-agent <<EOF
+#!/bin/bash
+#
+#       /etc/rc.d/init.d/docker-swarm-agent
+#
+# chkconfig: 345 70 30
+# description: Docker Swarm Agent
+# processname: swarm
+
+# Source function library.
+. /etc/init.d/functions
+
+LOCKFILE=/var/lock/subsys/docker-swarm-agent
+
+start() {
+        PID=`ps auxwww | grep "swarm join" | grep -v grep | awk '{ print $2 }'`
+        if [ "$PID" != "" ] ; then
+             return 0
+        fi
+        echo -n "Starting Docker Swarm Agent: "
+        /usr/local/bin/swarm join \
+          --addr=$swarm_addr:$PORT \
+          consul://127.0.0.1:8500/docker-swarm &
+        RETVAL=$?
+        [ $RETVAL -eq 0 ] && touch $LOCKFILE
+        echo
+        return $RETVAL
+}
+
+stop() {
+        echo -n "Shutting down Docker Swarm Agent: "
+
+        PID=`ps auxwww | grep "swarm join" | grep -v grep | awk '{ print $2 }'`
+        if [ "$PID" != "" ] ; then
+            kill $PID
+            RETVAL=$?
+            [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+        fi
+        echo
+        return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        ps auxwww | grep "swarm join" | grep -v grep
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    condrestart)
+        [ -f /var/lock/subsys/docker-swarm-agent ] && restart || :
+    *)
+        echo "Usage: docker-swarm-agent {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
+exit $?
+
+EOF
+
+    chkconfig --add docker-swarm-agent
+    service restart docker-swarm-agent
+else
+    echo "Unknown supported start system"
+    exit 1
+fi
+
+
+
