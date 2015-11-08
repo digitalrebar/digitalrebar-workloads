@@ -63,6 +63,7 @@ if [ "$MY_OPTIONS" != "" ] ; then
     else
       echo "OPTIONS=\"${MY_OPTIONS}\"" >> /etc/sysconfig/docker
       echo "export OPTIONS" >> /etc/sysconfig/docker
+      echo "other_args=\"${MY_OPTIONS}\"" >> /etc/sysconfig/docker
     fi
   elif [[ -d /etc/apt ]]; then
     echo "export DOCKER_OPTS=\"${DOCKER_OPTS} ${MY_OPTIONS}\"" >> /etc/default/docker
