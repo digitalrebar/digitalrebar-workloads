@@ -48,35 +48,35 @@ elif which chkconfig >/dev/null 2>/dev/null ; then
 LOCKFILE=/var/lock/subsys/docker-swarm-manager
 
 start() {
-        PID=`ps auxwww | grep "swarm manage" | grep -v grep | awk '{ print $2 }'`
-        if [ "$PID" != "" ] ; then
+        PID=\`ps auxwww | grep "swarm manage" | grep -v grep | awk '{ print \$2 }'\`
+        if [ "\$PID" != "" ] ; then
              return 0
         fi
         echo -n "Starting Docker Swarm Manager: "
-        /usr/local/bin/swarm manage \
+        daemon /usr/local/bin/swarm manage \
           --host=$swarm_addr:$M_PORT \
           --replication --addr=$swarm_addr:$M_PORT \
-          consul://127.0.0.1:8500/docker-swarm &
-        RETVAL=$?
-        [ $RETVAL -eq 0 ] && touch $LOCKFILE
+          consul://127.0.0.1:8500/docker-swarm > /var/log/docker-swarm-manager 2>&1 &
+        RETVAL=\$?
+        [ \$RETVAL -eq 0 ] && touch \$LOCKFILE
         echo
-        return $RETVAL
+        return \$RETVAL
 }
 
 stop() {
         echo -n "Shutting down Docker Swarm Manager: "
 
-        PID=`ps auxwww | grep "swarm manage" | grep -v grep | awk '{ print $2 }'`
-        if [ "$PID" != "" ] ; then
-            kill $PID
-            RETVAL=$?
-            [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+        PID=\`ps auxwww | grep "swarm manage" | grep -v grep | awk '{ print \$2 }'\`
+        if [ "\$PID" != "" ] ; then
+            kill \$PID
+            RETVAL=\$?
+            [ \$RETVAL -eq 0 ] && rm -f \$LOCKFILE
         fi
         echo
-        return $RETVAL
+        return \$RETVAL
 }
 
-case "$1" in
+case "\$1" in
     start)
         start
         ;;
@@ -92,17 +92,19 @@ case "$1" in
         ;;
     condrestart)
         [ -f /var/lock/subsys/docker-swarm-manager ] && restart || :
+        ;;
     *)
         echo "Usage: docker-swarm-manager {start|stop|status|restart}"
         exit 1
         ;;
 esac
-exit $?
+exit \$?
 
 EOF
 
+    chmod +x /etc/init.d/docker-swarm-manager
     chkconfig --add docker-swarm-manager
-    service restart docker-swarm-manager
+    command service docker-swarm-manager restart
 else
     echo "Unknown supported start system"
     exit 1
