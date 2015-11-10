@@ -5,6 +5,7 @@ barclamp:
   copyright: "RackN, Inc 2015"
   os_support:
     - centos-7.1.1503
+    - centos-6.7
 
 wizard:
   version: 1
@@ -34,14 +35,14 @@ roles:
     requires:
       - docker-ready
       - docker-swarm-install
-      - consul
+      - consul-member
     wants-attribs:
       - docker-port
   - name: docker-swarm-manager
     jig: script
     requires:
       - docker-swarm-install
-      - consul
+      - consul-master
     flags:
       - milestone
     attribs:
