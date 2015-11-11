@@ -1,6 +1,6 @@
-OPEN REBAR LICENSE:
+# DIGITAL REBAR LICENSE (APL2)
 
-Rebar is made available by Dell under the Apache 2 license.
+This Exention to Digital Rebar is made available by RackN under the Apache 2 license.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -11,11 +11,3 @@ Rebar is made available by Dell under the Apache 2 license.
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-COMPONENT LICENSES:
-
-Please see /doc/licenses for component license information
-
-ADDITIONAL COMPONENTS:
-
-Extensions to the Rebar framework (aka "barclamps") may be offered under different licenses.  These licenses should be documented under the components relevenat "/doc/licenses" directory.
