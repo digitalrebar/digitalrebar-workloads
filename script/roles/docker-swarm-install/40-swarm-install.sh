@@ -1,7 +1,7 @@
 #!/bin/bash
 . /etc/profile
 [[ -x /usr/local/bin/swarm ]] && return
-yum -y install git
+install git
 [[ -x $GOPATH/bin/godep ]] || go get github.com/tools/godep
 mkdir -p "$GOPATH/src/github.com/docker/"
 cd "$GOPATH/src/github.com/docker/"
