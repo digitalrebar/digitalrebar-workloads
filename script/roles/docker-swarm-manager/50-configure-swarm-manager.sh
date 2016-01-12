@@ -122,7 +122,7 @@ exec /usr/local/bin/swarm manage \
           consul://127.0.0.1:8500/docker-swarm > /var/log/docker-swarm-manager 2>&1
 EOF
 
-    command start docker-swarm-manager
+    command restart docker-swarm-manager
 
 else
     echo "Unknown supported start system"
