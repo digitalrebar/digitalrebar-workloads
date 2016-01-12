@@ -6,6 +6,7 @@ ip_re='(([0-9]+\.){3}[0-9]+)/[0-9]{,2}'
 swarm_addr="${BASH_REMATCH[1]}"
 
 M_PORT=$(read_attribute docker_swarm/manager_port)
+host_addr=$(read_attribute consul/bind_addr)
 
 
 if which systemctl >/dev/null 2>/dev/null ; then
@@ -20,7 +21,7 @@ Type=simple
 EnvironmentFile=-/etc/sysconfig/docker-swarm
 ExecStart=/usr/local/bin/swarm manage \
           --host=$swarm_addr:$M_PORT \
-          --replication --addr=$swarm_addr:$M_PORT \
+          --replication --addr=$host_addr:$M_PORT \
           consul://127.0.0.1:8500/docker-swarm
 
 [Install]
@@ -55,7 +56,7 @@ start() {
         echo -n "Starting Docker Swarm Manager: "
         daemon /usr/local/bin/swarm manage \
           --host=$swarm_addr:$M_PORT \
-          --replication --addr=$swarm_addr:$M_PORT \
+          --replication --addr=$host_addr:$M_PORT \
           consul://127.0.0.1:8500/docker-swarm > /var/log/docker-swarm-manager 2>&1 &
         RETVAL=\$?
         [ \$RETVAL -eq 0 ] && touch \$LOCKFILE
@@ -105,6 +106,24 @@ EOF
     chmod +x /etc/init.d/docker-swarm-manager
     chkconfig --add docker-swarm-manager
     command service docker-swarm-manager restart
+
+elif which initctl >/dev/null 2>/dev/null ; then
+
+    cat >/etc/init/docker-swarm-manager.conf <<EOF
+description "Start swarm manager on startup"
+start on started networking
+
+respawn
+respawn limit 5 60
+
+exec /usr/local/bin/swarm manage \
+          --host=$swarm_addr:$M_PORT \
+          --replication --addr=$host_addr:$M_PORT \
+          consul://127.0.0.1:8500/docker-swarm > /var/log/docker-swarm-manager 2>&1
+EOF
+
+    command start docker-swarm-manager
+
 else
     echo "Unknown supported start system"
     exit 1

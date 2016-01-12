@@ -38,6 +38,7 @@ roles:
       - consul-member
     wants-attribs:
       - docker-port
+      - consul-address
   - name: docker-swarm-manager
     jig: script
     requires:
@@ -45,6 +46,8 @@ roles:
       - consul-master
     flags:
       - milestone
+    wants-attribs:
+      - consul-address
     attribs:
       - name: docker-swarm-manager-port
         description: 'The port that swarm maangers will listen on'
