@@ -41,6 +41,11 @@ MY_OPTIONS=""
 if [[ $docker_port -ne 0 ]] ; then
   MY_OPTIONS="$MY_OPTIONS -H tcp://0.0.0.0:$docker_port"
 
+  # if centos/redhat firewall - add port
+  if which firewall-cmd ; then
+    firewall-cmd --add-port $docker_port/tcp
+  fi
+
   echo "DOCKER_HOST=127.0.0.1:$docker_port" >> /etc/environment
   echo "export DOCKER_HOST=127.0.0.1:$docker_port" > /etc/profile.d/docker_host.sh
   chmod +x /etc/profile.d/docker_host.sh
