@@ -116,7 +116,7 @@ exec /usr/local/bin/swarm join \
 
 EOF
 
-    start docker-swarm-agent
+    command restart docker-swarm-agent
 
 else
     echo "Unknown supported start system"
