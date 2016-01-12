@@ -14,5 +14,6 @@ pathmunge () {
 
 export GOPATH=\$HOME/go
 mkdir -p "\$GOPATH"
+pathmunge "/usr/local/go/bin" after
 pathmunge "\$GOPATH/bin" after
 EOF
