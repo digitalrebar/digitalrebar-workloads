@@ -110,3 +110,8 @@ else
     exit 1
 fi
 
+# if centos/redhat firewall - add port
+if which firewall-cmd ; then
+    firewall-cmd --add-port $M_PORT/tcp
+fi
+
