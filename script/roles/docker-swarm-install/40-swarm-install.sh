@@ -13,6 +13,6 @@ else
     cd swarm
 fi
 git checkout -f "$(read_attribute 'docker_swarm/version')"
-godep go install
+$GOPATH/bin/godep go install
 cp "$GOPATH/bin/swarm" /usr/local/bin/swarm
 
