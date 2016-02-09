@@ -1,9 +1,7 @@
 #!/bin/bash
 
-ip_re='(([0-9]+\.){3}[0-9]+)/[0-9]{,2}'
-
-[[ $(ip -4 -o addr show scope global) =~ $ip_re ]] || exit 1
-swarm_addr="${BASH_REMATCH[1]}"
+# Listen from everywhere - helps with vagrant and cloud.
+swarm_addr="0.0.0.0"
 
 M_PORT=$(read_attribute docker_swarm/manager_port)
 host_addr=$(read_attribute consul/bind_addr)
@@ -131,6 +129,6 @@ fi
 
 # if centos/redhat firewall - add port
 if which firewall-cmd ; then
-    firewall-cmd --add-port $M_PORT/tcp
+    firewall-cmd --add-port $M_PORT/tcp || :
 fi
 
