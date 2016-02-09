@@ -43,7 +43,7 @@ if [[ $docker_port -ne 0 ]] ; then
 
   # if centos/redhat firewall - add port
   if which firewall-cmd ; then
-    firewall-cmd --add-port $docker_port/tcp
+    firewall-cmd --add-port $docker_port/tcp || :
   fi
 
   echo "DOCKER_HOST=127.0.0.1:$docker_port" >> /etc/environment
