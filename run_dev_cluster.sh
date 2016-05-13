@@ -13,7 +13,7 @@ fi
 
 [[ $MASTER_NODES ]] || MASTER_NODES=3
 [[ $SLAVE_NODES ]] ||SLAVE_NODES=0
-[[ $SLAVE_PUBLIC_NODES ]] || SLAVE_PUBLIC_NODES=2
+ [[ $SLAVE_PUBLIC_NODES ]] || SLAVE_PUBLIC_NODES=2
 
 mountdir="${mountdir%/*}"
 
@@ -28,13 +28,6 @@ while [[ ! -x $mountdir/core/tools/docker-admin-up ]]; do
 done
 
 . "$mountdir/core/tools/da-lib.sh"
-
-if ! [[ $GENCONF_USER && $GENCONF_EMAIL && $GENCONF_PASSWORD ]]; then
-    echo "GENCONF_USER, GENCONF_EMAIL, and GENCONF_PASSWORD must be set"
-    echo "They are required to allow the dcos-genconf role to download the"
-    echo "DCOS configuration container from hub.docker.com."
-    exit 1
-fi
 
 cleanup() {
     res=$?
@@ -64,7 +57,6 @@ echo "Spawning $TOTAL_NODES for DCOS ($MASTER_NODES masters, $SLAVE_NODES slaves
 
 for ((spawned_nodes = 0; spawned_nodes < TOTAL_NODES; spawned_nodes++)); do
     SLAVE_MEM=4G "$mountdir/core/tools/kvm-slave" &
-    sleep 15
 done
 
 echo "Waiting on spawned nodes to become alive and available"
@@ -86,11 +78,6 @@ echo "Configuring genconf node"
 gc_node="$spawned_nodes"
 gc_node_addr="$(rebar nodes addresses "$gc_node" on admin-internal |jq -r '.addresses | .[0]')"
 rebar nodes bind "$gc_node" to dcos-genconf
-rebar deployments set dcos attrib dcos-nfs-network to '{"value": "192.168.124.0/24"}'
-rebar deployments set dcos attrib dcos-nfs-server-ip to "{\"value\": \"${gc_node_addr%/*}\"}"
-rebar deployments set dcos attrib dcos-docker-genconf-user to "{\"value\": \"$GENCONF_USER\"}"
-rebar deployments set dcos attrib dcos-docker-genconf-email to "{\"value\": \"$GENCONF_EMAIL\"}"
-rebar deployments set dcos attrib dcos-docker-genconf-password to "{\"value\": \"$GENCONF_PASSWORD\"}"
 
 masters=()
 for idx in "${!spawned_nodes[@]}"; do
@@ -111,9 +98,9 @@ for idx in "${!spawned_nodes[@]}"; do
     rebar nodes bind "$node" to "dcos-$role"
 done
 
-masters="$(printf "\\\\\"%s\\\\\"," "${masters[@]}")"
+masters="$(printf '\"%s\",' "${masters[@]}")"
 masters="[${masters%,}]"
-rebar deployments set dcos attrib dcos-master-list to "{\"value\": \"$masters\"}"
+rebar deployments set dcos attrib dcos-master-list to "{\"value\": $masters}"
 
 echo "Waiting for nodes to deploy"
 rebar deployments commit dcos

@@ -24,9 +24,12 @@ while (( timeout > 0 )); do
                 outlog+=("Waiting on required DCOS service: $service. Status: $status");;
         esac
     done
+    date
+    printf '%s\n' "${outlog[@]}"
+    echo
     [[ $finished == true ]] && break
     sleep 5
     timeout=$((timeout - 5))
 done
-printf '%s\n' "${outlog[@]}"
+
 [[ $finished == true ]]

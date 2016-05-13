@@ -1,14 +1,15 @@
 #!/bin/bash
 
-username=$(read_attribute 'dcos/genconf/docker_user')
-password=$(read_attribute 'dcos/genconf/docker_password')
-email=$(read_attribute 'dcos/genconf/docker_email')
-image=$(read_attribute 'dcos/genconf/docker_image')
+installer=$(read_attribute 'dcos/genconf/installer')
+checksum=$(read_attribute 'dcos/genconf/sha1sum')
+str=$(printf "%s  %s" "$checksum" "${installer##*/}")
 
-if ! [[ $username && $password && $email ]]; then
-    echo "Must supply username, email, and password!"
-    exit 1
+cd "$HOME"
+if [[ ! -f ${installer##*/} ]] || ! sha1sum -c <<< "$str"; then
+    while ! curl -fgLO "$installer"; do
+        sleep 10
+    done
 fi
 
-docker login -u "$username" -p "$password" -e "$email"
-docker pull "$image"
+sha1sum -c <<< "$str" || exit 1
+chmod 755 "${installer##*/}"

@@ -13,17 +13,17 @@
 # limitations under the License.
 #
 barclamp:
-  name: "mesosphere"
+  name: "dcos"
   parent: "core"
-  description: "Cookbooks for installing Mesosphere"
-  display: "MesosSphere"
+  description: "Cookbooks for installing DC/OS"
+  display: "DC/OS"
   version: "2.E"
-  source_url: "https://github.com/rackn/mesosphere"
+  source_url: "https://github.com/rackn/dcos"
   license: "Proprietary"
   license_url: ""
 
 os_support:
-  - centos-7.1-1503
+  - centos-7.2-1511
 
 roles:
   - name: dcos-prereqs
@@ -41,13 +41,6 @@ roles:
     requires:
       - dcos-prereqs
     attribs:
-      - name: dcos-bootstrap-url
-        description: "The URL that should be used to bootstrap DCOS from"
-        map: 'dcos/config/bootstrap_url'
-        default: 'file:///var/exports/genconf/serve'
-        schema:
-          type: str
-          required: true
       - name: dcos-cluster-name
         description: "The name of the Mesos cluster"
         map: 'dcos/config/cluster_name'
@@ -56,58 +49,25 @@ roles:
           type: str
           required: true
       - name: dcos-exhibitor-storage-backend
-        description: 'The backend that Exhibitor should use for Zookeeper.'
+        description: 'The backend that Exhibitor should use for Zookeeper. We recommend static'
         map: 'dcos/config/exhibitor_storage_backend'
-        default: 'shared_filesystem'
+        default: 'static'
         schema:
           type: str
           required: true
-      - name: dcos-exhibitor-aws-s3-bucket
-        description: 'The S3 bucket that Exhibitor will use to dynamically add or remove Zookeeper nodes'
-        map: 'dcos/config/s3_bucket'
-        default: ''
-        schema:
-          type: str
-          required: false
-      - name: dcos-exhibitor-aws-s3-prefix
-        description: 'The prefix that Exhibitor will use when adding or removing records.'
-        map: 'dcos/config/s3_prefix'
-        default: ''
-        schema:
-          type: str
-          required: false
-      - name: dcos-exhibitor-aws-region
-        description: 'The AWS region that the exhibitor S3 bucket is in'
-        map: 'dcos/config/aws_region'
-        schema:
-          type: str
-          required: false
-      - name: dcos-exhibitor-aws-access-key-id
-        description: 'The AWS access key that Exhibitor should use'
-        map: 'dcos/config/aws_access_key_id'
-        schema:
-          type: str
-          required: false
-      - name: dcos-exhibitor-aws-secret-access-key
-        description: 'The AWS secret access key that Exhibitor should use'
-        map: 'dcos/config/aws_secret_access_key'
-        schema:
-          type: str
-          required: false
-      - name: dcos-exhibitor-shared-fs-configdir
-        desription: 'The shared filesystem that Exhibitor will use to dynamically add or remove Zookeeper nodes'
-        map: 'dcos/config/exhibitor_fs_config_dir'
-        default: "/var/exports"
-        schema:
-          type: str
-          required: true
+          enum:
+            - static
+            - zookeeper
+            - aws_s3
+            - shared_filesystem
       - name: dcos-master-list
         description: 'The FQDN or IP of the load balancer for the master nodes'
         map: 'dcos/config/master_list'
         default: ''
         schema:
-          type: str
-          required: true
+          type: seq
+          sequence:
+            - type: str
       - name: dcos-master-discovery
         description: 'The master discovery mode to use.'
         map: 'dcos/config/master_discovery'
@@ -123,95 +83,36 @@ roles:
           type: str
           required: true
           enum: ["master","slave","slave-public"]
-      - name: dcos-weights
-        description: 'The weights to assign to Mesos roles'
-        default: 'slave_public=1'
-        map: 'dcos/config/weights'
-        schema:
-          type: str
-          required: true
-  - name: dcos-nfs-server
-    jig: script
-    description: 'Provide an NFS share for Exhibitor'
-    requires:
-      - dcos-config
-    wants-attribs:
-      - dcos-exhibitor-shared-fs-configdir
-    attribs:
-      - name: dcos-nfs-server-ip
-        description: "The IP address of the NFS server"
-        map: 'dcos/exhibitor/nfs_server_addr'
-        schema:
-          type: str
-          required: true
-      - name: dcos-nfs-network
-        description: "The network that we should allow clients to attach from"
-        map: 'dcos/exhibitor/nfs_network'
-        schema:
-          type: str
-          required: true
-  - name: dcos-nfs-client
-    jig: script
-    description: 'Mount an NFS share for Exhibitor'
-    requires:
-      - dcos-config
-      - dcos-nfs-server
-    flags:
-      - implicit
-    wants-attribs:
-      - dcos-exhibitor-shared-fs-configdir
-      - dcos-nfs-server-ip
   - name: dcos-genconf
     jig: script
     description: 'Generate a DCOS cluster configuration'
     requires:
       - dcos-config
-      - dcos-nfs-server
     wants-attribs:
       - dns_servers
-      - dcos-exhibitor-shared-fs-configdir
-      - dcos-bootstrap-url
       - dcos-cluster-name
       - dcos-exhibitor-storage-backend
-      # Ignore the S3 parameters for now.
-      # - dcos-exhibitor-aws-s3-bucket
-      # - dcos-exhibitor-aws-s3-prefix
-      # - dcos-exhibitor-aws-region
-      # - dcos-exhibitor-aws-access-key-id
-      # - dcos-exhibitor-aws-secret-access-key
       - dcos-master-list
       - dcos-roles
-      - dcos-weights
       - dcos-master-discovery
     attribs:
-      - name: dcos-docker-genconf-user
-        description: 'Name of a user with access to the DCOS genconf Docker image'
-        map: 'dcos/genconf/docker_user'
+      - name: dcos-docker-genconf-installer
+        description: 'The DCOS genconf installer to use to generate the cluster config.'
+        map: 'dcos/genconf/installer'
         schema:
           type: str
           required: true
-      - name: dcos-docker-genconf-password
-        description: 'Password for the user with access to the DCOS genconf Docker image'
-        map: 'dcos/genconf/docker_password'
+        default: 'https://downloads.dcos.io/dcos/EarlyAccess/dcos_generate_config.sh'
+      - name: dcos-docker-genconf-installer-sha1sum
+        description: 'The DCOS genconf installer SHA1 checksum'
+        map: 'dcos/genconf/sha1sum'
         schema:
           type: str
           required: true
-      - name: dcos-docker-genconf-email
-        description: 'Email address of the user with access to the DCOS genconf Docker image'
-        map: 'dcos/genconf/docker_email'
-        schema:
-          type: str
-          required: true
-      - name: dcos-docker-genconf-image
-        description: 'The DCOS genconf Docker image to use to generate the cluster config.'
-        map: 'dcos/genconf/docker_image'
-        schema:
-          type: str
-          required: true
-        default: 'mesosphere/dcos-genconf:testing_kartic_rackn-stable'
-      - name: dcos-bootstrap-id
-        description: 'The bootstrap ID that genconf retrieved from Mesosphere'
-        map: 'dcos/bootstrap_id'
+        default: '492f5be5cfd2b7e8a3ab5be3bbcad26b96d93bae'
+      - name: dcos-bootstrap-url
+        description: "The URL that the DCOS nodes will bootstrap from"
+        map: 'dcos/config/bootstrap_url'
         schema:
           type: str
           required: true
@@ -222,11 +123,9 @@ roles:
       - implicit
     requires:
       - dcos-config
-      - dcos-nfs-client
       - dcos-genconf
     wants-attribs:
-      - dcos-exhibitor-shared-fs-configdir
-      - dcos-bootstrap-id
+      - dcos-bootstrap-url
   - name: dcos-master
     description: 'A DCOS master node'
     jig: script

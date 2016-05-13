@@ -16,3 +16,9 @@ if [[ $addrs =~ $ip_re ]] ; then
 else
     echo "Cannot find IP address of admin-internal network!"
 fi
+
+tmpdir=/tmp/dcos_install
+mkdir -p "$tmpdir"
+bootstrap=$(read_attribute "dcos/config/bootstrap_url")
+cd "$tmpdir"
+curl -fgLO "$bootstrap/dcos_install.sh"
