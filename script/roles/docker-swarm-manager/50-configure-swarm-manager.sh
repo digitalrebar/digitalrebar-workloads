@@ -18,8 +18,8 @@ After=docker.service
 Type=simple
 EnvironmentFile=-/etc/sysconfig/docker-swarm
 ExecStart=/usr/local/bin/swarm manage \
-          --host=$swarm_addr:$M_PORT \
-          --replication --addr=$host_addr:$M_PORT \
+          --host=$(addr_port $swarm_addr $M_PORT) \
+          --replication --addr=$(addr_port $host_addr $M_PORT) \
           consul://127.0.0.1:8500/docker-swarm
 
 [Install]
@@ -53,8 +53,8 @@ start() {
         fi
         echo -n "Starting Docker Swarm Manager: "
         daemon /usr/local/bin/swarm manage \
-          --host=$swarm_addr:$M_PORT \
-          --replication --addr=$host_addr:$M_PORT \
+          --host=$(addr_port $swarm_addr $M_PORT) \
+          --replication --addr=$(addr_port $host_addr $M_PORT) \
           consul://127.0.0.1:8500/docker-swarm > /var/log/docker-swarm-manager 2>&1 &
         RETVAL=\$?
         [ \$RETVAL -eq 0 ] && touch \$LOCKFILE
@@ -115,8 +115,8 @@ respawn
 respawn limit 5 60
 
 exec /usr/local/bin/swarm manage \
-          --host=$swarm_addr:$M_PORT \
-          --replication --addr=$host_addr:$M_PORT \
+          --host=$(addr_port $swarm_addr $M_PORT) \
+          --replication --addr=$(addr_port $host_addr $M_PORT)  \
           consul://127.0.0.1:8500/docker-swarm > /var/log/docker-swarm-manager 2>&1
 EOF
 
