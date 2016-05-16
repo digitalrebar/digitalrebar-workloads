@@ -24,7 +24,7 @@ roles:
       - name: docker-swarm-version
         description: 'The version of swarm to install'
         map: 'docker_swarm/version'
-        default: 'v1.1.0'
+        default: 'v1.2.2'
         schema:
           type: str
   - name: docker-swarm-member

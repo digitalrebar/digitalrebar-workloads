@@ -17,7 +17,7 @@ After=docker.service
 Type=simple
 EnvironmentFile=-/etc/sysconfig/docker-swarm
 ExecStart=/usr/local/bin/swarm join \
-          --addr=$host_addr:${PORT} \
+          --addr=$(addr_port $host_addr ${PORT}) \
           consul://127.0.0.1:8500/docker-swarm
 
 [Install]
@@ -51,7 +51,7 @@ start() {
         fi
         echo -n "Starting Docker Swarm Agent: "
         daemon /usr/local/bin/swarm join \
-          --addr=$host_addr:$PORT \
+          --addr=$(addr_port $host_addr $PORT) \
           consul://127.0.0.1:8500/docker-swarm >/var/log/docker-swarm-agent.log 2>&1 &
         RETVAL=\$?
         [ \$RETVAL -eq 0 ] && touch \$LOCKFILE
@@ -111,7 +111,7 @@ respawn
 respawn limit 5 60
 
 exec /usr/local/bin/swarm join \
-          --addr=$host_addr:$PORT \
+          --addr=$(addr_port $host_addr $PORT) \
           consul://127.0.0.1:8500/docker-swarm >/var/log/docker-swarm-agent.log 2>&1
 
 EOF
