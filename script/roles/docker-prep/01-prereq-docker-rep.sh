@@ -83,10 +83,10 @@ if [ "$docker_cert_path" != "" ] ; then
       systemctl daemon-reload
     else
       echo "DOCKER_CERT_PATH=\"${docker_cert_path}\"" >> /etc/sysconfig/docker
-      echo "export DOKER_CERT_PATH" >> /etc/sysconfig/docker
+      echo "export DOCKER_CERT_PATH" >> /etc/sysconfig/docker
     fi
   elif [[ -d /etc/apt ]]; then
-    echo "export DOKER_CERT_PATH=\"${docker_cert_path}\"" >> /etc/default/docker
+    echo "export DOCKER_CERT_PATH=\"${docker_cert_path}\"" >> /etc/default/docker
   fi
 fi
 
