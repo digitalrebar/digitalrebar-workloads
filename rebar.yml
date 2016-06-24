@@ -8,7 +8,15 @@ barclamp:
     - centos-6.7
 
 wizard:
-  version: 1
+  version: 2
+  name: "Docker Swarm"
+  description: "Install Docker Swarm"
+  system_nodes: true
+  create_nodes: true
+  os: true
+  services:
+    docker-swarm-manager: odd
+    docker-swarm-member: all
 
 rebar:
   layout: 2.0
