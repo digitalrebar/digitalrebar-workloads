@@ -1,0 +1,4 @@
+--- 
+- name: Kubernetes Kubelet Install by RackN 2016
+  tasks:
+    - include: kubelet/main.yml

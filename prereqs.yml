@@ -1,0 +1,4 @@
+--- 
+- name: Kubernetes Pre-reqs Install by RackN 2016
+  tasks:
+    - include: prereqs/main.yml

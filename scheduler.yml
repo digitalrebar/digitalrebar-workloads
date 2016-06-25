@@ -1,0 +1,4 @@
+--- 
+- name: Kubernetes Scheduler Install by RackN 2016
+  tasks:
+    - include: scheduler/main.yml
