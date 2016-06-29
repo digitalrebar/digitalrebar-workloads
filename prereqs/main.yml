@@ -1,0 +1,38 @@
+--- 
+- name: User | Create User Group
+  group: name={{user.group|default(user.name)}} system={{user.system|default(omit)}}
+
+- name: User | Create User
+  user:
+    comment: "{{user.comment|default(omit)}}"
+    createhome: "{{user.create_home|default(omit)}}"
+    group: "{{user.group|default(user.name)}}"
+    home: "{{user.home|default(omit)}}"
+    shell: "{{user.shell|default(omit)}}"
+    name: "{{user.name}}"
+    system: "{{user.system|default(omit)}}"
+
+- name: Create kubernetes config directory
+  file:
+    path: "{{ kube_config_dir }}"
+    state: directory
+    owner: "{{ user.name }}"
+
+- name: Create kubernetes script directory
+  file:
+    path: "{{ kube_script_dir }}"
+    state: directory
+    owner: "{{ user.name }}"
+
+- name: Create kubernetes manifests directory
+  file:
+    path: "{{ kube_manifest_dir }}"
+    state: directory
+    owner: "{{ user.name }}"
+
+- name: Create kubernetes logs directory
+  file:
+    path: "{{ kube_log_dir }}"
+    state: directory
+    owner: "{{ user.name }}"
+  when: ansible_service_mgr in ["sysvinit","upstart"]
