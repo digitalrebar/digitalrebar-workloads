@@ -3,4 +3,5 @@
   - include: defaults/main.yml
   hosts: all
   tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
     - include: kubelet/main.yml

@@ -53,3 +53,6 @@ kube_manifest_dir: "{{ kube_config_dir }}/manifests"
 
 # Logging directory (sysvinit systems)
 kube_log_dir: "/var/log/kubernetes"
+
+# documentation of source for troubleshooting
+playbook_source: "https://github.com/digitalrebar/kompos8"

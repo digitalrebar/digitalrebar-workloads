@@ -3,4 +3,5 @@
   hosts: all
 
   tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
     - include: prereqs/main.yml

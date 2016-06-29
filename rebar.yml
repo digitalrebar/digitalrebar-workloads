@@ -74,7 +74,7 @@ roles:
     flags:
       - implicit
     requires:
-      - rebar-installed-node
+      - docker-prep
     metadata:
       playbook_file: prereqs.yml
       playbook_combined_repo: true
