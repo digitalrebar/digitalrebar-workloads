@@ -1,4 +1,6 @@
 --- 
 - name: Kubernetes Kubelet Install by RackN 2016
+  - include: defaults/main.yml
+  hosts: all
   tasks:
     - include: kubelet/main.yml

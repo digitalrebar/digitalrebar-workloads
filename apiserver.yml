@@ -1,4 +1,5 @@
 --- 
 - name: Kubernetes API Server Install by RackN 2016
+  hosts: all
   tasks:
     - include: apiserver/main.yml

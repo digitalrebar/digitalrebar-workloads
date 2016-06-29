@@ -1,4 +1,5 @@
 --- 
 - name: Kubernetes Node Install by RackN 2016
+  hosts: all
   tasks:
     - include: node/main.yml

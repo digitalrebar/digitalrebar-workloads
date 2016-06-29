@@ -1,4 +1,5 @@
 --- 
 - name: Kubernetes Scheduler Install by RackN 2016
+  hosts: all
   tasks:
     - include: scheduler/main.yml
