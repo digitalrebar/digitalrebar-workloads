@@ -22,6 +22,9 @@ wizard:
     default: "16 GB"
     AwsProvider: "m4.large"
     GoogleProvider: "n1-standard-16"
+  deployment_size:
+    k8ubernetes-master: 1
+    k8ubernetes-node: 3
 
 metadata:
   playbook_scope: deployment
