@@ -9,15 +9,19 @@ barclamp:
 
 wizard:
   version: 2
-  name: "Kubernetes"
+  name: "Kompos8 K8s"
   description: "Install Kubernetes Cluster"
   icon: "group_work"
   system_nodes: false
   create_nodes: true
   os: true
   services:
-    kubernetes-master: odd
-    kubernetes-node: all
+    k8ubernetes-master: odd
+    k8ubernetes-node: all
+  create_size:
+    default: "16 GB"
+    AwsProvider: "m4.large"
+    GoogleProvider: "n1-standard-16"
 
 metadata:
   playbook_scope: deployment
@@ -26,30 +30,25 @@ metadata:
   playbook_path: k8
 
 roles:
-  - name: kubernetes-master
+  - name: k8ubernetes-master
     description: 'Kubernetes Master'
     icon: "grid_on"
     jig: noop
     flags:
       - milestone
-    preceeds:
-      - kubernetes-deploy
     requires:
-      - kubernetes-etcd
-      - rebar-installed-node
+      - k8ubernetes-apiserver
 
-  - name: kubernetes-node
+  - name: k8ubernetes-node
     description: 'Kubernetes Node'
     jig: noop
     icon: "center_focus_strong"
     flags:
       - milestone
-    preceeds:
-      - kubernetes-deploy
     requires:
-      - rebar-installed-node
+      - k8ubernetes-worker
 
-  - name: kubernetes-prereqs
+  - name: k8ubernetes-prereqs
     description: 'Kubernetes Setup'
     jig: ansible-playbook
     icon: "crop_free"
@@ -58,20 +57,17 @@ roles:
     requires:
       - rebar-installed-node
     metadata:
-      playbook_scope: deployment
-      playbook_src_paths:
-        k8: https://github.com/rackn/kompos8.git
-      playbook_path: k8
       playbook_file: prereqs.yml
 
-  - name: kubernetes-kubelet
+  - name: k8ubernetes-kubelet
     description: 'Kubernetes Kubelet'
     jig: ansible-playbook
     icon: "center_focus_weak"
     flags:
       - implicit
     requires:
-      - kubernetes-prereqs
+      - k8ubernetes-prereqs
+      - k8ubernetes-etcd
     metadata:
       playbook_file: kubelet.yml
     wants-attribs:
@@ -79,14 +75,14 @@ roles:
       - use-proxy
       - proxy-servers
 
-  - name: kubernetes-apiserver
+  - name: k8ubernetes-apiserver
     description: 'Kubernetes API Server'
     jig: ansible-playbook
     icon: "photo_filter"
     flags:
       - implicit
     requires:
-      - kubernetes-prereqs
+      - k8ubernetes-kubelet
     metadata:
       playbook_file: apiserver.yml
     wants-attribs:
@@ -94,15 +90,14 @@ roles:
       - use-proxy
       - proxy-servers
 
-  - name: kubernetes-scheduler
+  - name: k8ubernetes-scheduler
     description: 'Kubernetes Scheduler'
     jig: ansible-playbook
     icon: "portrait"
     flags:
       - implicit
     requires:
-      - kubernetes-prereqs
-      - kubernetes-apiserver
+      - k8ubernetes-kubelet
     metadata:
       playbook_file: scheduler.yml
     wants-attribs:
@@ -110,699 +105,18 @@ roles:
       - use-proxy
       - proxy-servers
 
-  - name: kubernetes-worker
+  - name: k8ubernetes-worker
     icon: "transform"
     description: 'Kubernetes Worker'
     jig: ansible-playbook
     flags:
       - implicit
     requires:
-      - kubernetes-prereqs
-      - kubernetes-apiserver
-      - kubernetes-worker
+      - k8ubernetes-kubelet
+      - k8ubernetes-apiserver
     metadata:
       playbook_file: worker.yml
     wants-attribs:
       - nics
       - use-proxy
       - proxy-servers
-
-      
-  - name: kubernetes-deploy
-    description: 'Kubernetes Deploy'
-    jig: ansible-playbook
-    flags:
-      - milestone
-    requires:
-      - rebar-installed-node
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-    metadata:
-      playbook_scope: deployment
-      playbook_src_paths:
-        sk: https://github.com/rackn/kubernetes-kargo.git
-        oc: https://github.com/rackn/container-networking-ansible.git
-      playbook_src_setup:
-        - cp -r oc/filter* sk
-        - cp -r oc/roles/* sk/roles
-        - rm -f sk/ansible.cfg
-      playbook_path: sk
-      playbook_file: cluster-opencontrail.yml
-      role_role_map:
-      role_group_map:
-        kubernetes-etcd:
-          - etcd
-        kubernetes-master:
-          - kube-master
-          - k8s-cluster
-          - masters
-        kubernetes-node:
-          - kube-node
-          - k8s-cluster
-          - nodes
-        kubernetes-gateway:
-          - gateways
-          - k8s-cluster
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: opencontrail_build_http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: opencontrail_http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-      inventory_map:
-       - path: ip
-         name: eval:attrib(node-private-control-address).address
-       - path: opencontrail_ipaddr
-         name: eval:attrib(node-private-control-address).cidr
-#       - path: opencontrail_ipaddr
-#         name: eval:ipaddress(v4_only, kubernetes-network-category).cidr
-       - path: opencontrail_interface
-         name: eval:ipaddress(v4_only, kubernetes-network-category).ifname
-#       - path: access_ip
-#         name: eval:ipaddress(v4_only, kubernetes-network-category).address
-       - path: flannel_interface
-         name: eval:ipaddress(v4_only, kubernetes-network-category).ifname
-    attribs:
-      - name: kubernetes-cert_group
-        description: "The certificate group for security"
-        map: 'kube_cert_group'
-        default: 'kube-cert'
-        schema:
-          type: str
-          required: true
-      - name: kubernetes-bin_dir
-        description: "The local of binary files"
-        map: 'bin_dir'
-        default: '/usr/local/bin'
-        schema:
-          type: str
-          required: true
-      - name: kubernetes-local_release_dir
-        description: "The local of release download directory"
-        map: 'local_release_dir'
-        default: '/tmp/releases'
-        schema:
-          type: str
-          required: true
-      - name: kubernetes-log_level
-        description: "The kubernetes logging level"
-        map: 'kube_log_level'
-        default: 2
-        schema:
-          type: int
-          required: true
-      - name: kubernetes-users
-        description: "The default set of users for kubernetes API"
-        map: 'kube_users'
-        default:
-          kube:
-            pass: changeme
-            role: admin
-        schema:
-          type: map
-          mapping:
-            =:
-              type: map
-              mapping:
-                =:
-                  type: str
-          required: true
-      - name: kubernetes-cluster_name
-        description: "The name of the cluster"
-        map: 'cluster_name'
-        default: 'cluster.local'
-        schema:
-          type: str
-          required: true
-
-      - name: kubernetes-kube_service_addresses
-        description: "The service addresses for the kube service"
-        map: 'kube_service_addresses'
-        default: '10.233.0.0/18'
-        schema:
-          type: str
-          required: true
-
-      - name: kubernetes-cloud-provider
-        description: "Is this kubernetes running in a cloud, if true which?"
-        map: 'cloud_provider'
-        default: 'aws'
-        schema:
-          type: str
-          required: true
-          enum:
-            - "aws"
-            - "gce"
-            - "openstack"
-            - "generic"
-            - "false"
-            - "true"
-
-      - name: kubernetes-cloud-provider-type
-        description: "Which cloud provider is this running in (depricated for cloud-provider)"
-        map: 'cloud_provider_type'
-        default: 'aws'
-        schema:
-          type: str
-
-      - name: kubernetes-network-category
-        description: "The network category to use for contrail traffic"
-        map: 'kubernetes_network_category'
-        default: 'admin'
-        schema:
-          type: str
-
-      - name: kubernetes-networking
-        description: "The method of networking for the cluster"
-        map: 'kube_network_plugin'
-        default: 'flannel'
-        schema:
-          type: str
-          required: true
-          enum:
-            - flannel
-            - calico
-            - opencontrail
-
-      - name: kubernetes-pods_subnet
-        description: "Subnet pods should use for calico and flannel"
-        map: 'kube_pods_subnet'
-        default: '10.233.64.0/18'
-        schema:
-          type: str
-          required: true
-
-      - name: kubernetes-network_prefix
-        description: "The network prefix for the whole network"
-        map: 'kube_network_prefix'
-        default: 18
-        schema:
-          type: int
-          required: true
-
-      - name: kubernetes-network_node_prefix
-        description: "The network prefix for the node part of the network"
-        map: 'kube_network_node_prefix'
-        default: 24
-        schema:
-          type: int
-          required: true
-
-      - name: kubernetes-peer_with_router
-        description: "Should calico use bgp route distribution"
-        map: 'peer_with_router'
-        default: false
-        schema:
-          type: bool
-          required: true
- 
-      - name: kubernetes-opencontrail-cluster-type
-        description: "The type of opencontrail cluster to use: Do not change"
-        map: 'opencontrail_cluster_type'
-        default: 'kubernetes'
-        schema:
-          type: str
-          required: true
-      - name: kubernetes-opencontrail-kube-release
-        description: "The release of opencontrail kube tools to use"
-        map: 'opencontrail_kube_release'
-        default: '1.1'
-        schema:
-          type: str
-          required: true
-      - name: kubernetes-opencontrail_public_subnet
-        description: "The external network for opencontrail to use"
-        map: 'opencontrail_public_subnet'
-        default: '10.1.4.0/24'
-        schema:
-          type: str
-          required: true
-      - name: kubernetes-opencontrail_private_subnet
-        description: "The internal network for opencontrail to use"
-        map: 'opencontrail_private_subnet'
-        default: ''
-        schema:
-          type: str
-      - name: kubernetes-opencontrail_no_arp
-        description: "True implies that the opencontrail should use the default gw for communication"
-        map: 'opencontrail_no_arp'
-        default: false
-        schema:
-          type: bool
-
-      - name: kubernetes-apiserver_ip
-        description: "Default IP of apiserver"
-        map: 'kube_apiserver_ip'
-        default: "{{ kube_service_addresses|ipaddr('net')|ipaddr(1)|ipaddr('address') }}"
-        schema:
-          type: str
-          required: true
-
-      - name: kubernetes-apiservier_port
-        description: "The secure port for the API server"
-        map: 'kube_apiserver_port'
-        default: 443
-        schema:
-          type: int
-          required: true
-
-      - name: kubernetes-apiservier_insecure_port
-        description: "The insecure port for the API server"
-        map: 'kube_apiserver_insecure_port'
-        default: 8080
-        schema:
-          type: int
-          required: true
-
-      - name: kubernetes-upstream_dns_servers
-        description: "The set of upstream DNS servers"
-        map: 'upstream_dns_servers'
-        default:
-          - 8.8.8.8
-          - 4.4.8.8
-        schema:
-          type: seq
-          sequence:
-            - type: str
-              pattern: /[0-9a-f:.]*/
-      - name: kubernetes-dns_setup
-        description: "The dns internal server toggle to turn off (false)"
-        map: 'dns_setup'
-        default: true
-        schema:
-          type: bool
-      - name: kubernetes-dns_replicas
-        description: "The number of replicas to use in the cluster"
-        map: 'dns_replicas'
-        default: 1
-        schema:
-          type: int
-      - name: kubernetes-dns_domain
-        description: "The default dns domain name"
-        map: 'dns_domain'
-        default: "{{ cluster_name }}"
-        schema:
-          type: str
-      - name: kubernetes-dns_server
-        description: "The default IP of the internal dns server"
-        map: 'dns_server'
-        default: "{{ kube_service_addresses|ipaddr('net')|ipaddr(2)|ipaddr('address') }}"
-        schema:
-          type: str
-      - name: kubernetes-skydns_server
-        description: "The default IP of the internal dns container service"
-        map: 'skydns_server'
-        default: "{{ kube_service_addresses|ipaddr('net')|ipaddr(3)|ipaddr('address') }}"
-        schema:
-          type: str
-      - name: kubernetes-dns_namespace
-        description: "The namespace of the dns service"
-        map: 'kubedns_namespace'
-        default: "kube-system"
-        schema:
-          type: str
-
-      - name: etcd-peer-port
-        default: 2380
-        description: Port that etcd uses to talk amongst peers
-        map: 'etcd_peer_port'
-        schema:
-          type: int
-      - name: etcd-client-port
-        default: 2379
-        description: Port that etcd uses to talk to clients
-        map: 'etcd_client_port'
-        schema:
-          type: int
-
-  - name: kubernetes-dns
-    jig: ansible-playbook
-    requires:
-      - kubernetes-deploy
-    flags:
-      - milestone
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-dns_domain
-      - kubernetes-dns_server
-      - kubernetes-skydns_server
-      - kubernetes-dns_namespace
-      - kubernetes-cluster_name
-      - kubernetes-kube_service_addresses
-    metadata:
-      playbook_src_paths:
-        k8s-common: https://gitlab.com/kubespray-ansibl8s/k8s-common.git
-        k8s-kubedns: https://gitlab.com/kubespray-ansibl8s/k8s-kubedns.git
-      playbook_src_setup:
-        - mkdir -p sk/roles/apps
-        - ln -fs ../../../k8s-common sk/roles/apps/k8s-common
-        - ln -fs ../../../k8s-kubedns sk/roles/apps/k8s-kubedns
-      playbook_path: sk
-      playbook_file: .
-      role_role_map:
-        kubernetes-dns:
-          - apps/k8s-kubedns
-      role_group_map:
-        kubernetes-dns:
-          - kube-master
-        kubernetes-master:
-          - kube-master
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-ui
-    jig: ansible-playbook
-    requires:
-      - kubernetes-deploy
-    flags:
-      - milestone
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-cluster_name
-      - kubernetes-kube_service_addresses
-    metadata:
-      playbook_src_paths:
-        k8s-common: https://gitlab.com/kubespray-ansibl8s/k8s-common.git
-        k8s-kube-ui: https://gitlab.com/kubespray-ansibl8s/k8s-kube-ui.git
-      playbook_src_setup:
-        - mkdir -p sk/roles/apps
-        - ln -fs ../../../k8s-common sk/roles/apps/k8s-common
-        - ln -fs ../../../k8s-kube-ui sk/roles/apps/k8s-kube-ui
-      playbook_path: sk
-      playbook_file: .
-      role_role_map:
-        kubernetes-ui:
-          - apps/k8s-kube-ui
-      role_group_map:
-        kubernetes-ui:
-          - kube-master
-        kubernetes-master:
-          - kube-master
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-dashboard
-    jig: ansible-playbook
-    requires:
-      - kubernetes-deploy
-    flags:
-      - milestone
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-cluster_name
-      - kubernetes-kube_service_addresses
-    metadata:
-      playbook_src_paths:
-        k8s-common: https://gitlab.com/kubespray-ansibl8s/k8s-common.git
-        k8s-dashboard: https://gitlab.com/galthaus/k8s-dashboard.git
-      playbook_src_setup:
-        - mkdir -p sk/roles/apps
-        - ln -fs ../../../k8s-common sk/roles/apps/k8s-common
-        - ln -fs ../../../k8s-dashboard sk/roles/apps/k8s-dashboard
-      playbook_path: sk
-      playbook_file: .
-      role_role_map:
-        kubernetes-dashboard:
-          - apps/k8s-dashboard
-      role_group_map:
-        kubernetes-dashboard:
-          - kube-master
-        kubernetes-master:
-          - kube-master
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-dash
-    jig: ansible-playbook
-    requires:
-      - kubernetes-deploy
-    flags:
-      - milestone
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-cluster_name
-      - kubernetes-kube_service_addresses
-    metadata:
-      playbook_src_paths:
-        k8s-common: https://gitlab.com/kubespray-ansibl8s/k8s-common.git
-        k8s-kubedash: https://gitlab.com/kubespray-ansibl8s/k8s-kubedash.git
-      playbook_src_setup:
-        - mkdir -p sk/roles/apps
-        - ln -fs ../../../k8s-common sk/roles/apps/k8s-common
-        - ln -fs ../../../k8s-kubedash sk/roles/apps/k8s-kubedash
-      playbook_path: sk
-      playbook_file: .
-      role_role_map:
-        kubernetes-dash:
-          - apps/k8s-kubedash
-      role_group_map:
-        kubernetes-dash:
-          - kube-master
-        kubernetes-master:
-          - kube-master
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-monitoring
-    jig: ansible-playbook
-    requires:
-      - kubernetes-deploy
-    flags:
-      - milestone
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-cluster_name
-      - kubernetes-kube_service_addresses
-    metadata:
-      playbook_src_paths:
-        k8s-common: https://gitlab.com/kubespray-ansibl8s/k8s-common.git
-        k8s-influxdb: https://gitlab.com/kubespray-ansibl8s/k8s-influxdb.git
-        k8s-heapster: https://gitlab.com/kubespray-ansibl8s/k8s-heapster.git
-      playbook_src_setup:
-        - mkdir -p sk/roles/apps
-        - ln -fs ../../../k8s-common sk/roles/apps/k8s-common
-        - ln -fs ../../../k8s-influxdb sk/roles/apps/k8s-influxdb
-        - ln -fs ../../../k8s-heapster sk/roles/apps/k8s-heapster
-      playbook_path: sk
-      playbook_file: .
-      role_role_map:
-        kubernetes-monitoring:
-          - apps/k8s-influxdb
-          - apps/k8s-heapster
-      role_group_map:
-        kubernetes-monitoring:
-          - kube-master
-        kubernetes-master:
-          - kube-master
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-logging
-    jig: ansible-playbook
-    requires:
-      - kubernetes-deploy
-    flags:
-      - milestone
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-cluster_name
-      - kubernetes-kube_service_addresses
-    metadata:
-      playbook_src_paths:
-        k8s-common: https://gitlab.com/kubespray-ansibl8s/k8s-common.git
-        k8s-kube-logstash: https://gitlab.com/kubespray-ansibl8s/k8s-kube-logstash.git
-      playbook_src_setup:
-        - mkdir -p sk/roles/apps
-        - ln -fs ../../../k8s-common sk/roles/apps/k8s-common
-        - ln -fs ../../../k8s-kube-logstash sk/roles/apps/k8s-kube-logstash
-      playbook_path: sk
-      playbook_file: .
-      role_role_map:
-        kubernetes-logging:
-          - apps/k8s-kube-logstash
-      role_group_map:
-        kubernetes-logging:
-          - kube-master
-        kubernetes-master:
-          - kube-master
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-fabric8
-    jig: ansible-playbook
-    requires:
-      - kubernetes-deploy
-    flags:
-      - milestone
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-cluster_name
-      - kubernetes-kube_service_addresses
-    metadata:
-      playbook_src_paths:
-        k8s-common: https://gitlab.com/kubespray-ansibl8s/k8s-common.git
-        k8s-fabric8: https://gitlab.com/kubespray-ansibl8s/k8s-fabric8.git
-      playbook_src_setup:
-        - mkdir -p sk/roles/apps
-        - ln -fs ../../../k8s-common sk/roles/apps/k8s-common
-        - ln -fs ../../../k8s-fabric8 sk/roles/apps/k8s-fabric8
-      playbook_path: sk
-      playbook_file: .
-      role_role_map:
-        kubernetes-fabric8:
-          - apps/k8s-fabric8
-      role_group_map:
-        kubernetes-fabric8:
-          - kube-master
-        kubernetes-master:
-          - kube-master
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-test
-    description: 'Kubernetes Test'
-    jig: ansible-playbook
-    flags:
-      - milestone
-    requires:
-      - rebar-installed-node
-      - kubernetes-dns
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-      - kubernetes-networking
-    metadata:
-      playbook_scope: deployment
-      playbook_src_paths:
-        oc: https://github.com/rackn/container-networking-ansible.git
-      playbook_src_setup:
-        - mkdir -p sk
-        - cp oc/test/common/validate.yml sk
-      playbook_path: sk
-      playbook_file: validate.yml
-      role_role_map:
-      role_group_map:
-        kubernetes-etcd:
-          - etcd
-        kubernetes-master:
-          - kube-master
-          - k8s-cluster
-          - masters
-        kubernetes-node:
-          - kube-node
-          - k8s-cluster
-          - nodes
-        kubernetes-gateway:
-          - k8s-cluster
-          - gateways
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
-  - name: kubernetes-guestbook
-    description: 'Kubernetes Guestbook'
-    jig: ansible-playbook
-    flags:
-      - milestone
-    requires:
-      - rebar-installed-node
-      - kubernetes-dns
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-    metadata:
-      playbook_scope: deployment
-      playbook_src_paths:
-        oc: https://github.com/rackn/container-networking-ansible.git
-      playbook_src_setup:
-        - mkdir -p sk
-        - cp oc/test/common/examples.yml sk
-      playbook_path: sk
-      playbook_file: examples.yml
-      role_role_map:
-      role_group_map:
-        kubernetes-etcd:
-          - etcd
-        kubernetes-master:
-          - kube-master
-          - k8s-cluster
-          - masters
-        kubernetes-node:
-          - kube-node
-          - k8s-cluster
-          - nodes
-        kubernetes-gateway:
-          - gateways
-          - k8s-cluster
-      attribute_map:
-        - path: http_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-        - path: https_proxy
-          name: rebar/proxy/servers[0]/url
-          when: rebar/providers/use_proxy == true
-
