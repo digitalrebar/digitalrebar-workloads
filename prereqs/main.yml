@@ -1,0 +1,88 @@
+--- 
+# APL v2 Licensed.  Copyright RackN 2016
+# Original scripts based on code from https://github.com/kubespray/kargo
+
+# NOT INCLUDED preinstall/gitinfos.yml
+
+- name: Gather os specific variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_version|lower|replace('/', '_') }}.yml"
+      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_release }}.yml"
+      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_major_version|lower|replace('/', '_') }}.yml"
+      - "{{ ansible_distribution|lower }}.yml"
+      - "{{ ansible_os_family|lower }}.yml"
+      - defaults.yml
+      paths:
+      - ./prereqs/vars
+
+- name: User | Create User Group
+  group: name={{user.group|default(user.name)}} system={{user.system|default(omit)}}
+
+- name: User | Create User
+  user:
+    comment: "{{user.comment|default(omit)}}"
+    createhome: "{{user.create_home|default(omit)}}"
+    group: "{{user.group|default(user.name)}}"
+    home: "{{user.home|default(omit)}}"
+    shell: "{{user.shell|default(omit)}}"
+    name: "{{user.name}}"
+    system: "{{user.system|default(omit)}}"
+
+- name: Create kubernetes directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user.name }}"
+  with_items:
+    - "{{ kube_config_dir }}"
+    - "{{ kube_script_dir }}"
+    - "{{ kube_manifest_dir }}"
+    - "/etc/cni/net.d"
+    - "/opt/cni/bin"
+
+- name: Create kubernetes logs directory
+  file:
+    path: "{{ kube_log_dir }}"
+    state: directory
+    owner: "{{ user.name }}"
+  when: ansible_service_mgr in ["sysvinit","upstart"]
+
+- name: Update package management cache (YUM)
+  yum: update_cache=yes name='*'
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Install latest version of python-apt for Debian distribs
+  apt: name=python-apt state=latest update_cache=yes cache_valid_time=3600
+  when: ansible_os_family == "Debian"
+
+- name: Install python-dnf for latest RedHat versions
+  command: dnf install -y python-dnf yum
+  when: ansible_distribution == "Fedora" and
+        ansible_distribution_major_version > 21
+  changed_when: False
+
+- name: Install epel-release on RedHat/CentOS
+  shell: rpm -qa | grep epel-release || rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  when: ansible_distribution in ["CentOS","RedHat"] and
+        ansible_distribution_major_version >= 7
+  changed_when: False
+
+- debug: var=required_pkgs
+
+- name: Install packages requirements
+  action:
+    module: "{{ ansible_pkg_mgr }}"
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{required_pkgs | default([]) | union(common_required_pkgs|default([]))}}"
+  when: ansible_os_family != "CoreOS"
+
+# Todo : selinux configuration
+- name: Set selinux policy to permissive
+  selinux: policy=targeted state=permissive
+  when: ansible_os_family == "RedHat"
+  changed_when: False
+
+# NOT INCLUDED: preinstall/etchosts.yml tasks

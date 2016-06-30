@@ -1,4 +1,6 @@
 --- 
 - name: Kubernetes API Server Install by RackN 2016
+  hosts: all
   tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
     - include: apiserver/main.yml

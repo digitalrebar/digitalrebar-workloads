@@ -18,8 +18,8 @@ wizard:
   create_nodes: true
   os: true
   services:
-    k8ubernetes-master: odd
-    k8ubernetes-node: all
+    k8s-master: odd
+    k8s-node: all
   create_size:
     default: "16 GB"
     AwsProvider: "m4.large"
@@ -29,98 +29,120 @@ wizard:
     k8ubernetes-node: 3
 
 metadata:
-  playbook_scope: deployment
+  playbook_scope: node
   playbook_src_paths:
-    k8: https://github.com/rackn/kompos8.git
+    k8: https://github.com/digitalrebar/kompos8.git
   playbook_path: k8
 
 roles:
-  - name: k8ubernetes-master
+  - name: k8s-master
     description: 'Kubernetes Master'
     icon: "grid_on"
     jig: noop
     flags:
       - milestone
     requires:
-      - k8ubernetes-apiserver
+      - k8s-apiserver
 
-  - name: k8ubernetes-node
+  - name: k8s-node
     description: 'Kubernetes Node'
     jig: noop
     icon: "center_focus_strong"
     flags:
       - milestone
     requires:
-      - k8ubernetes-worker
+      - k8s-worker
 
-  - name: k8ubernetes-prereqs
+  - name: etcd
+    description: "etdc clustered from retr0h"
+    jig: ansible-playbook
+    requires:
+      - rebar-installed-node
+    flags:
+      - implicit
+    metadata:
+      playbook_src_paths:
+        etcd: "galaxy:retr0h.etcd"
+      playbook_path: "."
+      playbook_file: "."
+      role_role_map:
+        etcd:
+          - retr0h.etcd
+
+  - name: k8s-prereqs
     description: 'Kubernetes Setup'
     jig: ansible-playbook
     icon: "crop_free"
     flags:
       - implicit
     requires:
-      - rebar-installed-node
+      - docker-prep
     metadata:
       playbook_file: prereqs.yml
+      playbook_combined_repo: true
 
-  - name: k8ubernetes-kubelet
+  - name: k8s-kubelet
     description: 'Kubernetes Kubelet'
     jig: ansible-playbook
     icon: "center_focus_weak"
     flags:
       - implicit
     requires:
-      - k8ubernetes-prereqs
-      - k8ubernetes-etcd
+      - k8s-prereqs
+      - etcd
     metadata:
       playbook_file: kubelet.yml
+      playbook_combined_repo: true
+
     wants-attribs:
       - nics
       - use-proxy
       - proxy-servers
 
-  - name: k8ubernetes-apiserver
+  - name: k8s-apiserver
     description: 'Kubernetes API Server'
     jig: ansible-playbook
     icon: "photo_filter"
     flags:
       - implicit
     requires:
-      - k8ubernetes-kubelet
+      - k8s-kubelet
     metadata:
       playbook_file: apiserver.yml
+      playbook_combined_repo: true
     wants-attribs:
       - nics
       - use-proxy
       - proxy-servers
 
-  - name: k8ubernetes-scheduler
+  - name: k8s-scheduler
     description: 'Kubernetes Scheduler'
     jig: ansible-playbook
     icon: "portrait"
     flags:
       - implicit
     requires:
-      - k8ubernetes-kubelet
+      - k8s-kubelet
     metadata:
       playbook_file: scheduler.yml
+      playbook_combined_repo: true
     wants-attribs:
       - nics
       - use-proxy
       - proxy-servers
 
-  - name: k8ubernetes-worker
+  - name: k8s-worker
     icon: "transform"
     description: 'Kubernetes Worker'
     jig: ansible-playbook
     flags:
       - implicit
     requires:
-      - k8ubernetes-kubelet
-      - k8ubernetes-apiserver
+      - k8s-kubelet
+      - k8s-apiserver
     metadata:
       playbook_file: worker.yml
+      playbook_combined_repo: true
     wants-attribs:
       - nics
       - use-proxy
