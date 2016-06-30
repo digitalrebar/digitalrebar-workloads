@@ -3,3 +3,4 @@ required_pkgs:
   - aufs-tools
   - apt-transport-https
   - software-properties-common
+  - rsync
