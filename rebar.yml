@@ -51,7 +51,7 @@ roles:
     flags:
       - milestone
     requires:
-      - k8s-worker
+      - k8s-kubelet
 
   - name: etcd
     description: "etdc clustered from retr0h"
@@ -94,10 +94,20 @@ roles:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
 
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
+  - name: k8s-calico
+    description: 'Kubernetes Calico SDN'
+    jig: ansible-playbook
+    icon: "pets"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      - etcd
+    proceeds:
+      - k8s-kubelet
+    metadata:
+      playbook_file: calico.yml
+      playbook_combined_repo: true
 
   - name: k8s-apiserver
     description: 'Kubernetes API Server'
