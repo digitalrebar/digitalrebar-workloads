@@ -2,6 +2,8 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
+# NOT INCLUDED preinstall/gitinfos.yml
+
 - name: Gather os specific variables
   include_vars: "{{ item }}"
   with_first_found:
@@ -77,3 +79,10 @@
   with_items: "{{required_pkgs | default([]) | union(common_required_pkgs|default([]))}}"
   when: ansible_os_family != "CoreOS"
 
+# Todo : selinux configuration
+- name: Set selinux policy to permissive
+  selinux: policy=targeted state=permissive
+  when: ansible_os_family == "RedHat"
+  changed_when: False
+
+# NOT INCLUDED: preinstall/etchosts.yml tasks

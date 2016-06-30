@@ -27,7 +27,7 @@ wizard:
     k8ubernetes-node: 3
 
 metadata:
-  playbook_scope: deployment
+  playbook_scope: node
   playbook_src_paths:
     k8: https://github.com/digitalrebar/kompos8.git
   playbook_path: k8
