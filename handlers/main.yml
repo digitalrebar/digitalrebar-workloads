@@ -1,15 +1,23 @@
 ---
+- name: reload systemd
+  command: systemctl daemon-reload
+  when: ansible_service_mgr == "systemd"
+
 - name: restart kubelet
   command: /bin/true
   notify:
     - reload systemd
     - reload kubelet
 
-- name: reload systemd
-  command: systemctl daemon-reload
-  when: ansible_service_mgr == "systemd"
-
 - name: reload kubelet
   service:
     name: kubelet
     state: restarted
+
+- name: restart kube-apiserver
+  set_fact:
+    restart_apimaster: True
+
+- name: set secret_changed
+  set_fact:
+    secret_changed: true
