@@ -2,40 +2,35 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
+- name: Download kubernetes-kubelet
+  get_url:
+    url: "{{ kube_download_url }}/kubelet"
+    dest: "{{ kube_bin_dir }}/kubelet"
+    sha256sum: "{{vars['kube_checksum'][kube_version]['kubelet']}}"
+    owner: "{{ user.name }}"
+    mode: "0755"
+
 - name: install | Write kubelet systemd init file
-  template: src=kubelet.service.j2 dest=/etc/systemd/system/kubelet.service backup=yes
+  template: src=kubelet/templates/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service backup=yes
   when: ansible_service_mgr == "systemd"
   notify: restart kubelet
 
 - name: install | Write kubelet initd script
-  template: src=deb-kubelet.initd.j2 dest=/etc/init.d/kubelet owner=root mode=0755 backup=yes
+  template: src=kubelet/templates/deb-kubelet.initd.j2 dest=/etc/init.d/kubelet owner=root mode=0755 backup=yes
   when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
   notify: restart kubelet
 
-- name: install | Write kubelet initd script
-  template: src=rh-kubelet.initd.j2 dest=/etc/init.d/kubelet owner=root mode=0755 backup=yes
-  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "RedHat"
+- name: Write kubelet config file
+  template: src=kubelet/templates/kubelet.j2 dest={{ kube_config_dir }}/kubelet.env backup=yes
   notify: restart kubelet
 
-# TODO this should use ansible copy, not rsync
-- name: install | Install kubelet binary
-  command: rsync -piu "{{ local_release_dir }}/kubernetes/bin/kubelet" "{{ bin_dir }}/kubelet"
-  register: kubelet_copy
-  changed_when: false
-
-- name: Write kubelet config file
-  template: src=kubelet.j2 dest={{ kube_config_dir }}/kubelet.env backup=yes
-  notify:
-    - restart kubelet
-
 - name: write the kubecfg (auth) file for kubelet
-  template: src=node-kubeconfig.yaml.j2 dest={{ kube_config_dir }}/node-kubeconfig.yaml backup=yes
-  notify:
-    - restart kubelet
+  template: src=kubelet/templates/node-kubeconfig.yaml.j2 dest={{ kube_config_dir }}/node-kubeconfig.yaml backup=yes
+  notify: restart kubelet
 
 - name: Write proxy manifest
   template:
-    src: manifests/kube-proxy.manifest.j2
+    src: kubelet/templates/manifests/kube-proxy.manifest.j2
     dest: "{{ kube_manifest_dir }}/kube-proxy.manifest"
 
 - name: Restart kubelet if binary changed

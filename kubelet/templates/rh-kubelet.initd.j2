@@ -22,7 +22,7 @@
 . /etc/rc.d/init.d/functions
 
 prog="kubelet"
-exec="{{ bin_dir }}/$prog"
+exec="{{ kube_bin_dir }}/$prog"
 pidfile="/var/run/$prog.pid"
 lockfile="/var/lock/subsys/$prog"
 logfile="/var/log/$prog"
