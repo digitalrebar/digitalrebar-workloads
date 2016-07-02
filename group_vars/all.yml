@@ -11,12 +11,8 @@ user:
   group: "{{ kube_cert_group }}"
   createhome: no
 
-# Directory where the binaries will be installed
-bin_dir: /usr/local/bin
-
-# Where the binaries will be downloaded.
-# Note: ensure that you've enough disk space (about 1G)
-local_release_dir: "/tmp/releases"
+# Version of Kubernetes to use (see sources.yml)
+kube_version: v1.2.4
 
 # This is the group that the cert creation scripts chgrp the
 # cert files to. Not really changable...
@@ -24,6 +20,14 @@ kube_cert_group: kube-cert
 
 # Cluster Loglevel configuration
 kube_log_level: 2
+
+# Directory where the binaries will be installed
+bin_dir: /usr/local/bin
+kube_bin_dir: /kubernetes/bin
+
+# Where the binaries will be downloaded.
+# Note: ensure that you've enough disk space (about 1G)
+local_release_dir: "/tmp/releases"
 
 # This directory is where all the additional scripts go
 # that Kubernetes normally puts in /srv/kubernetes.

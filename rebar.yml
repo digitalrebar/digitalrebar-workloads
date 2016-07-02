@@ -51,7 +51,7 @@ roles:
     flags:
       - milestone
     requires:
-      - k8s-worker
+      - k8s-kubelet
 
   - name: etcd
     description: "etdc clustered from retr0h"
@@ -89,15 +89,23 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
-      - etcd
     metadata:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
 
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
+  - name: k8s-calico
+    description: 'Kubernetes Calico SDN'
+    jig: ansible-playbook
+    icon: "pets"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+    proceeds:
+      - k8s-kubelet
+    metadata:
+      playbook_file: calico.yml
+      playbook_combined_repo: true
 
   - name: k8s-apiserver
     description: 'Kubernetes API Server'
@@ -106,14 +114,22 @@ roles:
     flags:
       - implicit
     requires:
-      - k8s-kubelet
+      - k8s-kubectl
     metadata:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
+
+  - name: k8s-kubectl
+    description: 'Kubernetes Control (kubectl) Server'
+    jig: ansible-playbook
+    icon: "traffic"
+    flags:
+      - implicit
+    requires:
+      - k8s-kubelet
+    metadata:
+      playbook_file: kubectl.yml
+      playbook_combined_repo: true
 
   - name: k8s-scheduler
     description: 'Kubernetes Scheduler'

@@ -1,0 +1,28 @@
+--- 
+# APL v2 Licensed.  Copyright RackN 2016
+# Original scripts based on code from https://github.com/kubespray/kargo
+
+- name: kubernetes-kubectl
+  dest: kubernetes/bin/kubectl
+  version: "{{kube_version}}"
+  sha256: "{{vars['kube_checksum'][kube_version]['kubectl']}}"
+  source_url: "{{ kube_download_url }}/kubectl"
+  url: "{{ kube_download_url }}/kubectl"
+  owner: "kube"
+  mode: "0755"
+
+- name: Copy kubectl bash completion
+  copy:
+    src: kubectl_bash_completion.sh
+    dest: /etc/bash_completion.d/kubectl.sh
+  when: ansible_os_family in ["Debian","RedHat"]
+
+- name: Copy kubectl binary
+  command: rsync -piu "{{ local_release_dir }}/kubernetes/bin/kubectl" "{{ bin_dir }}/kubectl"
+  changed_when: false
+
+- name: restart kubelet
+  service:
+    name: kubelet
+    state: restarted
+  changed_when: false

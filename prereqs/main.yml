@@ -39,6 +39,7 @@
     - "{{ kube_config_dir }}"
     - "{{ kube_script_dir }}"
     - "{{ kube_manifest_dir }}"
+    - "{{ kube_bin_dir }}"
     - "/etc/cni/net.d"
     - "/opt/cni/bin"
 
@@ -71,7 +72,7 @@
 
 - debug: var=required_pkgs
 
-- name: Install packages requirements
+- name: Install packages requirements [SLOW]
   action:
     module: "{{ ansible_pkg_mgr }}"
     name: "{{ item }}"

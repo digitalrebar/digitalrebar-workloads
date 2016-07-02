@@ -3,4 +3,6 @@
   hosts: all
   tasks:
     - debug: msg="Playbook source {{ playbook_source }} "
+    # SHA references
+    - include_vars: group_vars/sources.yml
     - include: apiserver/main.yml
