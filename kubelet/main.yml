@@ -20,6 +20,9 @@
   when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
   notify: restart kubelet
 
+- debug: var=kube_config_dir
+- debug: var=kube_log_dir
+
 - name: Write kubelet config file
   template: src=kubelet/templates/kubelet.j2 dest={{ kube_config_dir }}/kubelet.env backup=yes
   notify: restart kubelet

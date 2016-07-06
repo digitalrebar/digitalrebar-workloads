@@ -38,11 +38,33 @@ roles:
   - name: k8s-master
     description: 'Kubernetes Master'
     icon: "grid_on"
+    type: "BarclampRebar::ServiceRole"
     jig: noop
     flags:
       - milestone
+    events:
+      - endpoint: inproc://role:k8s-master/on_active
+        selectors:
+          - event: on_active
+            obj_class: role
+            obj_id: k8s-master
+          - event: synch_on_delete
+            obj_class: role
+            obj_id: k8s-master
     requires:
       - k8s-apiserver
+      - k8s-scheduler
+    attribs:
+      - name: k8s-master-addresses
+        description: "The addresses of the Master nodes"
+        map: 'k8s/master/addresses'
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
+              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
 
   - name: k8s-node
     description: 'Kubernetes Node'
@@ -53,9 +75,10 @@ roles:
     requires:
       - k8s-kubelet
 
-  - name: etcd
-    description: "etdc clustered from retr0h"
+  - name: etcd-node
+    description: "etcd clustered from retr0h"
     jig: ansible-playbook
+    icon: "local_grocery_store"
     requires:
       - rebar-installed-node
     flags:
@@ -66,8 +89,17 @@ roles:
       playbook_path: "."
       playbook_file: "."
       role_role_map:
-        etcd:
+        etcd-node:
           - retr0h.etcd
+
+  - name: etcd
+    descript  ion: "etdc cluster service"
+    jig: noop
+    icon: "store"
+    requires:
+      - etcd-node
+    flags:
+      - milestone
 
   - name: k8s-prereqs
     description: 'Kubernetes Setup'
@@ -76,10 +108,13 @@ roles:
     flags:
       - implicit
     requires:
-      - docker-prep
+      #- docker-prep
+      - k8s-certs
     metadata:
       playbook_file: prereqs.yml
       playbook_combined_repo: true
+
+# node roles (requires master) 
 
   - name: k8s-kubelet
     description: 'Kubernetes Kubelet'
@@ -89,9 +124,65 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
+      - k8s-apiserver
+    wants-attribs:
+      - k8s-master-addresses
     metadata:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
+
+# master roles
+
+  - name: k8s-certs
+    description: "Kubernetes Security Certifcates"
+    jig: ansible-playbook
+    icon: account_balance
+    flags:
+      - implicit
+      - destructive
+    metadata:
+      playbook_file: certs.yml
+      playbook_combined_repo: true
+
+  - name: k8s-kubectl
+    description: 'Kubernetes Control (kubectl) Server'
+    jig: ansible-playbook
+    icon: "traffic"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      #- etcd
+    metadata:
+      playbook_file: kubectl.yml
+      playbook_combined_repo: true
+
+  - name: k8s-apiserver
+    description: 'Kubernetes API Server'
+    jig: ansible-playbook
+    icon: "photo_filter"
+    flags:
+      - cluster
+      - implicit
+    requires:
+      - k8s-kubectl
+    metadata:
+      playbook_file: apiserver.yml
+      playbook_combined_repo: true
+
+  - name: k8s-scheduler
+    description: 'Kubernetes Scheduler'
+    jig: ansible-playbook
+    icon: "portrait"
+    flags:
+      - implicit
+    requires:
+      - k8s-apiserver
+    metadata:
+      playbook_file: scheduler.yml
+      playbook_combined_repo: true
+
+# networking providers
 
   - name: k8s-calico
     description: 'Kubernetes Calico SDN'
@@ -106,60 +197,3 @@ roles:
     metadata:
       playbook_file: calico.yml
       playbook_combined_repo: true
-
-  - name: k8s-apiserver
-    description: 'Kubernetes API Server'
-    jig: ansible-playbook
-    icon: "photo_filter"
-    flags:
-      - implicit
-    requires:
-      - k8s-kubectl
-    metadata:
-      playbook_file: apiserver.yml
-      playbook_combined_repo: true
-
-  - name: k8s-kubectl
-    description: 'Kubernetes Control (kubectl) Server'
-    jig: ansible-playbook
-    icon: "traffic"
-    flags:
-      - implicit
-    requires:
-      - k8s-kubelet
-    metadata:
-      playbook_file: kubectl.yml
-      playbook_combined_repo: true
-
-  - name: k8s-scheduler
-    description: 'Kubernetes Scheduler'
-    jig: ansible-playbook
-    icon: "portrait"
-    flags:
-      - implicit
-    requires:
-      - k8s-kubelet
-    metadata:
-      playbook_file: scheduler.yml
-      playbook_combined_repo: true
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
-
-  - name: k8s-worker
-    icon: "transform"
-    description: 'Kubernetes Worker'
-    jig: ansible-playbook
-    flags:
-      - implicit
-    requires:
-      - k8s-kubelet
-      - k8s-apiserver
-    metadata:
-      playbook_file: worker.yml
-      playbook_combined_repo: true
-    wants-attribs:
-      - nics
-      - use-proxy
-      - proxy-servers
