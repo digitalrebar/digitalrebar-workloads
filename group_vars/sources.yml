@@ -3,7 +3,6 @@
 # locations and hashs of downloads
 
 kube_download_url: "https://storage.googleapis.com/kubernetes-release/release/{{ kube_version }}/bin/linux/amd64"
-
 kube_checksum:
     v1.2.2:
         kube_apiserver: eb1bfd8b877052cbd1991b8c429a1d06661f4cb019905e20e128174f724e16de
@@ -21,3 +20,6 @@ kube_checksum:
         kube_apiserver: fbe8296ad4b194c06f6802a126d35cd2887dc1aded308d4da2b580f270412b33
         kubectl: 5526a496a84701015485e32c86486e2f23599f7a865164f546e619c6a62f7f19
         kubelet: cd15b929f0190876216f397c2c6e7aa8c08d3b047fd90b4980cd68c8f4896211
+
+hyperkube_image_repo: "quay.io/smana/kubernetes-hyperkube"
+hyperkube_image_tag: "v1.2.5"

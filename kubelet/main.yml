@@ -2,6 +2,11 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
+- debug: var=k8s.master.addresses
+- debug: var=provider.type
+- debug: var=inventory_hostname
+- debug: var=cluster_name
+
 - name: Download kubernetes-kubelet
   get_url:
     url: "{{ kube_download_url }}/kubelet"

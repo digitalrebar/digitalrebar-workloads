@@ -55,6 +55,10 @@ roles:
       - k8s-apiserver
       - k8s-scheduler
     attribs:
+      - name: k8s-master-network
+        description: "The network of the Master nodes"
+        map: 'k8s/master/network'
+        default: 'node-control-address'
       - name: k8s-master-addresses
         description: "The addresses of the Master nodes"
         map: 'k8s/master/addresses'
@@ -113,6 +117,14 @@ roles:
     metadata:
       playbook_file: prereqs.yml
       playbook_combined_repo: true
+    attribs:
+      - name: kubernetes-log_level
+        description: "The kubernetes logging level"
+        map: 'kube_log_level'
+        default: 2
+        schema:
+          type: int
+          required: true
 
 # node roles (requires master) 
 
@@ -127,9 +139,12 @@ roles:
       - k8s-apiserver
     wants-attribs:
       - k8s-master-addresses
+      - provider-type
+      - cluster_name
     metadata:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
+
 
 # master roles
 
@@ -143,6 +158,14 @@ roles:
     metadata:
       playbook_file: certs.yml
       playbook_combined_repo: true
+    attribs:
+      - name: kubernetes-cluster_name
+        description: "The name of the cluster"
+        map: 'cluster_name'
+        default: 'cluster.local'
+        schema:
+          type: str
+          required: true
 
   - name: k8s-kubectl
     description: 'Kubernetes Control (kubectl) Server'
@@ -169,6 +192,37 @@ roles:
     metadata:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
+    attribs:
+      - name: kubernetes-users
+        description: "The default set of users for kubernetes API"
+        map: 'kube_users'
+        default:
+          kube:
+            pass: changeme
+            role: admin
+        schema:
+          type: map
+          mapping:
+            =:
+              type: map
+              mapping:
+                =:
+                  type: str
+          required: true
+      - name: kubernetes-apiservier_port
+        description: "The secure port for the API server"
+        map: 'kube_apiserver_port'
+        default: 443
+        schema:
+          type: int
+          required: true
+      - name: kubernetes-apiservier_insecure_port
+        description: "The insecure port for the API server"
+        map: 'kube_apiserver_insecure_port'
+        default: 8080
+        schema:
+          type: int
+          required: true
 
   - name: k8s-scheduler
     description: 'Kubernetes Scheduler'
