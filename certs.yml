@@ -1,0 +1,8 @@
+--- 
+- name: Kubernetes Certificates Install by RackN 2016
+  hosts: all
+
+  tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
+    # primary install
+    # - include: certs/main.yml

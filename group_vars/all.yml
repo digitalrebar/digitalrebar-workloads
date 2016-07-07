@@ -11,6 +11,13 @@ user:
   group: "{{ kube_cert_group }}"
   createhome: no
 
+# System Wide Overrides
+kube_apiserver_port: 8080
+cluster_name: "kompos8"
+dns_setup: false
+dns_server: "8.8.8.8"
+dns_domain: "example.com"
+
 # Version of Kubernetes to use (see sources.yml)
 kube_version: v1.2.4
 

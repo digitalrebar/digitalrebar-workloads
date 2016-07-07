@@ -2,6 +2,11 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
+- debug: var=k8s.master.addresses
+- debug: var=provider.type
+- debug: var=inventory_hostname
+- debug: var=cluster_name
+
 - name: Download kubernetes-kubelet
   get_url:
     url: "{{ kube_download_url }}/kubelet"
@@ -19,6 +24,9 @@
   template: src=kubelet/templates/deb-kubelet.initd.j2 dest=/etc/init.d/kubelet owner=root mode=0755 backup=yes
   when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
   notify: restart kubelet
+
+- debug: var=kube_config_dir
+- debug: var=kube_log_dir
 
 - name: Write kubelet config file
   template: src=kubelet/templates/kubelet.j2 dest={{ kube_config_dir }}/kubelet.env backup=yes

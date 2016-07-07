@@ -1,6 +1,6 @@
 --- 
 - name: Kubernetes Kubelet Install by RackN 2016
-  - include: defaults/main.yml
+
   hosts: all
   handlers:
     - include: handlers/main.yml
@@ -8,4 +8,4 @@
     - debug: msg="Playbook source {{ playbook_source }} "
     # SHA references
     - include_vars: group_vars/sources.yml
-    - include: kubelet/main.yml
+    #- include: kubelet/main.yml
