@@ -167,19 +167,6 @@ roles:
           type: str
           required: true
 
-  - name: k8s-kubectl
-    description: 'Kubernetes Control (kubectl) Server'
-    jig: ansible-playbook
-    icon: "traffic"
-    flags:
-      - implicit
-    requires:
-      - k8s-prereqs
-      #- etcd
-    metadata:
-      playbook_file: kubectl.yml
-      playbook_combined_repo: true
-
   - name: k8s-apiserver
     description: 'Kubernetes API Server'
     jig: ansible-playbook
@@ -224,6 +211,18 @@ roles:
           type: int
           required: true
 
+  - name: k8s-controller
+    description: 'Kubernetes Controller'
+    jig: ansible-playbook
+    icon: "event_seat"
+    flags:
+      - implicit
+    requires:
+      - k8s-apiserver
+    metadata:
+      playbook_file: controller.yml
+      playbook_combined_repo: true
+
   - name: k8s-scheduler
     description: 'Kubernetes Scheduler'
     jig: ansible-playbook
@@ -250,4 +249,18 @@ roles:
       - k8s-kubelet
     metadata:
       playbook_file: calico.yml
+      playbook_combined_repo: true
+
+# client roles
+
+  - name: k8s-kubectl
+    description: 'Kubernetes Control (kubectl) Server'
+    jig: ansible-playbook
+    icon: "traffic"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+    metadata:
+      playbook_file: kubectl.yml
       playbook_combined_repo: true
