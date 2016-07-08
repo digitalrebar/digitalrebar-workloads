@@ -54,6 +54,7 @@ roles:
     requires:
       - k8s-apiserver
       - k8s-scheduler
+      - k8s-controler
     attribs:
       - name: k8s-master-network
         description: "The network of the Master nodes"
@@ -128,6 +129,23 @@ roles:
 
 # node roles (requires master) 
 
+  - name: k8s-proxy
+    description: 'Kubernetes Node Proxy'
+    jig: ansible-playbook
+    icon: "call_missed_outgoing"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      - k8s-apiserver
+    wants-attribs:
+      - k8s-master-addresses
+      - provider-type
+      - cluster_name
+    metadata:
+      playbook_file: proxy.yml
+      playbook_combined_repo: true
+
   - name: k8s-kubelet
     description: 'Kubernetes Kubelet'
     jig: ansible-playbook
@@ -175,7 +193,7 @@ roles:
       - cluster
       - implicit
     requires:
-      - k8s-kubectl
+      #- etcd
     metadata:
       playbook_file: apiserver.yml
       playbook_combined_repo: true

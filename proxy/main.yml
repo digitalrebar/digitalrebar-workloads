@@ -1,0 +1,5 @@
+--- 
+# APL v2 Licensed.  Copyright RackN 2016
+# Original scripts based on code from https://github.com/kubespray/kargo
+
+- debug: var=cluster_name
