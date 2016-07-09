@@ -54,6 +54,7 @@ roles:
     requires:
       - k8s-apiserver
       - k8s-scheduler
+      - k8s-controller
     attribs:
       - name: k8s-master-network
         description: "The network of the Master nodes"
@@ -78,6 +79,8 @@ roles:
       - milestone
     requires:
       - k8s-kubelet
+      - k8s-proxy
+      # - docker
 
   - name: etcd-node
     description: "etcd clustered from retr0h"
@@ -97,13 +100,38 @@ roles:
           - retr0h.etcd
 
   - name: etcd
-    descript  ion: "etdc cluster service"
+    description: "etcd cluster service"
     jig: noop
+    type: "BarclampRebar::ServiceRole"
     icon: "store"
     requires:
       - etcd-node
     flags:
       - milestone
+    events:
+      - endpoint: inproc://role:etcd/on_active
+        selectors:
+          - event: on_active
+            obj_class: role
+            obj_id: etcd
+          - event: synch_on_delete
+            obj_class: role
+            obj_id: etcd
+    attribs:
+      - name: etcd-network
+        description: "The network of the etcd nodes"
+        map: 'etcd/network'
+        default: 'node-control-address'
+      - name: etcd-addresses
+        description: "The addresses of the etcd nodes"
+        map: 'etcd/addresses'
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
+              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
 
   - name: k8s-prereqs
     description: 'Kubernetes Setup'
@@ -118,15 +146,32 @@ roles:
       playbook_file: prereqs.yml
       playbook_combined_repo: true
     attribs:
-      - name: kubernetes-log_level
+      - name: k8s-log_level
         description: "The kubernetes logging level"
-        map: 'kube_log_level'
+        map: 'k8s\log\level'
         default: 2
         schema:
           type: int
           required: true
 
 # node roles (requires master) 
+
+  - name: k8s-proxy
+    description: 'Kubernetes Node Proxy'
+    jig: ansible-playbook
+    icon: "call_missed_outgoing"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      - k8s-apiserver
+    wants-attribs:
+      - k8s-master-addresses
+      - provider-type
+      - k8s-cluster-name
+    metadata:
+      playbook_file: proxy.yml
+      playbook_combined_repo: true
 
   - name: k8s-kubelet
     description: 'Kubernetes Kubelet'
@@ -139,8 +184,9 @@ roles:
       - k8s-apiserver
     wants-attribs:
       - k8s-master-addresses
+      - k8s-apiserver_port
       - provider-type
-      - cluster_name
+      - k8s-cluster-name
     metadata:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
@@ -159,26 +205,13 @@ roles:
       playbook_file: certs.yml
       playbook_combined_repo: true
     attribs:
-      - name: kubernetes-cluster_name
-        description: "The name of the cluster"
-        map: 'cluster_name'
+      - name: k8s-cluster-name
+        description: "The name of the Kubernetes cluster"
+        map: 'k8s/cluster/name'
         default: 'cluster.local'
         schema:
           type: str
           required: true
-
-  - name: k8s-kubectl
-    description: 'Kubernetes Control (kubectl) Server'
-    jig: ansible-playbook
-    icon: "traffic"
-    flags:
-      - implicit
-    requires:
-      - k8s-prereqs
-      #- etcd
-    metadata:
-      playbook_file: kubectl.yml
-      playbook_combined_repo: true
 
   - name: k8s-apiserver
     description: 'Kubernetes API Server'
@@ -188,14 +221,14 @@ roles:
       - cluster
       - implicit
     requires:
-      - k8s-kubectl
+      #- etcd
     metadata:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
     attribs:
-      - name: kubernetes-users
+      - name: k8s-users
         description: "The default set of users for kubernetes API"
-        map: 'kube_users'
+        map: 'k8s\user\name'
         default:
           kube:
             pass: changeme
@@ -209,20 +242,32 @@ roles:
                 =:
                   type: str
           required: true
-      - name: kubernetes-apiservier_port
+      - name: k8s-apiserver_port
         description: "The secure port for the API server"
-        map: 'kube_apiserver_port'
+        map: 'k8s\apiserver\port'
         default: 443
         schema:
           type: int
           required: true
-      - name: kubernetes-apiservier_insecure_port
+      - name: k8s-apiserver_insecure_port
         description: "The insecure port for the API server"
-        map: 'kube_apiserver_insecure_port'
+        map: 'k8s\apiserver\insecure_port'
         default: 8080
         schema:
           type: int
           required: true
+
+  - name: k8s-controller
+    description: 'Kubernetes Controller'
+    jig: ansible-playbook
+    icon: "event_seat"
+    flags:
+      - implicit
+    requires:
+      - k8s-apiserver
+    metadata:
+      playbook_file: controller.yml
+      playbook_combined_repo: true
 
   - name: k8s-scheduler
     description: 'Kubernetes Scheduler'
@@ -250,4 +295,19 @@ roles:
       - k8s-kubelet
     metadata:
       playbook_file: calico.yml
+      playbook_combined_repo: true
+
+# client roles
+
+  - name: k8s-kubectl
+    description: 'Kubernetes Control (kubectl) Server'
+    jig: ansible-playbook
+    icon: "traffic"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      - k8s-master
+    metadata:
+      playbook_file: kubectl.yml
       playbook_combined_repo: true

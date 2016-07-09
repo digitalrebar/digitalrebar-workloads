@@ -1,0 +1,12 @@
+--- 
+- name: Kubernetes Proxy Install by RackN 2016
+
+  hosts: all
+  handlers:
+    - include: handlers/main.yml
+  tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
+    # SHA references
+    - include_vars: group_vars/all.yml
+    - include_vars: group_vars/sources.yml
+    - include: proxy/main.yml
