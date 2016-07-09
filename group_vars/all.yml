@@ -4,7 +4,7 @@
 
 # system user account for install
 user:
-  name: kube
+  name: "{{ k8s.user.name | default('kube') }}"
   comment: "Kubernetes user"
   shell: /sbin/nologin
   system: yes
@@ -12,8 +12,9 @@ user:
   createhome: no
 
 # System Wide Overrides
-kube_apiserver_port: 8080
-cluster_name: "kompos8"
+kube_apiserver_port: "{{ k8s.apiserver.port | default(443) }}"
+cluster_name: "{{ k8s.cluster.name | default('kompos8') }}"
+
 dns_setup: false
 dns_server: "8.8.8.8"
 dns_domain: "example.com"
@@ -26,7 +27,7 @@ kube_version: v1.2.4
 kube_cert_group: kube-cert
 
 # Cluster Loglevel configuration
-kube_log_level: 2
+kube_log_level: "{{ k8s.log.level | default(2) }}"
 
 # Directory where the binaries will be installed
 bin_dir: /usr/local/bin

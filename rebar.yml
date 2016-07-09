@@ -79,6 +79,8 @@ roles:
       - milestone
     requires:
       - k8s-kubelet
+      - k8s-proxy
+      # - docker
 
   - name: etcd-node
     description: "etcd clustered from retr0h"
@@ -144,9 +146,9 @@ roles:
       playbook_file: prereqs.yml
       playbook_combined_repo: true
     attribs:
-      - name: kubernetes-log_level
+      - name: k8s-log_level
         description: "The kubernetes logging level"
-        map: 'kube_log_level'
+        map: 'k8s\log\level'
         default: 2
         schema:
           type: int
@@ -166,7 +168,7 @@ roles:
     wants-attribs:
       - k8s-master-addresses
       - provider-type
-      - cluster_name
+      - k8s-cluster-name
     metadata:
       playbook_file: proxy.yml
       playbook_combined_repo: true
@@ -182,8 +184,9 @@ roles:
       - k8s-apiserver
     wants-attribs:
       - k8s-master-addresses
+      - k8s-apiserver_port
       - provider-type
-      - cluster_name
+      - k8s-cluster-name
     metadata:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
@@ -202,9 +205,9 @@ roles:
       playbook_file: certs.yml
       playbook_combined_repo: true
     attribs:
-      - name: kubernetes-cluster_name
-        description: "The name of the cluster"
-        map: 'cluster_name'
+      - name: k8s-cluster-name
+        description: "The name of the Kubernetes cluster"
+        map: 'k8s/cluster/name'
         default: 'cluster.local'
         schema:
           type: str
@@ -223,9 +226,9 @@ roles:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
     attribs:
-      - name: kubernetes-users
+      - name: k8s-users
         description: "The default set of users for kubernetes API"
-        map: 'kube_users'
+        map: 'k8s\user\name'
         default:
           kube:
             pass: changeme
@@ -239,16 +242,16 @@ roles:
                 =:
                   type: str
           required: true
-      - name: kubernetes-apiservier_port
+      - name: k8s-apiserver_port
         description: "The secure port for the API server"
-        map: 'kube_apiserver_port'
+        map: 'k8s\apiserver\port'
         default: 443
         schema:
           type: int
           required: true
-      - name: kubernetes-apiservier_insecure_port
+      - name: k8s-apiserver_insecure_port
         description: "The insecure port for the API server"
-        map: 'kube_apiserver_insecure_port'
+        map: 'k8s\apiserver\insecure_port'
         default: 8080
         schema:
           type: int

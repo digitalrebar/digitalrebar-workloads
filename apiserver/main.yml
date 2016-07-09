@@ -2,6 +2,8 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
+- debug: var=k8s.cluster.name
+
 - name: kubernetes-apiserver
   dest: kubernetes/bin/kube-apiserver
   version: "{{kube_version}}"
