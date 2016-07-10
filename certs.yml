@@ -4,5 +4,8 @@
 
   tasks:
     - debug: msg="Playbook source {{ playbook_source }} "
+    # debugging variables
+    - include: prereqs/debug.yml
+      when: debug
     # primary install
     # - include: certs/main.yml

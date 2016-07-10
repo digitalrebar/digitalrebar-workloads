@@ -4,6 +4,7 @@ barclamp:
   license: APLv2
   copyright: "RackN, 2016"
   os_support:
+    # system D only!
     - ubuntu-15.04
     - ubuntu-16.04
     - centos-7.2.1511
@@ -38,7 +39,7 @@ roles:
   - name: k8s-master
     description: 'Kubernetes Master'
     icon: "grid_on"
-    type: "BarclampRebar::ServiceRole"
+    type: "BarclampCluster::ServiceRole"
     jig: noop
     flags:
       - milestone
@@ -70,6 +71,15 @@ roles:
           sequence:
             - type: str
               pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
+      - name: k8s-master-hostnames
+        description: "All hostnames of the Master nodes"
+        map: 'k8s/master/hostnames'
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
 
   - name: k8s-node
     description: 'Kubernetes Node'
@@ -142,6 +152,7 @@ roles:
     requires:
       #- docker-prep
       - k8s-certs
+      - cluster
     metadata:
       playbook_file: prereqs.yml
       playbook_combined_repo: true

@@ -7,15 +7,15 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-proxy
-    image: {{ hyperkube_image_repo }}:{{ hyperkube_image_tag }}
+    image: {{ hyperkube.image_repo }}:{{ hyperkube.image_tag }}
     command:
     - /hyperkube
     - proxy
-    - --v={{ kube_log_level }}
+    - --v={{ k8s.log.level }}
     - --master=https://{{ k8s.master.addresses[0] }}:{{ k8s.apiserver.port }}
     - --kubeconfig=/etc/kubernetes/node-kubeconfig.yaml
     - --bind-address={{ ip | default(ansible_default_ipv4.address) }}
-    - --proxy-mode={{ kube_proxy_mode }}
+    - --proxy-mode={{ k8s.proxy_mode }}
     securityContext:
       privileged: true
     volumeMounts:

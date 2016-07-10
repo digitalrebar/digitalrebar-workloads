@@ -8,4 +8,8 @@
     - debug: msg="Playbook source {{ playbook_source }} "
     # SHA references
     - include_vars: group_vars/sources.yml
+    # debugging variables
+    - include: prereqs/debug.yml
+      when: debug
+    # main script
     - include: kubelet/main.yml

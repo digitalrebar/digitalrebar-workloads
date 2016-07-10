@@ -9,4 +9,7 @@
     # SHA references
     - include_vars: group_vars/all.yml
     - include_vars: group_vars/sources.yml
+    # debugging variables
+    - include: prereqs/debug.yml
+      when: debug
     - include: proxy/main.yml
