@@ -2,69 +2,65 @@
 # file: group_vars/all
 # file contains shared variables for all playbooks
 
+debug: true
+
 # system user account for install
 user:
-  name: "{{ k8s.user.name | default('kube') }}"
+  name: "{{ k8s.user.name }}"
   comment: "Kubernetes user"
   shell: /sbin/nologin
   system: yes
-  group: "{{ kube_cert_group }}"
+  group: "{{ k8s.cert_group }}"
   createhome: no
 
-# System Wide Overrides
-kube_apiserver_port: "{{ k8s.apiserver.port | default(443) }}"
-cluster_name: "{{ k8s.cluster.name | default('kompos8') }}"
+cluster_name: "{{ cluster.name | default('kompos8') }}"
 
-dns_setup: false
-dns_server: "8.8.8.8"
-dns_domain: "example.com"
+dns:
+  setup: false
+  server: "8.8.8.8"
+  domain: "example.com"
 
-# Version of Kubernetes to use (see sources.yml)
-kube_version: v1.2.4
-
-# This is the group that the cert creation scripts chgrp the
-# cert files to. Not really changable...
-kube_cert_group: kube-cert
-
-# Cluster Loglevel configuration
-kube_log_level: "{{ k8s.log.level | default(2) }}"
-
-# Directory where the binaries will be installed
-bin_dir: /usr/local/bin
-kube_bin_dir: /kubernetes/bin
+# System Wide Defaults (DO NOT USE |default() anywhere - these ARE the defaults!)
+k8s:
+  apiserver:
+    port: 443
+    insecure_port: 8080
+  # Version of Kubernetes to use (see sources.yml)
+  version: "v1.2.4"
+  # This is the group that the cert creation scripts chgrp the
+  # cert files to. Not really changable...
+  cert_group: kube-cert
+  # Cluster Loglevel configuration
+  log:
+    level: 2
+    # Logging directory (sysvinit systems)
+    dir: "/var/log/kubernetes"
+  # Directory where the binaries will be installed
+  bin_dir: /usr/local/bin
+  # This directory is where all the additional scripts go
+  # that Kubernetes normally puts in /srv/kubernetes.
+  # This puts them in a sane location
+  script_dir: "{{ k8s.bin_dir }}/kubernetes-scripts"
+  # This directory is where all the additional config stuff goes
+  # the kubernetes normally puts in /srv/kubernets.
+  # This puts them in a sane location.
+  # Editting this value will almost surely break something. Don't
+  # change it. Things like the systemd scripts are hard coded to
+  # look in here. Don't do it.
+  config_dir: /etc/kubernetes
+  # This is where all the cert scripts and certs will be located
+  cert_dir: "{{ k8s.config_dir }}/ssl"
+  # This is where all of the bearer tokens will be stored
+  token_dir: "{{ k8s.config_dir }}/tokens"
+  # This is where to save basic auth file
+  users_dir: "{{ k8s.config_dir }}/users"
+  # This is where you can drop yaml/json files and the kubelet will run those
+  # pods on startup
+  manifest_dir: "{{ k8s.config_dir }}/manifests"
 
 # Where the binaries will be downloaded.
 # Note: ensure that you've enough disk space (about 1G)
 local_release_dir: "/tmp/releases"
-
-# This directory is where all the additional scripts go
-# that Kubernetes normally puts in /srv/kubernetes.
-# This puts them in a sane location
-kube_script_dir: "{{ bin_dir }}/kubernetes-scripts"
-
-# This directory is where all the additional config stuff goes
-# the kubernetes normally puts in /srv/kubernets.
-# This puts them in a sane location.
-# Editting this value will almost surely break something. Don't
-# change it. Things like the systemd scripts are hard coded to
-# look in here. Don't do it.
-kube_config_dir: /etc/kubernetes
-
-# This is where all the cert scripts and certs will be located
-kube_cert_dir: "{{ kube_config_dir }}/ssl"
-
-# This is where all of the bearer tokens will be stored
-kube_token_dir: "{{ kube_config_dir }}/tokens"
-
-# This is where to save basic auth file
-kube_users_dir: "{{ kube_config_dir }}/users"
-
-# This is where you can drop yaml/json files and the kubelet will run those
-# pods on startup
-kube_manifest_dir: "{{ kube_config_dir }}/manifests"
-
-# Logging directory (sysvinit systems)
-kube_log_dir: "/var/log/kubernetes"
 
 # documentation of source for troubleshooting
 playbook_source: "https://github.com/digitalrebar/kompos8"

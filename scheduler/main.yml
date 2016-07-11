@@ -36,16 +36,16 @@
     state: directory
     owner: "{{ user.name }}"
   with_items:
-    - "{{ kube_config_dir }}"
-    - "{{ kube_script_dir }}"
-    - "{{ kube_manifest_dir }}"
-    - "{{ kube_bin_dir }}"
+    - "{{ k8s.config_dir }}"
+    - "{{ k8s.script_dir }}"
+    - "{{ k8s.manifest_dir }}"
+    - "{{ k8s.bin_dir }}"
     - "/etc/cni/net.d"
     - "/opt/cni/bin"
 
 - name: Create kubernetes logs directory
   file:
-    path: "{{ kube_log_dir }}"
+    path: "{{ k8s.log.dir }}"
     state: directory
     owner: "{{ user.name }}"
   when: ansible_service_mgr in ["sysvinit","upstart"]

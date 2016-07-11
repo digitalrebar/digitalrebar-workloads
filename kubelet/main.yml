@@ -2,17 +2,11 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
-#- debug: var=k8s.master.addresses
-#- debug: var=provider.type
-#- debug: var=inventory_hostname
-- debug: var=k8s.cluster.name
-- debug: var=cluster_name
-
 - name: Download kubernetes-kubelet
   get_url:
-    url: "{{ kube_download_url }}/kubelet"
-    dest: "{{ kube_bin_dir }}/kubelet"
-    sha256sum: "{{vars['kube_checksum'][kube_version]['kubelet']}}"
+    url: "{{ k8s.download_url }}/kubelet"
+    dest: "{{ k8s.bin_dir }}/kubelet"
+    sha256sum: "{{ vars['k8s.checksum'][k8s.version]['kubelet']}}"
     owner: "{{ user.name }}"
     mode: "0755"
 
@@ -26,21 +20,18 @@
   when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
   notify: restart kubelet
 
-- debug: var=kube_config_dir
-- debug: var=kube_log_dir
-
 - name: Write kubelet config file
-  template: src=kubelet/templates/kubelet.j2 dest={{ kube_config_dir }}/kubelet.env backup=yes
+  template: src=kubelet/templates/kubelet.j2 dest={{ k8s.config_dir }}/kubelet.env backup=yes
   notify: restart kubelet
 
 - name: write the kubecfg (auth) file for kubelet
-  template: src=kubelet/templates/node-kubeconfig.yaml.j2 dest={{ kube_config_dir }}/node-kubeconfig.yaml backup=yes
+  template: src=kubelet/templates/node-kubeconfig.yaml.j2 dest={{ k8s.config_dir }}/node-kubeconfig.yaml backup=yes
   notify: restart kubelet
 
 - name: Write proxy manifest
   template:
     src: kubelet/templates/manifests/kube-proxy.manifest.j2
-    dest: "{{ kube_manifest_dir }}/kube-proxy.manifest"
+    dest: "{{ k8s.manifest_dir }}/kube-proxy.manifest"
 
 - name: Restart kubelet if binary changed
   command: /bin/true

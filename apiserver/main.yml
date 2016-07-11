@@ -2,15 +2,13 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
-- debug: var=k8s.cluster.name
-
 - name: kubernetes-apiserver
   dest: kubernetes/bin/kube-apiserver
-  version: "{{kube_version}}"
-  sha256: "{{vars['kube_checksum'][kube_version]['kube_apiserver']}}"
-  source_url: "{{ kube_download_url }}/kube-apiserver"
-  url: "{{ kube_download_url }}/kube-apiserver"
-  owner: "kube"
+  version: "{{k8s.version}}"
+  sha256: "{{vars['k8s.checksum'][k8s.version]['k8s.apiserver']}}"
+  source_url: "{{ k8s.download_url }}/kube-apiserver"
+  url: "{{ k8s.download_url }}/kube-apiserver"
+  owner: "{{ k8s.user }}"
   mode: "0755"
 
 - name: reload systemd
@@ -34,7 +32,7 @@
 
 - name: Copy kube-apiserver binary
   command: rsync -piu "{{ local_release_dir }}/kubernetes/bin/kube-apiserver" "{{ bin_dir }}/kube-apiserver"
-  register: kube_apiserver_copy
+  register: k8s.apiserver_copy
   changed_when: false
 
 - name: install | Write kube-apiserver systemd init file
@@ -57,12 +55,12 @@
 - name: Write kube-apiserver config file
   template:
     src: "kube-apiserver.j2"
-    dest: "{{ kube_config_dir }}/kube-apiserver.env"
+    dest: "{{ k8s.config_dir }}/kube-apiserver.env"
     backup: yes
   notify: restart kube-apiserver
 
 - name: Allow apiserver to bind on both secure and insecure ports
-  shell: setcap cap_net_bind_service+ep {{ bin_dir }}/kube-apiserver
+  shell: setcap cap_net_bind_service+ep {{ k8s.bin_dir }}/kube-apiserver
   changed_when: false
 
 - meta: flush_handlers
@@ -86,7 +84,7 @@
 
 - name: wait for the apiserver to be running
   wait_for:
-    port: "{{kube_apiserver_insecure_port}}"
+    port: "{{k8s.apiserver.insecure_port}}"
     timeout: 60
 
 - name: Create 'kube-system' namespace
@@ -98,10 +96,10 @@
 - name: Write kube-controller-manager manifest
   template:
     src: manifests/kube-controller-manager.manifest.j2
-    dest: "{{ kube_manifest_dir }}/kube-controller-manager.manifest"
+    dest: "{{ k8s.manifest_dir }}/kube-controller-manager.manifest"
 
 - name: Write kube-scheduler manifest
   template:
     src: manifests/kube-scheduler.manifest.j2
-    dest: "{{ kube_manifest_dir }}/kube-scheduler.manifest"
+    dest: "{{ k8s.manifest_dir }}/kube-scheduler.manifest"
 
