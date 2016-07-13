@@ -112,7 +112,7 @@ roles:
   - name: etcd
     description: "etcd cluster service"
     jig: noop
-    type: "BarclampRebar::ServiceRole"
+    type: "BarclampCluster::ServiceRole"
     icon: "store"
     requires:
       - etcd-node
