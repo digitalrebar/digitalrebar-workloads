@@ -151,6 +151,7 @@ roles:
       - implicit
     requires:
       #- docker-prep
+      - rebar-installed-node
       - k8s-certs
       - cluster
     metadata:
@@ -174,6 +175,7 @@ roles:
     flags:
       - implicit
     requires:
+      - rebar-installed-node
       - k8s-prereqs
       - k8s-apiserver
     wants-attribs:
@@ -191,6 +193,7 @@ roles:
     flags:
       - implicit
     requires:
+      - rebar-installed-node
       - k8s-prereqs
       - k8s-apiserver
     wants-attribs:
@@ -210,6 +213,7 @@ roles:
     jig: ansible-playbook
     icon: account_balance
     flags:
+      - rebar-installed-node
       - implicit
       - destructive
     metadata:
@@ -232,6 +236,7 @@ roles:
       - cluster
       - implicit
     requires:
+      - rebar-installed-node
       #- etcd
     metadata:
       playbook_file: apiserver.yml
@@ -275,6 +280,7 @@ roles:
     flags:
       - implicit
     requires:
+      - rebar-installed-node
       - k8s-apiserver
     metadata:
       playbook_file: controller.yml
@@ -287,6 +293,7 @@ roles:
     flags:
       - implicit
     requires:
+      - rebar-installed-node
       - k8s-apiserver
     metadata:
       playbook_file: scheduler.yml
@@ -301,6 +308,7 @@ roles:
     flags:
       - implicit
     requires:
+      - rebar-installed-node
       - k8s-prereqs
     proceeds:
       - k8s-kubelet
@@ -317,6 +325,7 @@ roles:
     flags:
       - implicit
     requires:
+      - rebar-installed-node
       - k8s-prereqs
       - k8s-master
     metadata:
