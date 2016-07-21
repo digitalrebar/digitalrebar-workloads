@@ -13,12 +13,19 @@ user:
   group: "{{ k8s.cert_group }}"
   createhome: no
 
-cluster_name: "{{ cluster.name | default('kompos8') }}"
-
 dns:
   setup: false
   server: "8.8.8.8"
   domain: "example.com"
+
+cluster:
+  name: "kompos8"
+  address: 127.0.0.1
+  addresses: []
+
+etcd:
+  port: 2379
+  addresses: []
 
 # System Wide Defaults (DO NOT USE |default() anywhere - these ARE the defaults!)
 k8s:

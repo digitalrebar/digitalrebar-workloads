@@ -1,13 +1,11 @@
 [Unit]
 Description=Kubernetes API Server
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
-Requires=etcd.service
-After=etcd.service
 
 [Service]
-EnvironmentFile=/etc/kubernetes/kube-apiserver.env
+EnvironmentFile={{ k8s.config_dir }}/kube-apiserver.env
 User=kube
-ExecStart={{ bin_dir }}/kube-apiserver \
+ExecStart={{ k8s.bin_dir }}/kube-apiserver \
         $KUBE_LOGTOSTDERR \
         $KUBE_LOG_LEVEL \
         $KUBE_ETCD_SERVERS \
