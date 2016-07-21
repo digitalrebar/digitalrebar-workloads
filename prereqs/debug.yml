@@ -3,9 +3,27 @@
 # Provides quick way to see all relevant variables
 
 - debug: msg='!!!!! WARNING - DEBUG ON - DISABLE FOR PRODUCTION !!!!!'
-- debug: var=rebar
-- debug: var=cluster
-- debug: var=k8s
-- debug: var=user
-- debug: var=dns
-- debug: var=provider
+
+- name: "DEBUG: Rebar variable"
+  debug: var=rebar
+  ignore_errors: yes
+
+- name: "DEBUG: Cluster variable"
+  debug: var=cluster
+  ignore_errors: yes
+
+- name: "DEBUG: Rebar K8s"
+  debug: var=k8s
+  ignore_errors: yes
+
+- name: "DEBUG: User variable"
+  debug: var=user
+  ignore_errors: yes
+
+- name: "DEBUG: DNS variable"
+  debug: var=dns
+  ignore_errors: yes
+
+- name: "DEBUG: Provider variable"
+  debug: var=provider
+  ignore_errors: yes
