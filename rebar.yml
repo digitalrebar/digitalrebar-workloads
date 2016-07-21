@@ -128,6 +128,13 @@ roles:
             obj_class: role
             obj_id: etcd
     attribs:
+      - name: etcd-port
+        description: "Port for etcd cluster"
+        map: 'etcd/port'
+        default: "2379"
+        schema:
+          type: int
+          required: true
       - name: etcd-network
         description: "The network of the etcd nodes"
         map: 'etcd/network'
@@ -150,7 +157,6 @@ roles:
     flags:
       - implicit
     requires:
-      #- docker-prep
       - rebar-installed-node
       - k8s-certs
       - cluster
@@ -193,18 +199,15 @@ roles:
     flags:
       - implicit
     requires:
-      - rebar-installed-node
+      - docker-prep
       - k8s-prereqs
       - k8s-apiserver
     wants-attribs:
       - k8s-master-addresses
       - k8s-apiserver_port
-      - provider-type
-      - k8s-cluster-name
     metadata:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
-
 
 # master roles
 
@@ -236,9 +239,15 @@ roles:
       - cluster
       - implicit
     requires:
-      - rebar-installed-node
-      - cluster
-      #- etcd
+      - k8s-prereqs
+      - etcd
+    wants-attribs:
+      - provider-type
+      - k8s-log_level
+      - k8s-apiserver_port
+      - k8s-cluster-name
+      - etcd-addresses
+      - etcd-port
     metadata:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
