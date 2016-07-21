@@ -237,6 +237,7 @@ roles:
       - implicit
     requires:
       - rebar-installed-node
+      - cluster
       #- etcd
     metadata:
       playbook_file: apiserver.yml
