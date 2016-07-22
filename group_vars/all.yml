@@ -6,8 +6,8 @@ debug: true
 
 # system user account for install
 user:
-  name: "{{ k8s.user.name }}"
-  comment: "Kubernetes user"
+  name: "{{ k8s.account }}"
+  comment: "Kubernetes Service Account"
   shell: /sbin/nologin
   system: yes
   group: "{{ k8s.cert_group }}"
@@ -27,8 +27,13 @@ etcd:
   port: 2379
   addresses: []
 
+provider:
+  name: "undefined"
+  type: "undefined"
+
 # System Wide Defaults (DO NOT USE |default() anywhere - these ARE the defaults!)
 k8s:
+  account: "kube"
   apiserver:
     port: 443
     insecure_port: 8080

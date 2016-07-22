@@ -22,13 +22,13 @@
 
 - name: User | Create User
   user:
-    comment: "{{user.comment|default(omit)}}"
-    createhome: "{{user.create_home|default(omit)}}"
-    group: "{{user.group|default(user.name)}}"
-    home: "{{user.home|default(omit)}}"
-    shell: "{{user.shell|default(omit)}}"
+    comment: "{{user.comment}}"
+    createhome: "{{user.create_home}}"
+    group: "{{user.group}}"
+    home: "{{user.home}}"
+    shell: "{{user.shell}}"
     name: "{{user.name}}"
-    system: "{{user.system|default(omit)}}"
+    system: "{{user.system}}"
 
 - name: Create kubernetes directories
   file:

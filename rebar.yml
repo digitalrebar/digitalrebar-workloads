@@ -171,6 +171,13 @@ roles:
         schema:
           type: int
           required: true
+      - name: k8s-account
+        description: "Kubernetes User Account"
+        map: 'k8s\account'
+        default: "kube"
+        schema:
+          type: str
+          required: true
 
 # node roles (requires master) 
 
@@ -240,21 +247,20 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
-      - etcd
+      # - etcd
     wants-attribs:
-      - provider-type
       - k8s-log_level
       - k8s-apiserver_port
       - k8s-cluster-name
-      - etcd-addresses
-      - etcd-port
+      #- etcd-addresses
+      #- etcd-port
     metadata:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
     attribs:
       - name: k8s-users
         description: "The default set of users for kubernetes API"
-        map: 'k8s\user\name'
+        map: 'k8s\users'
         default:
           kube:
             pass: changeme
