@@ -2,77 +2,28 @@
 # file: group_vars/all
 # file contains shared variables for all playbooks
 
-debug: true
-
-# system user account for install
-user:
-  name: "{{ k8s.account }}"
-  comment: "Kubernetes Service Account"
-  shell: /sbin/nologin
-  system: yes
-  group: "{{ k8s.cert_group }}"
-  createhome: no
-
-dns:
-  setup: false
-  server: "8.8.8.8"
-  domain: "example.com"
-
-cluster:
-  name: "kompos8"
-  address: 127.0.0.1
-  addresses: []
-
-etcd:
-  port: 2379
-  addresses: []
-
-provider:
-  name: "undefined"
-  type: "undefined"
-
-# System Wide Defaults (DO NOT USE |default() anywhere - these ARE the defaults!)
-k8s:
-  account: "kube"
-  apiserver:
-    port: 443
-    insecure_port: 8080
-  # Version of Kubernetes to use (see sources.yml)
-  version: "v1.2.4"
-  # This is the group that the cert creation scripts chgrp the
-  # cert files to. Not really changable...
-  cert_group: kube-cert
-  # Cluster Loglevel configuration
-  log:
-    level: 2
-    # Logging directory (sysvinit systems)
-    dir: "/var/log/kubernetes"
-  # Directory where the binaries will be installed
-  bin_dir: /usr/local/bin
-  # This directory is where all the additional scripts go
-  # that Kubernetes normally puts in /srv/kubernetes.
-  # This puts them in a sane location
-  script_dir: "{{ k8s.bin_dir }}/kubernetes-scripts"
-  # This directory is where all the additional config stuff goes
-  # the kubernetes normally puts in /srv/kubernets.
-  # This puts them in a sane location.
-  # Editting this value will almost surely break something. Don't
-  # change it. Things like the systemd scripts are hard coded to
-  # look in here. Don't do it.
-  config_dir: /etc/kubernetes
-  # This is where all the cert scripts and certs will be located
-  cert_dir: "{{ k8s.config_dir }}/ssl"
-  # This is where all of the bearer tokens will be stored
-  token_dir: "{{ k8s.config_dir }}/tokens"
-  # This is where to save basic auth file
-  users_dir: "{{ k8s.config_dir }}/users"
-  # This is where you can drop yaml/json files and the kubelet will run those
-  # pods on startup
-  manifest_dir: "{{ k8s.config_dir }}/manifests"
-
-# Where the binaries will be downloaded.
-# Note: ensure that you've enough disk space (about 1G)
-local_release_dir: "/tmp/releases"
+# DESIGN NOTE: We are minimizing the number of variables declared here!
+# Use the debug.yml page to name & test that variables are injected correctly
+# Please DO DRY your code with variables
+# Please do NOT create variables for things that are really hardcoded.
 
 # documentation of source for troubleshooting
 playbook_source: "https://github.com/digitalrebar/kompos8"
+
+# show variables during runs
+debug: true
+
+# common paths
+bin_dir: /usr/local/bin-
+config_dir: /etc/kubernetes
+log_dir: /var/log/kubernetes
+
+# locations and hashs of downloads
+sources:
+  download_url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s.version }}/bin/linux/amd64"
+  v1.2.5:
+    apiserver: fbe8296ad4b194c06f6802a126d35cd2887dc1aded308d4da2b580f270412b33
+    kubectl: 5526a496a84701015485e32c86486e2f23599f7a865164f546e619c6a62f7f19
+    kubelet: cd15b929f0190876216f397c2c6e7aa8c08d3b047fd90b4980cd68c8f4896211
+  v1.3.3:
+    apiserver: a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c

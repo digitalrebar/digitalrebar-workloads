@@ -1,7 +1,0 @@
----
-required_pkgs:
-  - python-httplib2
-  - openssl
-  - curl
-  - rsync
-  - bash-completion

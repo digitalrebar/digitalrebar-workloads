@@ -4,10 +4,12 @@
 
   tasks:
     - debug: msg="Playbook source {{ playbook_source }} "
-    # SHA references
-    - include_vars: group_vars/sources.yml
+
+    - include-vars: prereqs/vars.yml
+    
     # debugging variables
     - include: prereqs/debug.yml
       when: debug
+
     # primary install
     - include: prereqs/main.yml

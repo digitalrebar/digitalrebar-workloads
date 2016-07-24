@@ -1,30 +1,18 @@
 ---
 # APL v2 Licensed.  Copyright RackN 2016
-# Provides quick way to see all relevant variables
+# Provides quick way to validate that all required variables are present
 
 - name: "Debug On? YES!"
   debug: msg='!!!!! WARNING - DEBUG ON - DISABLE FOR PRODUCTION !!!!!'
 
-- name: "DEBUG: Rebar variable (may not be available)"
-  debug: var=rebar
-  ignore_errors: yes
+- name: "DEBUG: Account"
+  debug: var=k8s.account
 
-- name: "DEBUG: Cluster variable"
-  debug: var=cluster
-  ignore_errors: yes
+- name: "DEBUG: OS Family"
+  debug: var=ansible_distribution|lower
 
-- name: "DEBUG: Rebar K8s"
-  debug: var=k8s
-  ignore_errors: yes
+- name: "DEBUG: Required Packages"
+  debug: var=required_pkgs["{{ ansible_distribution|lower }}"]
 
-- name: "DEBUG: User variable"
-  debug: var=user
-  ignore_errors: yes
-
-- name: "DEBUG: DNS variable"
-  debug: var=dns
-  ignore_errors: yes
-
-- name: "DEBUG: Provider variable"
-  debug: var=provider
-  ignore_errors: yes
+#- name: "DEBUG: Variable"
+#  debug: var=rebar

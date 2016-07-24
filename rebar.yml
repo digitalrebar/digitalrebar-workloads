@@ -164,13 +164,6 @@ roles:
       playbook_file: prereqs.yml
       playbook_combined_repo: true
     attribs:
-      - name: k8s-log_level
-        description: "The kubernetes logging level"
-        map: 'k8s\log\level'
-        default: 2
-        schema:
-          type: int
-          required: true
       - name: k8s-account
         description: "Kubernetes User Account"
         map: 'k8s\account'
@@ -209,6 +202,7 @@ roles:
       - docker-prep
       - k8s-prereqs
       - k8s-apiserver
+      - k8s-ca-signed-cert
     wants-attribs:
       - k8s-master-addresses
       - k8s-apiserver_port
@@ -216,27 +210,83 @@ roles:
       playbook_file: kubelet.yml
       playbook_combined_repo: true
 
-# master roles
-
-  - name: k8s-certs
-    description: "Kubernetes Security Certifcates"
-    jig: ansible-playbook
+roles:
+  - name: k8s-ca
+    jig: role-provided
+    type: "BarclampCluster::MakeCa"
     icon: account_balance
-    flags:
-      - rebar-installed-node
-      - implicit
-      - destructive
-    metadata:
-      playbook_file: certs.yml
-      playbook_combined_repo: true
     attribs:
-      - name: k8s-cluster-name
-        description: "The name of the Kubernetes cluster"
-        map: 'k8s/cluster/name'
-        default: 'cluster.local'
+      - name: k8s-ca-label
+        description: "Label of the root CA"
+        default: "example"
+        map: 'k8s/cert/label'
         schema:
           type: str
-          required: true
+  - name: k8s-ca-install-root
+    jig: role-provided
+    type: "BarclampCluster::InstallRootCa"
+    requires:
+      - k8s-ca
+    flags:
+      - implicit
+      - milestone
+    wants-attribs:
+      - k8s-ca-label
+    icon: stars
+    attribs:
+      - name: k8s-root-file
+        description: "Information about the root file"
+        map: "k8s/cert/root"
+        default:
+          destination: "/etc/k8s-root.pem"
+          perm: "0600"
+          user: "kube"
+          group: "kube"
+        schema:
+          type: map
+          mapping:
+            =:
+              type: str
+  - name: k8s-ca-signed-cert
+    jig: role-provided
+    type: "BarclampCluster::InstallSignedCert"
+    requires:
+      - k8s-ca
+    flags:
+      - implicit
+      - milestone
+    wants-attribs:
+      - k8s-ca-label
+    icon: enhanced_encryption
+    attribs:
+      - name: k8s-cert-file
+        description: "Information about the cert file"
+        map: "k8s/cert/cert"
+        default:
+          destination: "/etc/k8s.pem"
+          perm: "0600"
+          user: "kube"
+          group: "kube"
+        schema:`
+          type: map
+          mapping:
+            =:
+              type: str
+      - name: k8s-key-file
+        description: "Information about the key file"
+        map: "k8s/cert/key"
+        default:
+          destination: "/etc/k8s.key"
+          perm: "0600"
+          user: "kube"
+          group: "kube"
+        schema:
+          type: map
+          mapping:
+            =:
+              type: str
+
+# master roles
 
   - name: k8s-apiserver
     description: 'Kubernetes API Server'
@@ -247,17 +297,32 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
+      - k8s-ca
+      - k8s-ca-install-root
       # - etcd
     wants-attribs:
-      - k8s-log_level
-      - k8s-apiserver_port
       - k8s-cluster-name
+      - k8s-account
       #- etcd-addresses
       #- etcd-port
     metadata:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
     attribs:
+      - name: k8s-version
+        description: "The Kubernetes version"
+        map: 'k8s\version'
+        default: v1.2.5
+        schema:
+          type: str
+          required: true
+      - name: k8s-log-level
+        description: "The kubernetes logging level"
+        map: 'k8s\log\level'
+        default: 2
+        schema:
+          type: int
+          required: true
       - name: k8s-users
         description: "The default set of users for kubernetes API"
         map: 'k8s\users'
@@ -274,7 +339,7 @@ roles:
                 =:
                   type: str
           required: true
-      - name: k8s-apiserver_port
+      - name: k8s-apiserver-port
         description: "The secure port for the API server"
         map: 'k8s\apiserver\port'
         default: 443
@@ -298,6 +363,7 @@ roles:
     requires:
       - rebar-installed-node
       - k8s-apiserver
+      - k8s-ca-signed-cert
     metadata:
       playbook_file: controller.yml
       playbook_combined_repo: true
@@ -310,6 +376,7 @@ roles:
       - implicit
     requires:
       - rebar-installed-node
+      - k8s-ca-signed-cert
       - k8s-apiserver
     metadata:
       playbook_file: scheduler.yml

@@ -13,7 +13,7 @@ KUBE_LOG_LEVEL="{{ k8s.log.level }}"
 KUBE_ALLOW_PRIV="--allow_privileged=true"
 
 # The port on the local server to listen on.
-KUBE_API_PORT="--insecure-port={{k8s.apiserver.insecure_port}} --secure-port={{ k8s.apiserver_port }}"
+KUBE_API_PORT="--insecure-port={{k8s.apiserver.insecure_port}} --secure-port={{ k8s.apiserver.port }}"
 
 # Insecure API address (we only want to allow localhost!)
 KUBE_API_INSECURE_BIND="--insecure-bind-address=localhost"
@@ -35,9 +35,3 @@ KUBE_TLS_CONFIG="--tls_cert_file={{ k8s.cert_dir }}/apiserver.pem --tls_private_
 
 # Add you own!
 KUBE_API_ARGS="--token_auth_file={{ k8s.token_dir }}/known_tokens.csv --basic-auth-file={{ k8s.users_dir }}/known_users.csv --service_account_key_file={{ k8s.cert_dir }}/apiserver-key.pem --advertise-address={{ cluster.address }}"
-
-{% if ansible_service_mgr in ["sysvinit","upstart"] %}
-DAEMON_ARGS="$KUBE_LOGGING $KUBE_LOG_LEVEL $KUBE_ALLOW_PRIV $KUBE_API_PORT $KUBE_API_INSECURE_BIND \
-$KUBE_SERVICE_ADDRESSES $KUBE_ETCD_SERVERS $KUBE_ADMISSION_CONTROL $KUBE_RUNTIME_CONFIG \
-$KUBE_TLS_CONFIG $KUBE_API_ARGS $KUBELET_CLOUDPROVIDER"
-{% endif %}

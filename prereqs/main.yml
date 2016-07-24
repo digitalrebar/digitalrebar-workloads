@@ -1,54 +1,35 @@
 --- 
 # APL v2 Licensed.  Copyright RackN 2016
-# Original scripts based on code from https://github.com/kubespray/kargo
-
-# NOT INCLUDED preinstall/gitinfos.yml
-
-- name: Gather os specific variables
-  include_vars: "{{ item }}"
-  with_first_found:
-    - files:
-      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_version|lower|replace('/', '_') }}.yml"
-      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_release }}.yml"
-      - "{{ ansible_distribution|lower }}-{{ ansible_distribution_major_version|lower|replace('/', '_') }}.yml"
-      - "{{ ansible_distribution|lower }}.yml"
-      - "{{ ansible_os_family|lower }}.yml"
-      - defaults.yml
-      paths:
-      - ./prereqs/vars
 
 - name: User | Create User Group
-  group: name={{user.group|default(user.name)}} system={{user.system|default(omit)}}
+  group: 
+    name: "{{ k8s.account }}"
+    system: yes
 
 - name: User | Create User
   user:
-    comment: "{{user.comment}}"
-    createhome: "{{user.create_home}}"
-    group: "{{user.group}}"
-    home: "{{user.home}}"
-    shell: "{{user.shell}}"
-    name: "{{user.name}}"
-    system: "{{user.system}}"
+    comment: "Kubernetes System Account"
+    createhome: no
+    group: "{{ k8s.account }}"
+    shell: /sbin/nologin
+    name: "{{ k8s.account }}"
+    system: yes
 
 - name: Create kubernetes directories
   file:
     path: "{{ item }}"
     state: directory
-    owner: "{{ user.name }}"
+    owner: "{{ k8s.account }}"
   with_items:
-    - "{{ kube_config_dir }}"
-    - "{{ kube_script_dir }}"
-    - "{{ kube_manifest_dir }}"
-    - "{{ kube_bin_dir }}"
-    - "/etc/cni/net.d"
-    - "/opt/cni/bin"
-
-- name: Create kubernetes logs directory
-  file:
-    path: "{{ kube_log_dir }}"
-    state: directory
-    owner: "{{ user.name }}"
-  when: ansible_service_mgr in ["sysvinit","upstart"]
+    - {{ config_dir }}
+    - {{ config_dir }}/ssl
+    - {{ config_dir }}/tokens
+    - {{ config_dir }}/users
+    - {{ bin_dir }}
+    - {{ bin_dir }}/kubernetes-scripts
+    - /etc/cni/net.d
+    - /opt/cni/bin
+    - {{ log_dir }}
 
 - name: Update package management cache (YUM)
   yum: update_cache=yes name='*'
@@ -70,14 +51,12 @@
         ansible_distribution_major_version >= 7
   changed_when: False
 
-- debug: var=required_pkgs
-
 - name: Install packages requirements [SLOW]
   action:
     module: "{{ ansible_pkg_mgr }}"
     name: "{{ item }}"
     state: latest
-  with_items: "{{required_pkgs | default([]) | union(common_required_pkgs|default([]))}}"
+  with_items: "{{ required_pkgs["{{ ansible_distribution|lower }}"] }}"
   when: ansible_os_family != "CoreOS"
 
 # Todo : selinux configuration
@@ -85,5 +64,3 @@
   selinux: policy=targeted state=permissive
   when: ansible_os_family == "RedHat"
   changed_when: False
-
-# NOT INCLUDED: preinstall/etchosts.yml tasks
