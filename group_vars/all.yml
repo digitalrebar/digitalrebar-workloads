@@ -14,16 +14,7 @@ playbook_source: "https://github.com/digitalrebar/kompos8"
 debug: true
 
 # common paths
-bin_dir: /usr/local/bin-
+bin_dir: /opt/kubernetes/server/bin
 config_dir: /etc/kubernetes
 log_dir: /var/log/kubernetes
 
-# locations and hashs of downloads
-sources:
-  download_url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s.version }}/bin/linux/amd64"
-  v1.2.5:
-    apiserver: fbe8296ad4b194c06f6802a126d35cd2887dc1aded308d4da2b580f270412b33
-    kubectl: 5526a496a84701015485e32c86486e2f23599f7a865164f546e619c6a62f7f19
-    kubelet: cd15b929f0190876216f397c2c6e7aa8c08d3b047fd90b4980cd68c8f4896211
-  v1.3.3:
-    apiserver: a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c

@@ -54,8 +54,8 @@ roles:
             obj_id: k8s-master
     requires:
       - k8s-apiserver
-      - k8s-scheduler
-      - k8s-controller
+      #- k8s-scheduler
+      #- k8s-controller
     attribs:
       - name: k8s-master-network
         description: "The network of the Master nodes"
@@ -81,75 +81,6 @@ roles:
           sequence:
             - type: str
 
-  - name: k8s-node
-    description: 'Kubernetes Node'
-    jig: noop
-    icon: "center_focus_strong"
-    flags:
-      - milestone
-    requires:
-      - k8s-kubelet
-      - k8s-proxy
-      # - docker
-
-  - name: etcd-node
-    description: "etcd clustered from retr0h"
-    jig: ansible-playbook
-    icon: "local_grocery_store"
-    requires:
-      - rebar-installed-node
-    flags:
-      - implicit
-    metadata:
-      playbook_src_paths:
-        etcd: "galaxy:retr0h.etcd"
-      playbook_path: "."
-      playbook_file: "."
-      role_role_map:
-        etcd-node:
-          - retr0h.etcd
-
-  - name: etcd
-    description: "etcd cluster service"
-    jig: noop
-    type: "BarclampCluster::ServiceRole"
-    icon: "store"
-    requires:
-      - etcd-node
-    flags:
-      - milestone
-    events:
-      - endpoint: inproc://role:etcd/on_active
-        selectors:
-          - event: on_active
-            obj_class: role
-            obj_id: etcd
-          - event: synch_on_delete
-            obj_class: role
-            obj_id: etcd
-    attribs:
-      - name: etcd-port
-        description: "Port for etcd cluster"
-        map: 'etcd/port'
-        default: "2379"
-        schema:
-          type: int
-          required: true
-      - name: etcd-network
-        description: "The network of the etcd nodes"
-        map: 'etcd/network'
-        default: 'node-control-address'
-      - name: etcd-addresses
-        description: "The addresses of the etcd nodes"
-        map: 'etcd/addresses'
-        default: []
-        schema:
-          type: seq
-          required: false
-          sequence:
-            - type: str
-              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
-
   - name: k8s-prereqs
     description: 'Kubernetes Setup'
     jig: ansible-playbook
@@ -158,7 +89,7 @@ roles:
       - implicit
     requires:
       - rebar-installed-node
-      - k8s-certs
+      #- k8s-certs
       - cluster
     metadata:
       playbook_file: prereqs.yml
@@ -171,120 +102,20 @@ roles:
         schema:
           type: str
           required: true
-
-# node roles (requires master) 
-
-  - name: k8s-proxy
-    description: 'Kubernetes Node Proxy'
-    jig: ansible-playbook
-    icon: "call_missed_outgoing"
-    flags:
-      - implicit
-    requires:
-      - rebar-installed-node
-      - k8s-prereqs
-      - k8s-apiserver
-    wants-attribs:
-      - k8s-master-addresses
-      - provider-type
-      - k8s-cluster-name
-    metadata:
-      playbook_file: proxy.yml
-      playbook_combined_repo: true
-
-  - name: k8s-kubelet
-    description: 'Kubernetes Kubelet'
-    jig: ansible-playbook
-    icon: "center_focus_weak"
-    flags:
-      - implicit
-    requires:
-      - docker-prep
-      - k8s-prereqs
-      - k8s-apiserver
-      - k8s-ca-signed-cert
-    wants-attribs:
-      - k8s-master-addresses
-      - k8s-apiserver_port
-    metadata:
-      playbook_file: kubelet.yml
-      playbook_combined_repo: true
-
-roles:
-  - name: k8s-ca
-    jig: role-provided
-    type: "BarclampCluster::MakeCa"
-    icon: account_balance
-    attribs:
-      - name: k8s-ca-label
-        description: "Label of the root CA"
-        default: "example"
-        map: 'k8s/cert/label'
+      - name: k8s-version
+        description: "The Kubernetes Version"
+        map: 'k8s\version'
+        default: v1.3.3
         schema:
           type: str
-  - name: k8s-ca-install-root
-    jig: role-provided
-    type: "BarclampCluster::InstallRootCa"
-    requires:
-      - k8s-ca
-    flags:
-      - implicit
-      - milestone
-    wants-attribs:
-      - k8s-ca-label
-    icon: stars
-    attribs:
-      - name: k8s-root-file
-        description: "Information about the root file"
-        map: "k8s/cert/root"
-        default:
-          destination: "/etc/k8s-root.pem"
-          perm: "0600"
-          user: "kube"
-          group: "kube"
+          required: true
+      - name: k8s-strict
+        description: "The Kubernetes Checksum Required"
+        map: 'k8s\strict'
+        default: true
         schema:
-          type: map
-          mapping:
-            =:
-              type: str
-  - name: k8s-ca-signed-cert
-    jig: role-provided
-    type: "BarclampCluster::InstallSignedCert"
-    requires:
-      - k8s-ca
-    flags:
-      - implicit
-      - milestone
-    wants-attribs:
-      - k8s-ca-label
-    icon: enhanced_encryption
-    attribs:
-      - name: k8s-cert-file
-        description: "Information about the cert file"
-        map: "k8s/cert/cert"
-        default:
-          destination: "/etc/k8s.pem"
-          perm: "0600"
-          user: "kube"
-          group: "kube"
-        schema:`
-          type: map
-          mapping:
-            =:
-              type: str
-      - name: k8s-key-file
-        description: "Information about the key file"
-        map: "k8s/cert/key"
-        default:
-          destination: "/etc/k8s.key"
-          perm: "0600"
-          user: "kube"
-          group: "kube"
-        schema:
-          type: map
-          mapping:
-            =:
-              type: str
+          type: bool
+          required: true
 
 # master roles
 
@@ -297,11 +128,11 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
-      - k8s-ca
-      - k8s-ca-install-root
-      # - etcd
+      #- k8s-ca
+      #- k8s-ca-install-root
+      #- etcd
     wants-attribs:
-      - k8s-cluster-name
+      - cluster-name
       - k8s-account
       #- etcd-addresses
       #- etcd-port
@@ -309,20 +140,6 @@ roles:
       playbook_file: apiserver.yml
       playbook_combined_repo: true
     attribs:
-      - name: k8s-version
-        description: "The Kubernetes version"
-        map: 'k8s\version'
-        default: v1.2.5
-        schema:
-          type: str
-          required: true
-      - name: k8s-log-level
-        description: "The kubernetes logging level"
-        map: 'k8s\log\level'
-        default: 2
-        schema:
-          type: int
-          required: true
       - name: k8s-users
         description: "The default set of users for kubernetes API"
         map: 'k8s\users'
@@ -339,6 +156,13 @@ roles:
                 =:
                   type: str
           required: true
+      - name: k8s-log-level
+        description: "The kubernetes logging level"
+        map: 'k8s\log\level'
+        default: 2
+        schema:
+          type: int
+          required: true
       - name: k8s-apiserver-port
         description: "The secure port for the API server"
         map: 'k8s\apiserver\port'
@@ -353,64 +177,3 @@ roles:
         schema:
           type: int
           required: true
-
-  - name: k8s-controller
-    description: 'Kubernetes Controller'
-    jig: ansible-playbook
-    icon: "event_seat"
-    flags:
-      - implicit
-    requires:
-      - rebar-installed-node
-      - k8s-apiserver
-      - k8s-ca-signed-cert
-    metadata:
-      playbook_file: controller.yml
-      playbook_combined_repo: true
-
-  - name: k8s-scheduler
-    description: 'Kubernetes Scheduler'
-    jig: ansible-playbook
-    icon: "portrait"
-    flags:
-      - implicit
-    requires:
-      - rebar-installed-node
-      - k8s-ca-signed-cert
-      - k8s-apiserver
-    metadata:
-      playbook_file: scheduler.yml
-      playbook_combined_repo: true
-
-# networking providers
-
-  - name: k8s-calico
-    description: 'Kubernetes Calico SDN'
-    jig: ansible-playbook
-    icon: "pets"
-    flags:
-      - implicit
-    requires:
-      - rebar-installed-node
-      - k8s-prereqs
-    proceeds:
-      - k8s-kubelet
-    metadata:
-      playbook_file: calico.yml
-      playbook_combined_repo: true
-
-# client roles
-
-  - name: k8s-kubectl
-    description: 'Kubernetes Control (kubectl) Server'
-    jig: ansible-playbook
-    icon: "traffic"
-    flags:
-      - implicit
-    requires:
-      - rebar-installed-node
-      - k8s-prereqs
-      - k8s-master
-    metadata:
-      playbook_file: kubectl.yml
-      playbook_combined_repo: true

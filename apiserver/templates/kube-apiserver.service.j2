@@ -4,7 +4,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
 [Service]
 EnvironmentFile={{ config_dir }}/kube-apiserver.env
-User=kube
+User={{ k8s.account }}
 ExecStart={{ bin_dir }}/kube-apiserver \
         $KUBE_LOGTOSTDERR \
         $KUBE_LOG_LEVEL \

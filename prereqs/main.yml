@@ -64,3 +64,26 @@
   selinux: policy=targeted state=permissive
   when: ansible_os_family == "RedHat"
   changed_when: False
+
+- name: "Download Kubernetes Executables [SLOW]"
+  get_url:
+    dest: /tmp/kubernetes.tar.gz"
+    fail_on_missing: yes
+    flat: yes
+    checksum: "{{ k8s.checksum }}"
+    url: "{{ k8s_source }}"
+    owner: "{{ k8s.account }}"
+    mode: "0755"
+    validate_certs: yes
+
+- name: "Extract All Materials from Archive (step 1/2)"
+  unarchive: 
+    src: /tmp/kubernetes.tar.gz
+    dest: /tmp
+
+- name: "Extract Executables from Archive (step 2/2) [assumes to amd64]"
+  unarchive: 
+    src: /tmp/kubernetes/server/kubernetes-server-linux-amd64.tar.gz
+    dest: /opt
+    owner: {{ k8s.account }}
+    mode: u=rx

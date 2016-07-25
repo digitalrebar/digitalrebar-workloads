@@ -5,7 +5,7 @@
   tasks:
     - debug: msg="Playbook source {{ playbook_source }} "
 
-    - include-vars: prereqs/vars.yml
+    - include-var: prereqs/vars.yml
     
     # debugging variables
     - include: prereqs/debug.yml

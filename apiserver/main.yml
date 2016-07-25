@@ -2,14 +2,8 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Original scripts based on code from https://github.com/kubespray/kargo
 
-- name: "Download Executable"
-  dest: kubernetes/bin/kube-apiserver
-  version: "{{ k8s.version }}"
-  sha256: "{{vars['sources'][k8s.version]['apiserver']}}"
-  source_url: "{{ sources.download_url }}/kube-apiserver"
-  url: "{{ sources.download_url }}/kube-apiserver"
-  owner: "{{ k8s.account }}"
-  mode: "0755"
+# copy over EXE
+
 
 - name: reload systemd
   command: systemctl daemon-reload
