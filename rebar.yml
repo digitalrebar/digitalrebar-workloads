@@ -182,3 +182,187 @@ roles:
         schema:
           type: int
           required: true
+
+
+  - name: etcd-config
+    description: "etcd config for cluster"
+    jig: noop
+    icon: "layers"
+    requires:
+      - rebar-installed-node
+    attribs:
+      - name: etcd-client-port
+        description: "Client Port for etcd cluster"
+        map: 'etcd_client_port'
+        default: 2379
+        schema:
+          type: int
+          required: true
+      - name: etcd-peer-port
+        description: "Peer Port for etcd cluster"
+        map: 'etcd_peer_port'
+        default: 2380
+        schema:
+          type: int
+          required: true
+      - name: etcd-url-scheme
+        description: "HTTP or HTTPS for communication"
+        map: 'etcd_url_scheme'
+        default: "https"
+        schema:
+          type: str
+          required: true
+      - name: etcd-initial-cluster-state
+        description: "Initial cluster state"
+        map: 'etcd_initial_cluster_state'
+        default: "new"
+        schema:
+          type: str
+          required: true
+      - name: etcd-initial-cluster-token
+        description: "Initial cluster token"
+        map: 'etcd_initial_cluster_token'
+        default: "etcd-cluster"
+        schema:
+          type: str
+          required: true
+      - name: etcd-use-client-certs
+        description: "Should etcd use Client certs"
+        map: 'etcd_client_cert_auth'
+        default: true
+        schema:
+          type: bool
+          required: true
+      - name: etcd-client-cert-file
+        description: "Client connection cert file"
+        map: 'etcd_client_cert_file'
+        default: "/etc/etcd/etcd-client.cert"
+        schema:
+          type: str
+          required: true
+      - name: etcd-client-key-file
+        description: "Client connection key file"
+        map: 'etcd_client_key_file'
+        default: "/etc/etcd/etcd-client.key"
+        schema:
+          type: str
+          required: true
+      - name: etcd-client-ca-file
+        description: "Client connection ca file"
+        map: 'etcd_client_trusted_ca_file'
+        default: "/etc/etcd/etcd-trusted-client.pem"
+        schema:
+          type: str
+          required: true
+      - name: etcd-use-peer-certs
+        description: "Should etcd use Peer certs"
+        map: 'etcd_peer_client_cert_auth'
+        default: true
+        schema:
+          type: bool
+          required: true
+      - name: etcd-peer-cert-file
+        description: "Peer connection cert file"
+        map: 'etcd_peer_cert_file'
+        default: "/etc/etcd/etcd-peer.cert"
+        schema:
+          type: str
+          required: true
+      - name: etcd-peer-key-file
+        description: "Peer connection key file"
+        map: 'etcd_peer_key_file'
+        default: "/etc/etcd/etcd-peer.key"
+        schema:
+          type: str
+          required: true
+      - name: etcd-peer-ca-file
+        description: "Peer connection ca file"
+        map: 'etcd_peer_trusted_ca_file'
+        default: "/etc/etcd/etcd-trusted-peer.pem"
+        schema:
+          type: str
+          required: true
+      - name: etcd-network
+        description: "The network of the etcd nodes, e.g. admin category"
+        map: 'etcd/network'
+        default: 'admin'
+        schema:
+          type: str
+          required: true
+
+
+  - name: etcd-node
+    description: "etcd clustered from retr0h"
+    jig: ansible-playbook
+    icon: "local_grocery_store"
+    preceeds:
+      - etcd
+    requires:
+      - rebar-installed-node
+      - etcd-config
+    flags:
+      - implicit
+      - milestone
+    wants-attribs:
+      - etcd-client-port
+      - etcd-peer-port
+      - etcd-url-scheme
+      - etcd-initial-cluster-state
+      - etcd-initial-cluster-token
+      - etcd-use-client-certs
+      - etcd-client-cert-file
+      - etcd-client-key-file
+      - etcd-client-ca-file
+      - etcd-use-peer-certs
+      - etcd-peer-cert-file
+      - etcd-peer-key-file
+      - etcd-peer-ca-file
+      - etcd-network
+    metadata:
+      playbook_src_paths:
+        roles/etcd: https://github.com/digitalrebar/ansible-etcd
+      playbook_path: "."
+      playbook_file: "."
+      role_role_map:
+        etcd-node:
+          - etcd
+      role_group_map:
+        etcd-node:
+          - etcd
+      inventory_map:
+        - path: ip
+          name: eval:ipaddress(v4_only, etcd-network).address
+
+  - name: etcd
+    description: "etcd cluster service"
+    jig: noop
+    type: "BarclampCluster::ServiceRole"
+    icon: "store"
+    requires:
+      - etcd-config
+    flags:
+      - milestone
+    events:
+      - endpoint: inproc://role:etcd/on_active
+        selectors:
+          - event: on_active
+            obj_class: role
+            obj_id: etcd
+          - event: synch_on_delete
+            obj_class: role
+            obj_id: etcd
+    wants-attribs:
+      - etcd-port
+      - etcd-network
+    attribs:
+      - name: etcd-addresses
+        description: "The addresses of the etcd nodes"
+        map: 'etcd/addresses'
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
+              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
+
