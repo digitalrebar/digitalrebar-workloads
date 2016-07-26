@@ -18,10 +18,21 @@ The goal of the decomposition is to isolate individual services as much as possi
 
 Defaults: see group_vars/all.yml
 
-Limitations
------------
+Design Decisions
+----------------
 
-To streamline development, Kompos8 will require SystemD.
+The following items are recognized as principles for the Kompos8 scripts:
+
+  1. To streamline development, Kompos8 will require SystemD.
+  #. Further, we will not (re)package the simple Kubernetes GO services into containers.
+  #. For Ansible, we will avoid using unneeded variables and default() in the plays.  We would rather have them fail quickly when information is missing.
+  #. While we want create portable playbooks without Rebar dependencies, we are NOT trying to create playbooks that stand alone without Rebar.
+
+Architecture Requirements
+-------------------------
+
+  1. Do not comingle services but allow them to co-exist
+  #. Must be multi-node
 
 Naming & Conventions
 --------------------
@@ -30,11 +41,11 @@ Kompos8 is a play on "composate" with the K (for Kubernetes or k8s) substituted 
 
 Variables in the workload should be nested and generally follow:
 
-* k8s. for kubernetes items with additional grouping
-* cluster. for cluster items
-* provider. for provider (e.g. cloud) items
-* rebar. for rebar specific items
-* user. for user items
+  * k8s. for kubernetes items with additional grouping
+  * cluster. for cluster items
+  * provider. for provider (e.g. cloud) items
+  * rebar. for rebar specific items
+  * user. for Kubernetes user items (account is the service account)
 
 Enable to ``debug`` variable to see specifics in the runs.
 

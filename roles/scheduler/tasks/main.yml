@@ -1,0 +1,13 @@
+--- 
+# APL v2 Licensed.  Copyright RackN 2016
+# Original scripts based on code from https://github.com/kubespray/kargo
+
+--- 
+- name: Kubernetes Scheduler Install by RackN 2016
+  hosts: all
+  tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
+    # debugging variables
+    - include: debug.yml
+      when: debug
+

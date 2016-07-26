@@ -1,0 +1,18 @@
+---
+# APL v2 Licensed.  Copyright RackN 2016
+# Provides quick way to validate that all required variables are present
+
+- name: "Debug On? YES!"
+  debug: msg='!!!!! WARNING - DEBUG ON - DISABLE FOR PRODUCTION !!!!!'
+
+- name: "DEBUG: Account"
+  debug: var=k8s.account
+
+- name: "DEBUG: OS Family"
+  debug: var=ansible_distribution|lower
+
+- name: "DEBUG: Required Packages"
+  debug: var=required_pkgs["{{ ansible_distribution|lower }}"]
+
+#- name: "DEBUG: Variable"
+#  debug: var=rebar
