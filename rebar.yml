@@ -82,7 +82,7 @@ roles:
             - type: str
 
   - name: k8s-prereqs
-    description: 'Kubernetes Setup'
+    description: 'Kubernetes Setup for All Roles'
     jig: ansible-playbook
     icon: "crop_free"
     flags:
@@ -90,10 +90,12 @@ roles:
     requires:
       - rebar-installed-node
       #- k8s-certs
-      - cluster
     metadata:
-      playbook_file: prereqs.yml
+      role_role_map:
+        k8s-prereqs:
+          - prereqs
       playbook_combined_repo: true
+      playbook_file: roles/prereqs/main.yml
     attribs:
       - name: k8s-account
         description: "Kubernetes User Account"
@@ -137,8 +139,11 @@ roles:
       #- etcd-addresses
       #- etcd-port
     metadata:
-      playbook_file: apiserver.yml
+      role_role_map:
+        k8s-apiserver:
+          - apiserver
       playbook_combined_repo: true
+      playbook_file: roles/apiserver/main.yml    
     attribs:
       - name: k8s-users
         description: "The default set of users for kubernetes API"

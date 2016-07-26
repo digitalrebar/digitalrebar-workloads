@@ -1,0 +1,47 @@
+--- 
+- name: Kubernetes Kubelet Install by RackN 2016
+
+  hosts: all
+  handlers:
+    - include: handlers/main.yml
+  tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
+    # SHA references
+    - include_vars: group_vars/sources.yml
+    # debugging variables
+    - include: prereqs/debug.yml
+      when: debug
+    # main script
+
+    - name: install | Write kubelet systemd init file
+      template: src=kubelet/templates/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service backup=yes
+      when: ansible_service_mgr == "systemd"
+      notify: restart kubelet
+
+    - name: Write kubelet config file
+      template: src=kubelet/templates/kubelet.j2 dest={{ k8s.config_dir }}/kubelet.env backup=yes
+      notify: restart kubelet
+
+    - name: write the kubecfg (auth) file for kubelet
+      template: src=kubelet/templates/node-kubeconfig.yaml.j2 dest={{ k8s.config_dir }}/node-kubeconfig.yaml backup=yes
+      notify: restart kubelet
+
+    - name: Write proxy manifest
+      template:
+        src: kubelet/templates/manifests/kube-proxy.manifest.j2
+        dest: "{{ k8s.manifest_dir }}/kube-proxy.manifest"
+
+    - name: Restart kubelet if binary changed
+      command: /bin/true
+      notify: restart kubelet
+      when: kubelet_copy.stdout_lines
+
+    # reload-systemd
+    - meta: flush_handlers
+
+    - name: Enable kubelet
+      service:
+        name: kubelet
+        enabled: yes
+        state: started
+

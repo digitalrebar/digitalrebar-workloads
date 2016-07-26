@@ -1,0 +1,102 @@
+--- 
+# APL v2 Licensed.  Copyright RackN 2016
+- name: Kubernetes Pre-reqs Install by RackN 2016
+  hosts: all
+
+  tasks:
+    - debug: msg="Playbook source {{ playbook_source }} "
+
+    - include_vars: vars/all.yml
+    - include: debug.yml
+      when: debug
+
+    - name: User | Create User Group
+      group: 
+        name: "{{ k8s.account }}"
+        system: yes
+
+    - name: User | Create User
+      user:
+        comment: "Kubernetes System Account"
+        createhome: no
+        group: "{{ k8s.account }}"
+        shell: /sbin/nologin
+        name: "{{ k8s.account }}"
+        system: yes
+
+    - name: Create kubernetes directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ k8s.account }}"
+      with_items:
+        - {{ config_dir }}
+        - {{ config_dir }}/ssl
+        - {{ config_dir }}/tokens
+        - {{ config_dir }}/users
+        - {{ bin_dir }}
+        - {{ bin_dir }}/kubernetes-scripts
+        - /etc/cni/net.d
+        - /opt/cni/bin
+        - {{ log_dir }}
+
+    - name: Update package management cache (YUM)
+      yum: update_cache=yes name='*'
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: Install latest version of python-apt for Debian distribs
+      apt: name=python-apt state=latest update_cache=yes cache_valid_time=3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install python-dnf for latest RedHat versions
+      command: dnf install -y python-dnf yum
+      when: ansible_distribution == "Fedora" and
+            ansible_distribution_major_version > 21
+      changed_when: False
+
+    - name: Install epel-release on RedHat/CentOS
+      shell: rpm -qa | grep epel-release || rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      when: ansible_distribution in ["CentOS","RedHat"] and
+            ansible_distribution_major_version >= 7
+      changed_when: False
+
+    - name: Install packages requirements [SLOW]
+      action:
+        module: "{{ ansible_pkg_mgr }}"
+        name: "{{ item }}"
+        state: latest
+      with_items: "{{ required_pkgs["{{ ansible_distribution|lower }}"] }}"
+      when: ansible_os_family != "CoreOS"
+
+    # Todo : selinux configuration
+    - name: Set selinux policy to permissive
+      selinux: policy=targeted state=permissive
+      when: ansible_os_family == "RedHat"
+      changed_when: False
+
+    - name: "Download Kubernetes Executables [SLOW]"
+      get_url:
+        dest: /tmp/kubernetes.tar.gz
+        fail_on_missing: yes
+        flat: yes
+        checksum: "{{ vars["source"]["checksum"][k8s.version] }}"
+        url: "{{ source.url }}"
+        owner: "{{ k8s.account }}"
+        mode: "0755"
+        validate_certs: yes
+      local_only: true
+      when: vars["source"]["checksum"][k8s.version] is defined
+
+    - name: "Extract All Materials from Archive (step 1/2)"
+      unarchive: 
+        src: /tmp/kubernetes.tar.gz
+        dest: /tmp
+      local_only: true
+
+    - name: "Extract Executables from Archive (step 2/2) [assumes to amd64]"
+      unarchive: 
+        src: /tmp/kubernetes/server/kubernetes-server-linux-amd64.tar.gz
+        dest: /opt
+        owner: {{ k8s.account }}
+        mode: u=rx
+      local_only: true

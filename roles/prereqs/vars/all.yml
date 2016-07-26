@@ -2,7 +2,7 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Provides quick way to see all relevant variables
 
-# locations of downloads (SHA should be passed!)
+# locations of downloads
 source:
   url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s.version }}/kubernetes.tar.gz"
   checksum:
