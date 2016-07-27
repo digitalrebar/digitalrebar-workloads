@@ -173,11 +173,23 @@ roles:
           type: int
           required: true
 
-
-  - name: etcd-config
-    description: "etcd config for cluster"
-    jig: noop
-    icon: "layers"
+  - name: etcd-node
+    description: "etcd clustered from retr0h"
+    jig: ansible-playbook
+    icon: "local_grocery_store"
+    preceeds:
+      - etcd
+    requires:
+      - rebar-installed-node
+      - cert-ca-install-root
+      - cert-ca-signed-cert
+    flags:
+      - implicit
+      - milestone
+    wants-attribs:
+      - cert-key-file
+      - cert-cert-file
+      - cert-root-file
     attribs:
       - name: etcd-client-port
         description: "Client Port for etcd cluster"
@@ -192,6 +204,13 @@ roles:
         default: 2380
         schema:
           type: int
+          required: true
+      - name: etcd-data-dir
+        description: "Where etcd should store its data"
+        map: 'etcd_data_dir'
+        default: "/var/cache/etcd/state"
+        schema:
+          type: str
           required: true
       - name: etcd-url-scheme
         description: "HTTP or HTTPS for communication"
@@ -235,34 +254,6 @@ roles:
         schema:
           type: str
           required: true
-
-
-  - name: etcd-node
-    description: "etcd clustered from retr0h"
-    jig: ansible-playbook
-    icon: "local_grocery_store"
-    preceeds:
-      - etcd
-    requires:
-      - rebar-installed-node
-      - etcd-config
-      - cert-ca-install-root
-      - cert-ca-signed-cert
-    flags:
-      - implicit
-      - milestone
-    wants-attribs:
-      - etcd-client-port
-      - etcd-peer-port
-      - etcd-url-scheme
-      - etcd-initial-cluster-state
-      - etcd-initial-cluster-token
-      - etcd-use-client-certs
-      - etcd-use-peer-certs
-      - etcd-network
-      - cert-key-file
-      - cert-cert-file
-      - cert-root-file
     metadata:
       playbook_src_paths:
         roles/etcd: https://github.com/digitalrebar/ansible-etcd
@@ -297,7 +288,7 @@ roles:
     type: "BarclampCluster::ServiceRole"
     icon: "store"
     requires:
-      - etcd-config
+      - etcd-node
     flags:
       - milestone
     events:
