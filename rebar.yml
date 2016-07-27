@@ -178,8 +178,6 @@ roles:
     description: "etcd config for cluster"
     jig: noop
     icon: "layers"
-    requires:
-      - rebar-installed-node
     attribs:
       - name: etcd-client-port
         description: "Client Port for etcd cluster"
@@ -223,54 +221,12 @@ roles:
         schema:
           type: bool
           required: true
-      - name: etcd-client-cert-file
-        description: "Client connection cert file"
-        map: 'etcd_client_cert_file'
-        default: "/etc/etcd/etcd-client.cert"
-        schema:
-          type: str
-          required: true
-      - name: etcd-client-key-file
-        description: "Client connection key file"
-        map: 'etcd_client_key_file'
-        default: "/etc/etcd/etcd-client.key"
-        schema:
-          type: str
-          required: true
-      - name: etcd-client-ca-file
-        description: "Client connection ca file"
-        map: 'etcd_client_trusted_ca_file'
-        default: "/etc/etcd/etcd-trusted-client.pem"
-        schema:
-          type: str
-          required: true
       - name: etcd-use-peer-certs
         description: "Should etcd use Peer certs"
         map: 'etcd_peer_client_cert_auth'
         default: true
         schema:
           type: bool
-          required: true
-      - name: etcd-peer-cert-file
-        description: "Peer connection cert file"
-        map: 'etcd_peer_cert_file'
-        default: "/etc/etcd/etcd-peer.cert"
-        schema:
-          type: str
-          required: true
-      - name: etcd-peer-key-file
-        description: "Peer connection key file"
-        map: 'etcd_peer_key_file'
-        default: "/etc/etcd/etcd-peer.key"
-        schema:
-          type: str
-          required: true
-      - name: etcd-peer-ca-file
-        description: "Peer connection ca file"
-        map: 'etcd_peer_trusted_ca_file'
-        default: "/etc/etcd/etcd-trusted-peer.pem"
-        schema:
-          type: str
           required: true
       - name: etcd-network
         description: "The network of the etcd nodes, e.g. admin category"
@@ -290,6 +246,8 @@ roles:
     requires:
       - rebar-installed-node
       - etcd-config
+      - cert-ca-install-root
+      - cert-ca-signed-cert
     flags:
       - implicit
       - milestone
@@ -300,14 +258,11 @@ roles:
       - etcd-initial-cluster-state
       - etcd-initial-cluster-token
       - etcd-use-client-certs
-      - etcd-client-cert-file
-      - etcd-client-key-file
-      - etcd-client-ca-file
       - etcd-use-peer-certs
-      - etcd-peer-cert-file
-      - etcd-peer-key-file
-      - etcd-peer-ca-file
       - etcd-network
+      - cert-key-file
+      - cert-cert-file
+      - cert-root-file
     metadata:
       playbook_src_paths:
         roles/etcd: https://github.com/digitalrebar/ansible-etcd
@@ -319,6 +274,19 @@ roles:
       role_group_map:
         etcd-node:
           - etcd
+      attribute_map:
+        - path: etcd_client_cert_file
+          name: cert/cert/destination
+        - path: etcd_client_key_file
+          name: cert/key/destination
+        - path: etcd_client_trusted_ca_file
+          name: cert/root/destination
+        - path: etcd_peer_cert_file
+          name: cert/cert/destination
+        - path: etcd_peer_key_file
+          name: cert/key/destination
+        - path: etcd_peer_trusted_ca_file
+          name: cert/root/destination
       inventory_map:
         - path: ip
           name: eval:ipaddress(v4_only, etcd-network).address
@@ -356,3 +324,77 @@ roles:
             - type: str
               pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
 
+  - name: cert-ca
+    jig: role-provided
+    type: "BarclampCluster::MakeCa"
+    icon: account_balance
+    attribs:
+      - name: cert-ca-label
+        description: "Label of the root CA"
+        default: "k8s-ca"
+        map: 'cert/label'
+        schema:
+          type: str
+  - name: cert-ca-install-root
+    jig: role-provided
+    type: "BarclampCluster::InstallRootCa"
+    requires:
+      - cert-ca
+    flags:
+      - implicit
+      - milestone
+    wants-attribs:
+      - cert-ca-label
+    icon: stars
+    attribs:
+      - name: cert-root-file
+        description: "Information about the root file"
+        map: "cert/root"
+        default:
+          destination: "/etc/cert-root.pem"
+          perm: "0600"
+          user: "root"
+          group: "root"
+        schema:
+          type: map
+          mapping:
+            =:
+              type: str
+  - name: cert-ca-signed-cert
+    jig: role-provided
+    type: "BarclampCluster::InstallSignedCert"
+    requires:
+      - cert-ca
+    flags:
+      - implicit
+      - milestone
+    wants-attribs:
+      - cert-ca-label
+    icon: enhanced_encryption
+    attribs:
+      - name: cert-cert-file
+        description: "Information about the cert file"
+        map: "cert/cert"
+        default:
+          destination: "/etc/cert.pem"
+          perm: "0600"
+          user: "root"
+          group: "root"
+        schema:
+          type: map
+          mapping:
+            =:
+              type: str
+      - name: cert-key-file
+        description: "Information about the key file"
+        map: "cert/key"
+        default:
+          destination: "/etc/cert.key"
+          perm: "0600"
+          user: "root"
+          group: "root"
+        schema:
+          type: map
+          mapping:
+            =:
+              type: str
