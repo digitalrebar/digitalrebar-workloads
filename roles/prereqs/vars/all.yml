@@ -8,22 +8,21 @@ source:
   checksum:
     v1.3.3: "sha256:a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c"
 
-required_pkgs:
-  centos: 
-    - libselinux-python
-    - device-mapper-libs
-    - rsync
-  debian:
-    - python-apt
-    - aufs-tools
-    - apt-transport-https
-    - software-properties-common
-    - rsync
-  fedora:
-    - libselinux-python
-    - device-mapper-libs
-    - rsync
-  redhat:
-    - libselinux-python
-    - device-mapper-libs
-    - rsync
+centos:
+  - libselinux-python
+  - device-mapper-libs
+  - rsync
+debian:
+  - python-apt
+  - aufs-tools
+  - apt-transport-https
+  - software-properties-common
+  - rsync
+fedora:
+  - libselinux-python
+  - device-mapper-libs
+  - rsync
+redhat:
+  - libselinux-python
+  - device-mapper-libs
+  - rsync

@@ -5,14 +5,27 @@
 - name: "Debug On? YES!"
   debug: msg='!!!!! WARNING - DEBUG ON - DISABLE FOR PRODUCTION !!!!!'
 
-- name: "DEBUG: Account"
+- name: "VAR: Account"
   debug: var=k8s.account
 
-- name: "DEBUG: OS Family"
-  debug: var=ansible_distribution|lower
+- name: "VAR: Version"
+  debug: var=k8s.version
 
-- name: "DEBUG: Required Packages"
-  debug: var=required_pkgs["{{ ansible_distribution|lower }}"]
+- name: "VAR: OS Family"
+  debug: var=ansible_os_family|lower
 
-#- name: "DEBUG: Variable"
+- name: "VAR: Required Packages"
+  debug: var="{{ ansible_os_family|lower }}"
+  # required_pkgs.{{ ansible_os_family|lower }}
+
+- name: "VAR: Download Source"
+  debug: var=source.url
+
+- name: "VAR: Strict Checksum"
+  debug: var=k8s.strict
+
+- name: "VAR: Checksum"
+  debug: var=source.checksum["{{ k8s.version }}"]
+
+#- name: "VAR: Variable"
 #  debug: var=rebar
