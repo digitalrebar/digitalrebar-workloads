@@ -59,11 +59,9 @@ roles:
     attribs:
       - name: k8s-master-network
         description: "The network of the Master nodes"
-        map: 'k8s/master/network'
         default: 'node-control-address'
       - name: k8s-master-addresses
         description: "The addresses of the Master nodes"
-        map: 'k8s/master/addresses'
         default: []
         schema:
           type: seq
@@ -73,7 +71,6 @@ roles:
               pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
       - name: k8s-master-hostnames
         description: "All hostnames of the Master nodes"
-        map: 'k8s/master/hostnames'
         default: []
         schema:
           type: seq
@@ -99,21 +96,18 @@ roles:
     attribs:
       - name: k8s-account
         description: "Kubernetes User Account"
-        map: 'k8s\account'
         default: "kube"
         schema:
           type: str
           required: true
       - name: k8s-version
         description: "The Kubernetes Version"
-        map: 'k8s\version'
         default: v1.3.3
         schema:
           type: str
           required: true
       - name: k8s-strict
         description: "The Kubernetes Checksum Required"
-        map: 'k8s\strict'
         default: true
         schema:
           type: bool
@@ -147,7 +141,6 @@ roles:
     attribs:
       - name: k8s-users
         description: "The default set of users for kubernetes API"
-        map: 'k8s\users'
         default:
           kube:
             pass: changeme
@@ -163,21 +156,18 @@ roles:
           required: true
       - name: k8s-log-level
         description: "The kubernetes logging level"
-        map: 'k8s\log\level'
         default: 2
         schema:
           type: int
           required: true
       - name: k8s-apiserver-port
         description: "The secure port for the API server"
-        map: 'k8s\apiserver\port'
         default: 443
         schema:
           type: int
           required: true
-      - name: k8s-apiserver_insecure_port
+      - name: k8s-apiserver-insecure_port
         description: "The insecure port for the API server"
-        map: 'k8s\apiserver\insecure_port'
         default: 8080
         schema:
           type: int

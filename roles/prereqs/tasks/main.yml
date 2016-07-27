@@ -30,15 +30,15 @@
         state: directory
         owner: "{{ k8s.account }}"
       with_items:
-        - {{ config_dir }}
-        - {{ config_dir }}/ssl
-        - {{ config_dir }}/tokens
-        - {{ config_dir }}/users
-        - {{ bin_dir }}
-        - {{ bin_dir }}/kubernetes-scripts
+        - "{{ config_dir }}"
+        - "{{ config_dir }}/ssl"
+        - "{{ config_dir }}/tokens"
+        - "{{ config_dir }}/users"
+        - "{{ bin_dir }}"
+        - "{{ bin_dir }}/kubernetes-scripts"
         - /etc/cni/net.d
         - /opt/cni/bin
-        - {{ log_dir }}
+        - "{{ log_dir }}"
 
     - name: Update package management cache (YUM)
       yum: update_cache=yes name='*'
@@ -65,7 +65,7 @@
         module: "{{ ansible_pkg_mgr }}"
         name: "{{ item }}"
         state: latest
-      with_items: "{{ required_pkgs["{{ ansible_distribution|lower }}"] }}"
+      with_items: "{{ vars[ansible_os_family|lower] }}"
       when: ansible_os_family != "CoreOS"
 
     # Todo : selinux configuration
@@ -74,29 +74,32 @@
       when: ansible_os_family == "RedHat"
       changed_when: False
 
+    - name: "Allow downloads without checksum!"
+      fail: msg="not supported yet"
+      when: not k8s.strict
+
     - name: "Download Kubernetes Executables [SLOW]"
       get_url:
         dest: /tmp/kubernetes.tar.gz
-        fail_on_missing: yes
-        flat: yes
-        checksum: "{{ vars["source"]["checksum"][k8s.version] }}"
+        checksum: "{{ item }}"
         url: "{{ source.url }}"
         owner: "{{ k8s.account }}"
         mode: "0755"
         validate_certs: yes
-      local_only: true
-      when: vars["source"]["checksum"][k8s.version] is defined
+      with_items: "{{ vars['source']['checksum'][k8s.version] }}"
+      when: source.checksum["{{k8s.version}}"] is defined and k8s.strict
 
+    # ideally, we could do this on the server and just copy the result
     - name: "Extract All Materials from Archive (step 1/2)"
       unarchive: 
+        copy: no
         src: /tmp/kubernetes.tar.gz
         dest: /tmp
-      local_only: true
 
     - name: "Extract Executables from Archive (step 2/2) [assumes to amd64]"
       unarchive: 
+        copy: no
         src: /tmp/kubernetes/server/kubernetes-server-linux-amd64.tar.gz
         dest: /opt
-        owner: {{ k8s.account }}
+        owner: "{{ k8s.account }}"
         mode: u=rx
-      local_only: true
