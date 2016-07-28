@@ -1,9 +1,5 @@
---- 
 # APL v2 Licensed.  Copyright RackN 2016
-- name: Kubernetes Pre-reqs Install by RackN 2016
-  hosts: all
-
-  tasks:
+--- 
     - debug: msg="Playbook source {{ playbook_source }} "
 
     - include_vars: vars/all.yml
@@ -78,28 +74,32 @@
       fail: msg="not supported yet"
       when: not k8s.strict
 
+    - name: Create Cache Directory
+      local_action: file path="{{k8s.cache}}/{{k8s.version}}" state=directory mode=0775 recurse=yes
+
     - name: "Download Kubernetes Executables [SLOW]"
-      get_url:
-        dest: /tmp/kubernetes.tar.gz
+      local_action:
+        module: get_url
+        dest: "{{k8s.cache}}/{{k8s.version}}/kubernetes.tar.gz"
         checksum: "{{ item }}"
         url: "{{ source.url }}"
-        owner: "{{ k8s.account }}"
-        mode: "0755"
         validate_certs: yes
       with_items: "{{ vars['source']['checksum'][k8s.version] }}"
       when: source.checksum["{{k8s.version}}"] is defined and k8s.strict
 
     # ideally, we could do this on the server and just copy the result
     - name: "Extract All Materials from Archive (step 1/2)"
-      unarchive: 
+      local_action:
+        module: unarchive
         copy: no
-        src: /tmp/kubernetes.tar.gz
-        dest: /tmp
+        src: "{{k8s.cache}}/{{k8s.version}}/kubernetes.tar.gz"
+        dest: "{{k8s.cache}}/{{k8s.version}}"
+        creates: "{{k8s.cache}}/{{k8s.version}}/kubernetes/server/kubernetes-server-linux-amd64.tar.gz"
 
     - name: "Extract Executables from Archive (step 2/2) [assumes to amd64]"
       unarchive: 
-        copy: no
-        src: /tmp/kubernetes/server/kubernetes-server-linux-amd64.tar.gz
+        src: "{{k8s.cache}}/{{k8s.version}}/kubernetes/server/kubernetes-server-linux-amd64.tar.gz"
         dest: /opt
         owner: "{{ k8s.account }}"
         mode: u=rx
+        creates: "/opt/kubernetes/server/bin/kubectl"

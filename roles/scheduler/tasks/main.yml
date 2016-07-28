@@ -1,13 +1,42 @@
 --- 
-# APL v2 Licensed.  Copyright RackN 2016
-# Original scripts based on code from https://github.com/kubespray/kargo
-
---- 
-- name: Kubernetes Scheduler Install by RackN 2016
-  hosts: all
-  tasks:
     - debug: msg="Playbook source {{ playbook_source }} "
+
     # debugging variables
     - include: debug.yml
       when: debug
+
+    - name: install | Write kube-scheduler systemd init file
+      template:
+        src: "kube-scheduler.service.j2"
+        dest: "/etc/systemd/system/kube-scheduler.service"
+        backup: yes
+      when: ansible_service_mgr == "systemd"
+      notify: restart kube-scheduler
+
+    - name: reload systemd
+      command: systemctl daemon-reload
+      when: ansible_service_mgr == "systemd"
+
+    - name: reload kube-scheduler
+      service:
+        name: kube-scheduler
+        state: restarted
+        enabled: yes
+
+    - name: Enable scheduler
+      service:
+        name: kube-scheduler
+        enabled: yes
+        state: started
+
+    - meta: flush_handlers
+
+# GREG: This is wrong, do this instead: sudo systemctl status kube-scheduler-manager --no-pager
+
+    - name: wait for the scheduler to be running
+      wait_for:
+        port: "{{ k8s.apiserver.insecure_port }}"
+        timeout: 60
+
+
 
