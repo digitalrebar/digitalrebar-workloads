@@ -1,12 +1,32 @@
 --- 
-- name: Kubernetes API Server Install by RackN 2016
-  hosts: apiserver
-  tasks:
+#- name: Kubernetes API Server Install by RackN 2016
+#  hosts: apiserver
+#  tasks:
+
     - debug: msg="Playbook source {{ playbook_source }} "
 
     # debugging variables
     - include: debug.yml
       when: debug
+
+    - name: Write kube-apiserver config file
+      template:
+        src: "kube-apiserver.j2"
+        dest: "{{ config_dir }}/kube-apiserver.env"
+        backup: yes
+      notify: restart kube-apiserver
+
+    - name: install | Write kube-apiserver systemd init file
+      template:
+        src: "kube-apiserver.service.j2"
+        dest: "/etc/systemd/system/kube-apiserver.service"
+        backup: yes
+      when: ansible_service_mgr == "systemd"
+      notify: restart kube-apiserver
+
+    - name: Allow apiserver to bind on both secure and insecure ports
+      shell: setcap cap_net_bind_service+ep {{ bin_dir }}/kube-apiserver
+      changed_when: false
 
     - name: reload systemd
       command: systemctl daemon-reload
@@ -27,30 +47,7 @@
         state: started
       when: restart_apimaster is not defined or restart_apimaster == False
 
-    - name: install | Write kube-apiserver systemd init file
-      template:
-        src: "kube-apiserver.service.j2"
-        dest: "/etc/systemd/system/kube-apiserver.service"
-        backup: yes
-      when: ansible_service_mgr == "systemd"
-      notify: restart kube-apiserver
-
-    - name: Write kube-apiserver config file
-      template:
-        src: "kube-apiserver.j2"
-        dest: "{{ config_dir }}/kube-apiserver.env"
-        backup: yes
-      notify: restart kube-apiserver
-
-    - name: Allow apiserver to bind on both secure and insecure ports
-      shell: setcap cap_net_bind_service+ep {{ bin_dir }}/kube-apiserver
-      changed_when: false
-
     - meta: flush_handlers
-
-    - include: start.yml
-      with_items: "{{ groups['kube-master'] }}"
-      when: "{{ hostvars[item].inventory_hostname == inventory_hostname }}"
 
     - name: wait for the apiserver to be running
       wait_for:

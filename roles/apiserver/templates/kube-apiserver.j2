@@ -3,35 +3,40 @@
 #
 # The following values are used to configure the kube-apiserver
 
-# logging to stderr means we get it in the systemd journal
-KUBE_LOGGING="--logtostderr=true"
+KUBE_API_SERVER_ARGS+=" --admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"
+KUBE_API_SERVER_ARGS+=" --advertise-address={{ ip }}"
+KUBE_API_SERVER_ARGS+=" --apiserver-count=3"
 
-# Apiserver Log level, 0 is debug
-KUBE_LOG_LEVEL="{{ k8s.log.level }}"
+KUBE_API_SERVER_ARGS+=" --allow-privileged=true"
+KUBE_API_SERVER_ARGS+=" --authorization-mode=ABAC"
+KUBE_API_SERVER_ARGS+=" --authorization-policy-file=/var/lib/kubernetes/authorization-policy.jsonl"
+KUBE_API_SERVER_ARGS+=" --bind-address=0.0.0.0"
+KUBE_API_SERVER_ARGS+=" --enable-swagger-ui=true"
 
-# Should this cluster be allowed to run privileged docker containers
-KUBE_ALLOW_PRIV="--allow_privileged=true"
+KUBE_API_SERVER_ARGS="  --logtostderr=true"
+KUBE_API_SERVER_ARGS+=" --secure-port={{ k8s.apiserver.port }}"
 
-# The port on the local server to listen on.
-KUBE_API_PORT="--insecure-port={{k8s.apiserver.insecure_port}} --secure-port={{ k8s.apiserver.port }}"
+KUBE_API_SERVER_ARGS+=" --etcd-cafile=/var/lib/kubernetes/ca.pem"
+KUBE_API_SERVER_ARGS+=" --etcd-servers={% for host in etcd.addresses %}https://{{ host }}:{{ etcd.port }}{% if not loop.last %},{% endif %}{% endfor %}"
 
-# Insecure API address (we only want to allow localhost!)
-KUBE_API_INSECURE_BIND="--insecure-bind-address=localhost"
+KUBE_API_SERVER_ARGS+=" --insecure-port={{k8s.apiserver.insecure_port}}"
+KUBE_API_SERVER_ARGS+=" --insecure-bind-address=localhost"
 
-# Address range to use for services
-KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ k8s.master.addresses }}"
+KUBE_API_SERVER_ARGS+=" --kubelet-certificate-authority=/var/lib/kubernetes/ca.pem"
 
-# Location of the etcd cluster
-KUBE_ETCD_SERVERS="--etcd_servers={% for host in etcd.addresses %}http://{{ host }}:{{ etcd.port }}{% if not loop.last %},{% endif %}{% endfor %}"
+KUBE_API_SERVER_ARGS+=" --service-account-key-file={{ k8s.cert_dir }}/apiserver-key.pem"
+KUBE_API_SERVER_ARGS+=" --service-cluster-ip-range={{ k8s.master.addresses }}"
+KUBE_API_SERVER_ARGS+=" --service-node-port-range=30000-32767"
 
-# default admission control policies
-KUBE_ADMISSION_CONTROL="--admission_control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"
+KUBE_API_SERVER_ARGS+=" --token-auth-file={{ k8s.token_dir }}/known_tokens.csv"
 
-# RUNTIME API CONFIGURATION (e.g. enable extensions)
-KUBE_RUNTIME_CONFIG="{% if k8s.api_runtime_config is defined %}{% for conf in k8s.api_runtime_config %}--runtime-config={{ conf }} {% endfor %}{% endif %}"
+KUBE_API_SERVER_ARGS+=" --tls-cert-file={{ k8s.cert_dir }}/apiserver.pem"
+KUBE_API_SERVER_ARGS+=" --tls-private-key-file={{ k8s.cert_dir }}/apiserver-key.pem"
+KUBE_API_SERVER_ARGS+=" --v={{ k8s.log.level }}"
 
-# TLS CONFIGURATION
-KUBE_TLS_CONFIG="--tls_cert_file={{ k8s.cert_dir }}/apiserver.pem --tls_private_key_file={{ k8s.cert_dir }}/apiserver-key.pem --client_ca_file={{ k8s.cert_dir }}/ca.pem"
 
-# Add you own!
-KUBE_API_ARGS="--token_auth_file={{ k8s.token_dir }}/known_tokens.csv --basic-auth-file={{ k8s.users_dir }}/known_users.csv --service_account_key_file={{ k8s.cert_dir }}/apiserver-key.pem --advertise-address={{ cluster.address }}"
+# TODO: THINK ABOUT TURNING THIS ON - KARGO
+# KUBE_API_SERVER_ARGS+=" --client-ca-file={{ k8s.cert_dir }}/ca.pem"
+# KUBE_API_SERVER_ARGS+=" --basic-auth-file={{ k8s.users_dir }}/known_users.csv"
+# KUBE_API_SERVER_ARGS+=" {% if k8s.api_runtime_config is defined %}{% for conf in k8s.api_runtime_config %}--runtime-config={{ conf }} {% endfor %}{% endif %}"
+
