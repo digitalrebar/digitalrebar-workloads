@@ -36,64 +36,35 @@ metadata:
   playbook_path: k8
 
 roles:
-  - name: k8s-master
-    description: 'Kubernetes Master'
-    icon: "grid_on"
-    type: "BarclampCluster::ServiceRole"
+  - name: k8s-config
+    description: 'Kubernetes Config'
+    icon: "group_work"
     jig: noop
-    flags:
-      - milestone
-    events:
-      - endpoint: inproc://role:k8s-master/on_active
-        selectors:
-          - event: on_active
-            obj_class: role
-            obj_id: k8s-master
-          - event: synch_on_delete
-            obj_class: role
-            obj_id: k8s-master
-    requires:
-      - k8s-apiserver
-      #- k8s-scheduler
-      #- k8s-controller
     attribs:
       - name: k8s-master-network
         description: "The network of the Master nodes"
-        default: 'node-control-address'
-      - name: k8s-master-addresses
-        description: "The addresses of the Master nodes"
-        default: []
+        default: 'admin'
         schema:
-          type: seq
-          required: false
-          sequence:
-            - type: str
-              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
-      - name: k8s-master-hostnames
-        description: "All hostnames of the Master nodes"
-        default: []
+          type: str
+          required: true
+      - name: k8s-cluster_name
+        description: "Kubernetes Cluster Name"
+        default: "kubernetes"
         schema:
-          type: seq
-          required: false
-          sequence:
-            - type: str
-
-  - name: k8s-prereqs
-    description: 'Kubernetes Setup for All Roles'
-    jig: ansible-playbook
-    icon: "crop_free"
-    flags:
-      - implicit
-    requires:
-      - rebar-installed-node
-      #- k8s-certs
-    metadata:
-      role_role_map:
-        k8s-prereqs:
-          - prereqs
-      playbook_combined_repo: true
-      playbook_file: roles/prereqs/tasks/main.yml
-    attribs:
+          type: str
+          required: true
+      - name: k8s-cluster_service_ips
+        description: "The pool of service cluster IPs"
+        default: '10.32.0.0/24'
+        schema:
+          type: str
+          required: true
+      - name: k8s-cluster_ips
+        description: "The pool of cluster IPs"
+        default: '10.20.0.0/16'
+        schema:
+          type: str
+          required: true
       - name: k8s-account
         description: "Kubernetes User Account"
         default: "kube"
@@ -106,45 +77,36 @@ roles:
         schema:
           type: str
           required: true
+      - name: k8s-cache
+        description: "Kubernetes Cache"
+        default: "/tftpboot/cache/kubernetes"
+        schema:
+          type: str
+          required: true
       - name: k8s-strict
         description: "The Kubernetes Checksum Required"
         default: true
         schema:
           type: bool
           required: true
-
-# master roles
-
-  - name: k8s-apiserver
-    description: 'Kubernetes API Server'
-    jig: ansible-playbook
-    icon: "photo_filter"
-    flags:
-      - cluster
-      - implicit
-    requires:
-      - k8s-prereqs
-      #- k8s-ca
-      #- k8s-ca-install-root
-      #- etcd
-    wants-attribs:
-      - cluster-name
-      - k8s-account
-      #- etcd-addresses
-      #- etcd-port
-    metadata:
-      role_role_map:
-        k8s-apiserver:
-          - apiserver
-      playbook_combined_repo: true
-      playbook_file: roles/apiserver/tasks/main.yml
-    attribs:
+      - name: k8s-token_dir
+        description: "The Kubernetes token/auth dir"
+        default: "/etc/kubernetes"
+        schema:
+          type: str
+          required: true
       - name: k8s-users
         description: "The default set of users for kubernetes API"
         default:
-          kube:
+          admin:
             pass: changeme
             role: admin
+          kubelet:
+            pass: changeme
+            role: kubelet
+          scheduler:
+            pass: changeme
+            role: scheduler
         schema:
           type: map
           mapping:
@@ -173,11 +135,206 @@ roles:
           type: int
           required: true
 
+  - name: k8s-prereqs
+    description: 'Kubernetes Setup for All Roles'
+    jig: ansible-playbook
+    icon: "crop_free"
+    flags:
+      - implicit
+    requires:
+      - rebar-installed-node
+      - k8s-config
+    wants-attribs:
+      - k8s-cache
+      - k8s-account
+      - k8s-version
+      - k8s-strict
+    metadata:
+      role_role_map:
+        k8s-prereqs:
+          - prereqs
+      role_group_map:
+        k8s-prereqs:
+          - prereqs
+      playbook_combined_repo: true
+      playbook_file: "."
 
-  - name: etcd-config
-    description: "etcd config for cluster"
+  - name: k8s-master
+    description: 'Kubernetes Master'
+    icon: "grid_on"
+    type: "BarclampCluster::ServiceRole"
     jig: noop
-    icon: "layers"
+    flags:
+      - milestone
+    events:
+      - endpoint: inproc://role:k8s-master/on_active
+        selectors:
+          - event: on_active
+            obj_class: role
+            obj_id: k8s-master
+          - event: synch_on_delete
+            obj_class: role
+            obj_id: k8s-master
+    requires:
+      - k8s-apiserver
+      - k8s-scheduler
+      - k8s-controller
+    attribs:
+      - name: k8s-master-addresses
+        description: "The addresses of the Master nodes"
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
+              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
+      - name: k8s-master-hostnames
+        description: "All hostnames of the Master nodes"
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
+
+  - name: k8s-apiserver
+    description: 'Kubernetes API Server'
+    jig: ansible-playbook
+    icon: "photo_filter"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      - k8s-config
+      - cert-ca-install-root
+      - cert-ca-signed-cert
+      - etcd
+    wants-attribs:
+      - k8s-account
+      - k8s-version
+      - k8s-log-level
+      - k8s-cluster_service_ips
+      - k8s-apiserver-port
+      - k8s-apiserver-insecure_port
+      - k8s-token_dir
+      - k8s-users
+      - k8s-master-network
+      - cert-key-file
+      - cert-cert-file
+      - cert-root-file
+      - etcd-addresses
+      - etcd-client-port
+    metadata:
+      role_role_map:
+        k8s-apiserver:
+          - apiserver
+      role_group_map:
+        k8s-apiserver:
+          - apiserver
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: k8s/apiserver/tls_cert_file
+          name: cert/cert/destination
+        - path: k8s/apiserver/tls_key_file
+          name: cert/key/destination
+        - path: k8s/apiserver/service_account_key_file
+          name: cert/key/destination
+        - path: k8s/apiserver/kubelet_cert_auth
+          name: cert/root/destination
+        - path: k8s/apiserver/etcd_ca_file
+          name: cert/root/destination
+        - path: k8s/apiserver/count
+          name: eval:count_nodes_with_role(k8s-apiserver)
+        - path: etcd/port
+          name: etcd_client_port
+      inventory_map:
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network).address
+
+  # Assumes that it is running on the same node as the k8s-apiserver
+  - name: k8s-controller
+    description: 'Kubernetes Controller Server'
+    jig: ansible-playbook
+    icon: "photo_filter"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      - k8s-config
+      - k8s-apiserver
+      - cert-ca-install-root
+      - cert-ca-signed-cert
+    wants-attribs:
+      - k8s-apiserver-insecure_port
+      - k8s-cluster_name
+      - k8s-cluster_ips
+      - k8s-cluster_service_ips
+      - k8s-log-level
+      - k8s-master-network
+      - cert-key-file
+      - cert-cert-file
+      - cert-root-file
+    metadata:
+      role_role_map:
+        k8s-controller:
+          - controller
+      role_group_map:
+        k8s-controller:
+          - controller
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: k8s/controller/service_account_key_file
+          name: cert/key/destination
+        - path: k8s/controller/root_ca_file
+          name: cert/root/destination
+      inventory_map:
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network).address
+
+  - name: k8s-scheduler
+    description: 'Kubernetes Scheduler Server'
+    jig: ansible-playbook
+    icon: "photo_filter"
+    flags:
+      - implicit
+    requires:
+      - k8s-prereqs
+      - k8s-config
+      - k8s-apiserver
+    wants-attribs:
+      - k8s-apiserver-insecure_port
+      - k8s-log-level
+      - k8s-master-network
+    metadata:
+      role_role_map:
+        k8s-scheduler:
+          - scheduler
+      role_group_map:
+        k8s-scheduler:
+          - scheduler
+      playbook_combined_repo: true
+      playbook_file: "."
+      inventory_map:
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network).address
+
+  - name: etcd-node
+    description: "etcd clustered from retr0h"
+    jig: ansible-playbook
+    icon: "local_grocery_store"
+    requires:
+      - rebar-installed-node
+      - cert-ca-install-root
+      - cert-ca-signed-cert
+    flags:
+      - milestone
+    wants-attribs:
+      - cert-key-file
+      - cert-cert-file
+      - cert-root-file
     attribs:
       - name: etcd-client-port
         description: "Client Port for etcd cluster"
@@ -192,6 +349,13 @@ roles:
         default: 2380
         schema:
           type: int
+          required: true
+      - name: etcd-data-dir
+        description: "Where etcd should store its data"
+        map: 'etcd_data_dir'
+        default: "/var/cache/etcd/state"
+        schema:
+          type: str
           required: true
       - name: etcd-url-scheme
         description: "HTTP or HTTPS for communication"
@@ -235,34 +399,6 @@ roles:
         schema:
           type: str
           required: true
-
-
-  - name: etcd-node
-    description: "etcd clustered from retr0h"
-    jig: ansible-playbook
-    icon: "local_grocery_store"
-    preceeds:
-      - etcd
-    requires:
-      - rebar-installed-node
-      - etcd-config
-      - cert-ca-install-root
-      - cert-ca-signed-cert
-    flags:
-      - implicit
-      - milestone
-    wants-attribs:
-      - etcd-client-port
-      - etcd-peer-port
-      - etcd-url-scheme
-      - etcd-initial-cluster-state
-      - etcd-initial-cluster-token
-      - etcd-use-client-certs
-      - etcd-use-peer-certs
-      - etcd-network
-      - cert-key-file
-      - cert-cert-file
-      - cert-root-file
     metadata:
       playbook_src_paths:
         roles/etcd: https://github.com/digitalrebar/ansible-etcd
@@ -297,7 +433,7 @@ roles:
     type: "BarclampCluster::ServiceRole"
     icon: "store"
     requires:
-      - etcd-config
+      - etcd-node
     flags:
       - milestone
     events:
@@ -310,7 +446,7 @@ roles:
             obj_class: role
             obj_id: etcd
     wants-attribs:
-      - etcd-port
+      - etcd-client-port
       - etcd-network
     attribs:
       - name: etcd-addresses

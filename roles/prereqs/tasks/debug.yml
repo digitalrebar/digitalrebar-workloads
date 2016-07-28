@@ -11,6 +11,9 @@
 - name: "VAR: Version"
   debug: var=k8s.version
 
+- name: "VAR: Cache"
+  debug: var=k8s.cache
+
 - name: "VAR: OS Family"
   debug: var=ansible_os_family|lower
 
