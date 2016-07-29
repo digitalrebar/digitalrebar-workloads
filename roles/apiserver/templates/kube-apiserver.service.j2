@@ -3,12 +3,43 @@ Description=Kubernetes API Server
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
 [Service]
-EnvironmentFile={{ config_dir }}/kube-apiserver.env
 User={{ k8s.account }}
-ExecStart={{ bin_dir }}/kube-apiserver $KUBE_API_SERVER_ARGS
+ExecStart={{ bin_dir }}/kube-apiserver \
+		--admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
+		--advertise-address={{ ip }} \
+		--apiserver-count={{ k8s.apiserver.count }} \
+		--allow-privileged=true \
+		--authorization-mode=ABAC \
+		--authorization-policy-file={{k8s.token_dir}}/authorization-policy.jsonl \
+		--bind-address=0.0.0.0 \
+		--enable-swagger-ui=true \
+		--logtostderr=true \
+		--secure-port={{ k8s.apiserver.port }} \
+		--etcd-cafile={{ k8s.apiserver.etcd_ca_file }} \
+		--etcd-certfile={{ k8s.apiserver.etcd_key_file }} \
+		--etcd-keyfile={{ k8s.apiserver.etcd_cert_file }} \
+		--etcd-servers={% for host in etcd.addresses %}https://{{ host }}:{{ etcd.port }}{% if not loop.last %},{% endif %}{% endfor %} \
+		--insecure-port={{k8s.apiserver.insecure_port}} \
+		--insecure-bind-address=127.0.0.1 \
+		--kubelet-certificate-authority={{ k8s.apiserver.kubelet_cert_auth }} \
+		--service-account-key-file={{ k8s.apiserver.service_account_key_file }} \
+		--service-cluster-ip-range={{ k8s.cluster_service_ips }} \
+		--service-node-port-range=30000-32767 \
+		--token-auth-file={{ k8s.token_dir }}/known_tokens.csv \
+		--tls-cert-file={{ k8s.apiserver.tls_cert_file }} \
+		--tls-private-key-file={{ k8s.apiserver.tls_key_file }} \
+		--v={{ k8s.log.level }}
 Restart=on-failure
 Type=notify
 LimitNOFILE=65536
 
 [Install]
 WantedBy=multi-user.target
+
+
+# TODO: THINK ABOUT TURNING THIS ON - KARGO
+# 		--client-ca-file={ { k8s.cert_dir } }/ca.pem \
+# 		--basic-auth-file={ { k8s.users_dir } }/known_users.csv \
+# 		{% if k8s.api_runtime_config is defined %}{% for conf in k8s.api_runtime_config %}--runtime-config={{ conf }} {% endfor %}{% endif %} \
+#
+
