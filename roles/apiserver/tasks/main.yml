@@ -5,13 +5,6 @@
 - include: debug.yml
   when: debug
 
-- name: Write kube-apiserver config file
-  template:
-    src: "kube-apiserver.j2"
-    dest: "{{ config_dir }}/kube-apiserver.env"
-    backup: yes
-  notify: restart kube-apiserver
-
 - name: install | Write kube-apiserver systemd init file
   template:
     src: "kube-apiserver.service.j2"
@@ -29,7 +22,7 @@
 
 - name: Populate users for token auth in API
   lineinfile:
-    dest: "{{ k8s.token_dir }}/known_token.csv"
+    dest: "{{ k8s.token_dir }}/known_tokens.csv"
     create: yes
     line: '{{ item.value.pass }},{{ item.key }},{{ item.value.role }}'
     backup: yes
@@ -38,7 +31,6 @@
 
 - name: reload systemd
   command: systemctl daemon-reload
-  when: ansible_service_mgr == "systemd" and restart_apimaster is defined and restart_apimaster == True
 
 - name: reload kube-apiserver
   service:

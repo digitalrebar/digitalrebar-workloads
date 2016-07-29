@@ -245,6 +245,10 @@ roles:
           name: cert/root/destination
         - path: k8s/apiserver/etcd_ca_file
           name: cert/root/destination
+        - path: k8s/apiserver/etcd_cert_file
+          name: cert/cert/destination
+        - path: k8s/apiserver/etcd_key_file
+          name: cert/key/destination
         - path: k8s/apiserver/count
           name: eval:count_nodes_with_role(k8s-apiserver)
         - path: etcd/port
@@ -488,7 +492,7 @@ roles:
         map: "cert/root"
         default:
           destination: "/etc/cert-root.pem"
-          perm: "0600"
+          perm: "0644"
           user: "root"
           group: "root"
         schema:
@@ -513,7 +517,7 @@ roles:
         map: "cert/cert"
         default:
           destination: "/etc/cert.pem"
-          perm: "0600"
+          perm: "0644"
           user: "root"
           group: "root"
         schema:
@@ -526,7 +530,7 @@ roles:
         map: "cert/key"
         default:
           destination: "/etc/cert.key"
-          perm: "0600"
+          perm: "0644"
           user: "root"
           group: "root"
         schema:
