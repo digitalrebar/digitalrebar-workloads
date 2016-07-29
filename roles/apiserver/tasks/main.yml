@@ -9,42 +9,37 @@
   template:
     src: "kube-apiserver.service.j2"
     dest: "/etc/systemd/system/kube-apiserver.service"
-    backup: yes
   when: ansible_service_mgr == "systemd"
-  notify: restart kube-apiserver
+  notify:
+    - reload kube-apiserver systemd
+    - restart kube-apiserver
 
 - name: install | Authorization config file
   template:
     src: "authorization-policy.jsonl.j2"
     dest: "{{ k8s.token_dir }}/authorization-policy.jsonl"
-    backup: yes
-  notify: restart kube-apiserver
+  notify:
+    - restart kube-apiserver
 
 - name: Populate users for token auth in API
   lineinfile:
     dest: "{{ k8s.token_dir }}/known_tokens.csv"
     create: yes
     line: '{{ item.value.pass }},{{ item.key }},{{ item.value.role }}'
-    backup: yes
   with_dict: "{{ k8s.users }}"
-  notify: restart kube-apiserver
+  notify:
+    - restart kube-apiserver
 
-- name: reload systemd
-  command: systemctl daemon-reload
+- name: Allow apiserver to bind on both secure and insecure ports
+  shell: setcap cap_net_bind_service+ep {{ bin_dir }}/kube-apiserver
+  changed_when: false
 
-- name: reload kube-apiserver
-  service:
-    name: kube-apiserver
-    state: restarted
-    enabled: yes
+- meta: flush_handlers
 
 - name: Enable apiserver
   service:
     name: kube-apiserver
     enabled: yes
-    state: started
-
-- meta: flush_handlers
 
 - name: wait for the apiserver to be running
   wait_for:

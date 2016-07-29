@@ -14,10 +14,3 @@
     name: kubelet
     state: restarted
 
-- name: restart kube-apiserver
-  set_fact:
-    restart_apimaster: True
-
-- name: set secret_changed
-  set_fact:
-    secret_changed: true

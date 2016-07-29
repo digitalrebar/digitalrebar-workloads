@@ -1,0 +1,9 @@
+---
+- name: reload kube-controller systemd
+  command: systemctl daemon-reload
+
+- name: restart kube-controller
+  service:
+    name: kube-controller
+    state: restarted
+
