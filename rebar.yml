@@ -492,7 +492,7 @@ roles:
         map: "cert/root"
         default:
           destination: "/etc/cert-root.pem"
-          perm: "0600"
+          perm: "0644"
           user: "root"
           group: "root"
         schema:
@@ -517,7 +517,7 @@ roles:
         map: "cert/cert"
         default:
           destination: "/etc/cert.pem"
-          perm: "0600"
+          perm: "0644"
           user: "root"
           group: "root"
         schema:
@@ -530,7 +530,7 @@ roles:
         map: "cert/key"
         default:
           destination: "/etc/cert.key"
-          perm: "0600"
+          perm: "0644"
           user: "root"
           group: "root"
         schema:
