@@ -18,3 +18,12 @@ bin_dir: /opt/kubernetes/server/bin
 config_dir: /etc/kubernetes
 log_dir: /var/log/kubernetes
 
+# locations of downloads
+source:
+  url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s.version }}/bin/linux/amd64"
+  checksum:
+    v1.3.3:
+      kube-apiserver: "sha256:a4816d0cde65368ce211464b2e85932e963caac54bcc12911b945b75d11366fc"
+      kube-controller-manager: "sha256:16aefb8facdaf98e348b5c83e7972c6786aad326c9cae5846b66c87a174e55c5"
+      kubectl: "sha256:7ecb4ce0af38d847cdc4976f72530c73b4533a8b973489b92508363566dcfd61"
+      kube-scheduler: "sha256:9047e0f76ce615b2c9c83bf798470d0356536dd460f31be6cddff7b3ecf14a12"

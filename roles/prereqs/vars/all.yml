@@ -2,12 +2,6 @@
 # APL v2 Licensed.  Copyright RackN 2016
 # Provides quick way to see all relevant variables
 
-# locations of downloads
-source:
-  url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s.version }}/kubernetes.tar.gz"
-  checksum:
-    v1.3.3: "sha256:a92a74a0d3f7d02d01ac2c8dfb5ee2e97b0485819e77b2110eb7c6b7c782478c"
-
 centos:
   - libselinux-python
   - device-mapper-libs
@@ -26,3 +20,4 @@ redhat:
   - libselinux-python
   - device-mapper-libs
   - rsync
+

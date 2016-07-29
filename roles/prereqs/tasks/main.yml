@@ -69,37 +69,3 @@
       selinux: policy=targeted state=permissive
       when: ansible_os_family == "RedHat"
       changed_when: False
-
-    - name: "Allow downloads without checksum!"
-      fail: msg="not supported yet"
-      when: not k8s.strict
-
-    - name: Create Cache Directory
-      local_action: file path="{{k8s.cache}}/{{k8s.version}}" state=directory mode=0775 recurse=yes
-
-    - name: "Download Kubernetes Executables [SLOW]"
-      local_action:
-        module: get_url
-        dest: "{{k8s.cache}}/{{k8s.version}}/kubernetes.tar.gz"
-        checksum: "{{ item }}"
-        url: "{{ source.url }}"
-        validate_certs: yes
-      with_items: "{{ vars['source']['checksum'][k8s.version] }}"
-      when: source.checksum["{{k8s.version}}"] is defined and k8s.strict
-
-    # ideally, we could do this on the server and just copy the result
-    - name: "Extract All Materials from Archive (step 1/2)"
-      local_action:
-        module: unarchive
-        copy: no
-        src: "{{k8s.cache}}/{{k8s.version}}/kubernetes.tar.gz"
-        dest: "{{k8s.cache}}/{{k8s.version}}"
-        creates: "{{k8s.cache}}/{{k8s.version}}/kubernetes/server/kubernetes-server-linux-amd64.tar.gz"
-
-    - name: "Extract Executables from Archive (step 2/2) [assumes to amd64]"
-      unarchive: 
-        src: "{{k8s.cache}}/{{k8s.version}}/kubernetes/server/kubernetes-server-linux-amd64.tar.gz"
-        dest: /opt
-        owner: "{{ k8s.account }}"
-        mode: u=rx
-        creates: "/opt/kubernetes/server/bin/kubectl"

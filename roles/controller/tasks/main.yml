@@ -5,6 +5,15 @@
 - include: debug.yml
   when: debug
 
+- name: "Download Kubernetes Executables [SLOW]"
+  get_url:
+    dest: "{{bin_dir}}/kube-controller-manager"
+    checksum: "{{ item }}"
+    url: "{{ source.url }}/kube-controller-manager"
+    validate_certs: yes
+  with_items: "{{ vars['source']['checksum'][k8s.version]['kube-controller-manager'] }}"
+    when: source.checksum["{{k8s.version}}"] is defined and k8s.strict|default(true)
+
 - name: install | Write kube-controller systemd init file
   template:
     src: "kube-controller.service.j2"
