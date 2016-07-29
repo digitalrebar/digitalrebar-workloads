@@ -382,6 +382,8 @@ roles:
         schema:
           type: str
           required: true
+      # NOTE: Kubernetes works, but currentstatuses reports etcd failure.
+      # https://github.com/kubernetes/kubernetes/issues/27343
       - name: etcd-use-client-certs
         description: "Should etcd use Client certs"
         map: 'etcd_client_cert_auth'

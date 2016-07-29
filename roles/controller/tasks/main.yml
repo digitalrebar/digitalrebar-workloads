@@ -1,42 +1,31 @@
 --- 
-    - debug: msg="Playbook source {{ playbook_source }} "
+- debug: msg="Playbook source {{ playbook_source }} "
 
-    # debugging variables
-    - include: debug.yml
-      when: debug
+# debugging variables
+- include: debug.yml
+  when: debug
 
-    - name: install | Write kube-controller systemd init file
-      template:
-        src: "kube-controller.service.j2"
-        dest: "/etc/systemd/system/kube-controller.service"
-        backup: yes
-      when: ansible_service_mgr == "systemd"
-      notify: restart kube-controller
+- name: install | Write kube-controller systemd init file
+  template:
+    src: "kube-controller.service.j2"
+    dest: "/etc/systemd/system/kube-controller.service"
+    backup: yes
+  when: ansible_service_mgr == "systemd"
+  notify: 
+    - reload kube-controller systemd
+    - restart kube-controller
 
-    - name: reload systemd
-      command: systemctl daemon-reload
-      when: ansible_service_mgr == "systemd"
+- meta: flush_handlers
 
-    - name: reload kube-controller
-      service:
-        name: kube-controller
-        state: restarted
-        enabled: yes
+- name: Enable controller
+  service:
+    name: kube-controller
+    enabled: yes
 
-    - name: Enable controller
-      service:
-        name: kube-controller
-        enabled: yes
-        state: started
+#GREG: This is wrong, do this instead: sudo systemctl status kube-controller-manager --no-pager
 
-    - meta: flush_handlers
-
-# GREG: This is wrong, do this instead: sudo systemctl status kube-controller-manager --no-pager
-
-    - name: wait for the controller to be running
-      wait_for:
-        port: "{{ k8s.apiserver.insecure_port }}"
-        timeout: 60
-
-
+- name: wait for the controller to be running
+  wait_for:
+    port: "{{ k8s.apiserver.insecure_port }}"
+    timeout: 60
 
