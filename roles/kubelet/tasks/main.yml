@@ -5,6 +5,8 @@
 - include: debug.yml
   when: debug
 
+- include: ../shared/tasks/downloader.yml kube_component=kubelet
+
 - name: Create cni directory
   file:
     path: /opt/cni
@@ -49,4 +51,3 @@
   service:
     name: kubelet
     enabled: yes
-

@@ -5,15 +5,7 @@
 - include: debug.yml
   when: debug
 
-- name: "Download Kubernetes Executables [SLOW]"
-  get_url:
-    dest: "{{bin_dir}}/kube-scheduler"
-    checksum: "{{ item }}"
-    url: "{{ source.url }}/kube-scheduler"
-    validate_certs: yes
-    mode: 0755
-  with_items: "{{ vars['source']['checksum'][k8s.version]['kube-scheduler'] }}"
-  when: source.checksum["{{k8s.version}}"] is defined and k8s.strict|default(true)
+- include: ../shared/tasks/downloader.yml kube_component=kube-scheduler
 
 - name: install | Write kube-scheduler systemd init file
   template:
