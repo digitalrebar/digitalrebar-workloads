@@ -11,6 +11,7 @@
     checksum: "{{ item }}"
     url: "{{ source.url }}/kube-apiserver"
     validate_certs: yes
+    mode: 0755
   with_items: "{{ vars['source']['checksum'][k8s.version]['kube-apiserver'] }}"
   when: source.checksum["{{k8s.version}}"] is defined and k8s.strict|default(true)
 

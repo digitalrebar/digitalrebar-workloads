@@ -1,15 +1,34 @@
 --- 
-- name: Kubernetes Proxy Install by RackN 2016
+- debug: msg="Playbook source {{ playbook_source }} "
 
-  hosts: all
-  handlers:
-    - include: handlers/main.yml
-  tasks:
-    - debug: msg="Playbook source {{ playbook_source }} "
-    # SHA references
-    - include_vars: group_vars/all.yml
-    - include_vars: group_vars/sources.yml
-    # debugging variables
-    - include: prereqs/debug.yml
-      when: debug
-    - include: proxy/main.yml
+# debugging variables
+- include: debug.yml
+  when: debug
+
+- name: "Download Kubernetes Executables [SLOW]"
+  get_url:
+    dest: "{{bin_dir}}/kube-proxy"
+    checksum: "{{ item }}"
+    url: "{{ source.url }}/kube-proxy"
+    validate_certs: yes
+    mode: 0755
+  with_items: "{{ vars['source']['checksum'][k8s.version]['kube-proxy'] }}"
+  when: source.checksum["{{k8s.version}}"] is defined and k8s.strict|default(true)
+
+- name: install | Write kube-proxy systemd init file
+  template:
+    src: kube-proxy.service.j2
+    dest: /etc/systemd/system/kube-proxy.service
+  when: ansible_service_mgr == "systemd"
+  notify:
+    - reload proxy systemd
+    - restart proxy
+
+# reload-systemd
+- meta: flush_handlers
+
+- name: Enable proxy
+  service:
+    name: proxy
+    enabled: yes
+

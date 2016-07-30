@@ -1,47 +1,52 @@
 --- 
-- name: Kubernetes Kubelet Install by RackN 2016
+- debug: msg="Playbook source {{ playbook_source }} "
 
-  hosts: all
-  handlers:
-    - include: handlers/main.yml
-  tasks:
-    - debug: msg="Playbook source {{ playbook_source }} "
-    # SHA references
-    - include_vars: group_vars/sources.yml
-    # debugging variables
-    - include: prereqs/debug.yml
-      when: debug
-    # main script
+# debugging variables
+- include: debug.yml
+  when: debug
 
-    - name: install | Write kubelet systemd init file
-      template: src=kubelet/templates/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service backup=yes
-      when: ansible_service_mgr == "systemd"
-      notify: restart kubelet
+- name: Create cni directory
+  file:
+    path: /opt/cni
+    state: directory
 
-    - name: Write kubelet config file
-      template: src=kubelet/templates/kubelet.j2 dest={{ k8s.config_dir }}/kubelet.env backup=yes
-      notify: restart kubelet
+- name: Get CNI tarball
+  get_url:
+    dest: "/tmp/cni-c864f0e1ea73719b8f4582402b0847064f9883b0.tar.gz"
+    url: "https://storage.googleapis.com/kubernetes-release/network-plugins/cni-c864f0e1ea73719b8f4582402b0847064f9883b0.tar.gz"
+    validate_certs: yes
 
-    - name: write the kubecfg (auth) file for kubelet
-      template: src=kubelet/templates/node-kubeconfig.yaml.j2 dest={{ k8s.config_dir }}/node-kubeconfig.yaml backup=yes
-      notify: restart kubelet
+- name: Explode tarball
+  shell: "tar -xvf /tmp/cni-c864f0e1ea73719b8f4582402b0847064f9883b0.tar.gz -C /opt/cni"
 
-    - name: Write proxy manifest
-      template:
-        src: kubelet/templates/manifests/kube-proxy.manifest.j2
-        dest: "{{ k8s.manifest_dir }}/kube-proxy.manifest"
+- name: "Download Kubernetes Executables [SLOW]"
+  get_url:
+    dest: "{{bin_dir}}/kubelet"
+    checksum: "{{ item }}"
+    url: "{{ source.url }}/kubelet"
+    validate_certs: yes
+    mode: 0755
+  with_items: "{{ vars['source']['checksum'][k8s.version]['kubelet'] }}"
+  when: source.checksum["{{k8s.version}}"] is defined and k8s.strict|default(true)
 
-    - name: Restart kubelet if binary changed
-      command: /bin/true
-      notify: restart kubelet
-      when: kubelet_copy.stdout_lines
+- name: install | Write kubeconfig
+  template:
+    src: "kubeconfig.j2"
+    dest: "/var/lib/kubelet/kubeconfig"
+  notify: restart kubelet
 
-    # reload-systemd
-    - meta: flush_handlers
+- name: install | Write kubelet systemd init file
+  template: src=kubelet/templates/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service backup=yes
+  when: ansible_service_mgr == "systemd"
+  notify:
+    - reload kubelet systemd
+    - restart kubelet
 
-    - name: Enable kubelet
-      service:
-        name: kubelet
-        enabled: yes
-        state: started
+# reload-systemd
+- meta: flush_handlers
+
+- name: Enable kubelet
+  service:
+    name: kubelet
+    enabled: yes
 

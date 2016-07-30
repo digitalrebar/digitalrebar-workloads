@@ -1,0 +1,38 @@
+--- 
+- debug: msg="Playbook source {{ playbook_source }} "
+
+# debugging variables
+- include: debug.yml
+  when: debug
+
+- name: "Download Docker Executables [SLOW]"
+  get_url:
+    dest: "/tmp/docker.tgz"
+    checksum: "{{ item }}"
+    url: "https://get.docker.com/builds/Linux/x86_64/docker-{{k8s.docker.version}}.tgz"
+    validate_certs: yes
+
+- name: "Untar docker"
+  shell: "cd /tmp ; tar -xvf /tmp/docker.tgz"
+  creates: /tmp/docker/docker
+
+- name: Put docker files in place
+  shell: "cp -p /tmp/docker/docker* /usr/bin"
+  creates: /usr/bin/docker
+
+- name: install | Write docker systemd init file
+  template:
+    src: "docker.service.j2"
+    dest: "/etc/systemd/system/docker.service"
+  when: ansible_service_mgr == "systemd"
+  notify:
+    - reload docker systemd
+    - restart docker
+
+- meta: flush_handlers
+
+- name: Enable docker
+  service:
+    name: docker
+    enabled: yes
+
