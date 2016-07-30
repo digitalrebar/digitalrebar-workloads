@@ -17,9 +17,6 @@
 - name: "DEBUG: K8s users"
   debug: var=k8s.users
 
-- name: "DEBUG: Version"
-  debug: var=k8s.version
-
 - name: "DEBUG: K8s Master"
   debug: var=k8s.master
 
@@ -31,16 +28,6 @@
 
 - name: "DEBUG: K8s"
   debug: var=k8s
-
-- name: "VAR: Strict Checksum"
-  debug: var=k8s.strict
-
-- name: "VAR: Download Source"
-  debug: var=source.url
-
-- name: "VAR: Checksum"
-  debug: var=source.checksum["{{ k8s.version }}"]
-
 
 #- name: "DEBUG: Variable"
 #  debug: var=rebar

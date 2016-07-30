@@ -1,5 +1,6 @@
 --- 
 - debug: msg="Playbook source {{ playbook_source }} "
+<<<<<<< Updated upstream
 
 # debugging variables
 - include: debug.yml
@@ -34,13 +35,45 @@
     src: "kubeconfig.j2"
     dest: "/var/lib/kubelet/kubeconfig"
   notify: restart kubelet
+=======
+# SHA references
+- include_vars: group_vars/sources.yml
+# debugging variables
+- include: prereqs/debug.yml
+  when: debug
+# main script
+
+- include: ../shared/tasks/downloader.yml kube_component=kubelet
+>>>>>>> Stashed changes
 
 - name: install | Write kubelet systemd init file
   template: src=kubelet/templates/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service backup=yes
   when: ansible_service_mgr == "systemd"
+<<<<<<< Updated upstream
   notify:
     - reload kubelet systemd
     - restart kubelet
+=======
+  notify: restart kubelet
+
+- name: Write kubelet config file
+  template: src=kubelet/templates/kubelet.j2 dest={{ k8s.config_dir }}/kubelet.env backup=yes
+  notify: restart kubelet
+
+- name: write the kubecfg (auth) file for kubelet
+  template: src=kubelet/templates/node-kubeconfig.yaml.j2 dest={{ k8s.config_dir }}/node-kubeconfig.yaml backup=yes
+  notify: restart kubelet
+
+- name: Write proxy manifest
+  template:
+    src: kubelet/templates/manifests/kube-proxy.manifest.j2
+    dest: "{{ k8s.manifest_dir }}/kube-proxy.manifest"
+
+- name: Restart kubelet if binary changed
+  command: /bin/true
+  notify: restart kubelet
+  when: kubelet_copy.stdout_lines
+>>>>>>> Stashed changes
 
 # reload-systemd
 - meta: flush_handlers
@@ -49,4 +82,8 @@
   service:
     name: kubelet
     enabled: yes
+<<<<<<< Updated upstream
+=======
+    state: started
+>>>>>>> Stashed changes
 

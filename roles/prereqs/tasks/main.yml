@@ -1,71 +1,71 @@
 # APL v2 Licensed.  Copyright RackN 2016
 --- 
-    - debug: msg="Playbook source {{ playbook_source }} "
+- debug: msg="Playbook source {{ playbook_source }} "
 
-    - include_vars: vars/all.yml
-    - include: debug.yml
-      when: debug
+- include_vars: vars/all.yml
+- include: debug.yml
+  when: debug
 
-    - name: User | Create User Group
-      group: 
-        name: "{{ k8s.account }}"
-        system: yes
+- name: User | Create User Group
+  group: 
+    name: "{{ k8s.account }}"
+    system: yes
 
-    - name: User | Create User
-      user:
-        comment: "Kubernetes System Account"
-        createhome: no
-        group: "{{ k8s.account }}"
-        shell: /sbin/nologin
-        name: "{{ k8s.account }}"
-        system: yes
+- name: User | Create User
+  user:
+    comment: "Kubernetes System Account"
+    createhome: no
+    group: "{{ k8s.account }}"
+    shell: /sbin/nologin
+    name: "{{ k8s.account }}"
+    system: yes
 
-    - name: Create kubernetes directories
-      file:
-        path: "{{ item }}"
-        state: directory
-        owner: "{{ k8s.account }}"
-      with_items:
-        - "{{ config_dir }}"
-        - "{{ config_dir }}/ssl"
-        - "{{ config_dir }}/tokens"
-        - "{{ config_dir }}/users"
-        - "{{ bin_dir }}"
-        - "{{ bin_dir }}/kubernetes-scripts"
-        - /etc/cni/net.d
-        - /opt/cni/bin
-        - "{{ log_dir }}"
+- name: Create kubernetes directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ k8s.account }}"
+  with_items:
+    - "{{ config_dir }}"
+    - "{{ config_dir }}/ssl"
+    - "{{ config_dir }}/tokens"
+    - "{{ config_dir }}/users"
+    - "{{ bin_dir }}"
+    - "{{ bin_dir }}/kubernetes-scripts"
+    - /etc/cni/net.d
+    - /opt/cni/bin
+    - "{{ log_dir }}"
 
-    - name: Update package management cache (YUM)
-      yum: update_cache=yes name='*'
-      when: ansible_pkg_mgr == 'yum'
+- name: Update package management cache (YUM)
+  yum: update_cache=yes name='*'
+  when: ansible_pkg_mgr == 'yum'
 
-    - name: Install latest version of python-apt for Debian distribs
-      apt: name=python-apt state=latest update_cache=yes cache_valid_time=3600
-      when: ansible_os_family == "Debian"
+- name: Install latest version of python-apt for Debian distribs
+  apt: name=python-apt state=latest update_cache=yes cache_valid_time=3600
+  when: ansible_os_family == "Debian"
 
-    - name: Install python-dnf for latest RedHat versions
-      command: dnf install -y python-dnf yum
-      when: ansible_distribution == "Fedora" and
-            ansible_distribution_major_version > 21
-      changed_when: False
+- name: Install python-dnf for latest RedHat versions
+  command: dnf install -y python-dnf yum
+  when: ansible_distribution == "Fedora" and
+        ansible_distribution_major_version > 21
+  changed_when: False
 
-    - name: Install epel-release on RedHat/CentOS
-      shell: rpm -qa | grep epel-release || rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-      when: ansible_distribution in ["CentOS","RedHat"] and
-            ansible_distribution_major_version >= 7
-      changed_when: False
+- name: Install epel-release on RedHat/CentOS
+  shell: rpm -qa | grep epel-release || rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  when: ansible_distribution in ["CentOS","RedHat"] and
+        ansible_distribution_major_version >= 7
+  changed_when: False
 
-    - name: Install packages requirements [SLOW]
-      action:
-        module: "{{ ansible_pkg_mgr }}"
-        name: "{{ item }}"
-        state: latest
-      with_items: "{{ vars[ansible_os_family|lower] }}"
-      when: ansible_os_family != "CoreOS"
+- name: Install packages requirements [SLOW]
+  action:
+    module: "{{ ansible_pkg_mgr }}"
+    name: "{{ item }}"
+    state: latest
+  with_items: "{{ vars[ansible_os_family|lower] }}"
+  when: ansible_os_family != "CoreOS"
 
-    # Todo : selinux configuration
-    - name: Set selinux policy to permissive
-      selinux: policy=targeted state=permissive
-      when: ansible_os_family == "RedHat"
-      changed_when: False
+# Todo : selinux configuration
+- name: Set selinux policy to permissive
+  selinux: policy=targeted state=permissive
+  when: ansible_os_family == "RedHat"
+  changed_when: False

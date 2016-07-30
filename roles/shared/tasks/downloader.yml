@@ -1,0 +1,39 @@
+---
+
+- name: "DEBUG: Version"
+  debug: var=k8s.version
+  when: debug
+
+- name: "VAR: Strict Checksum"
+  debug: var=k8s.strict
+  when: debug
+
+- name: "VAR: Download Source"
+  debug: var=source.url
+  when: debug
+
+- name: "VAR: Component"
+  debug: var=kube_component
+  when: debug
+
+- name: "VAR: Checksum"
+  debug: var=source.checksum["{{ k8s.version }}"]["{{ kube_component }}"]
+  when: debug
+
+- name: "Download {{ kube_component }} {{ k8s.version }} Kubernetes Executable WITHOUT CHECKSUM [SLOW]"
+  get_url:
+    dest: "{{bin_dir}}/{{ kube_component }}"
+    url: "{{ source.url }}/{{ kube_component }}"
+    mode: 0755
+  with_items: "{{ vars['source']['checksum'][k8s.version][kube_component] }}"
+  when: not k8s.strict and source.checksum["{{k8s.version}}"] is not defined
+
+- name: "Download {{ kube_component}} {{ k8s.version }} Kubernetes Executables [SLOW]"
+  get_url:
+    dest: "{{bin_dir}}/{{ kube_component }}"
+    checksum: "{{ item }}"
+    url: "{{ source.url }}/{{ kube_component }}"
+    validate_certs: yes
+    mode: 0755
+  with_items: "{{ vars['source']['checksum'][k8s.version][kube_component] }}"
+  when: source.checksum["{{k8s.version}}"][kube_component] is defined and k8s.strict|default(true)
