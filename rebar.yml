@@ -176,6 +176,7 @@ roles:
       - k8s-apiserver
       - k8s-scheduler
       - k8s-controller
+      - k8s-kubectl
     attribs:
       - name: k8s-master-addresses
         description: "The addresses of the Master nodes"
@@ -562,6 +563,7 @@ roles:
     requires:
       - k8s-kubelet
       - k8s-proxy
+      - k8s-kubectl
     attribs:
       - name: k8s-worker-addresses
         description: "The addresses of the Master nodes"
@@ -674,6 +676,28 @@ roles:
       role_group_map:
         k8s-docker:
           - docker
+      playbook_combined_repo: true
+      playbook_file: "."
+
+  - name: k8s-kubectl
+    description: 'Kubernetes Kubectl'
+    jig: ansible-playbook
+    # XXX: Need icon
+    icon: "photo_filter"
+    flags:
+      - implicit
+    requires:
+      - k8s-config
+    wants-attribs:
+      - k8s-version
+      - k8s-strict
+    metadata:
+      role_role_map:
+        k8s-kubectl:
+          - kubectl
+      role_group_map:
+        k8s-kubectl:
+          - kubectl
       playbook_combined_repo: true
       playbook_file: "."
 
