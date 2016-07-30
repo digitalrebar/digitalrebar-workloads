@@ -21,6 +21,6 @@
 
 - name: Enable proxy
   service:
-    name: proxy
+    name: kube-proxy
     enabled: yes
 

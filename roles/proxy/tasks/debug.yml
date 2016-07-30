@@ -1,0 +1,46 @@
+---
+# APL v2 Licensed.  Copyright RackN 2016
+# Provides quick way to validate that all required variables are present
+
+- name: "Debug On? YES!"
+  debug: msg='!!!!! WARNING - DEBUG ON - DISABLE FOR PRODUCTION !!!!!'
+
+- name: "DEBUG: Account"
+  debug: var=k8s.account
+
+- name: "DEBUG: Cluster"
+  debug: var=cluster.name
+
+- name: "DEBUG: K8s Log"
+  debug: var=k8s.log.level
+
+- name: "DEBUG: K8s users"
+  debug: var=k8s.users
+
+- name: "DEBUG: Version"
+  debug: var=k8s.version
+
+- name: "DEBUG: K8s Master"
+  debug: var=k8s.master
+
+- name: "DEBUG: Etcd Info"
+  debug: var=etcd
+
+- name: "DEBUG: K8s API Server Ports"
+  debug: var=k8s.apiserver
+
+- name: "DEBUG: K8s"
+  debug: var=k8s
+
+- name: "VAR: Strict Checksum"
+  debug: var=k8s.strict
+
+- name: "VAR: Download Source"
+  debug: var=source.url
+
+- name: "VAR: Checksum"
+  debug: var=source.checksum["{{ k8s.version }}"]
+
+
+#- name: "DEBUG: Variable"
+#  debug: var=rebar
