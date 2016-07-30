@@ -4,6 +4,6 @@
 
 - name: restart proxy
   service:
-    name: proxy
+    name: kube-proxy
     state: restarted
 

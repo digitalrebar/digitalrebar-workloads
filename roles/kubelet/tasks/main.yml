@@ -7,6 +7,11 @@
 
 - include: ../shared/tasks/downloader.yml kube_component=kubelet
 
+- name: Create kubelet directory
+  file:
+    path: /var/lib/kubelet
+    state: directory
+
 - name: Create cni directory
   file:
     path: /opt/cni
@@ -38,7 +43,9 @@
   notify: restart kubelet
 
 - name: install | Write kubelet systemd init file
-  template: src=kubelet/templates/kubelet.service.j2 dest=/etc/systemd/system/kubelet.service backup=yes
+  template:
+    src: kubelet.service.j2
+    dest: /etc/systemd/system/kubelet.service
   when: ansible_service_mgr == "systemd"
   notify:
     - reload kubelet systemd

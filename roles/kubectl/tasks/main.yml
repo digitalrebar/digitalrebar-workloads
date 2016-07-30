@@ -14,8 +14,3 @@
     dest: /etc/bash_completion.d/kubectl.sh
   when: ansible_os_family in ["Debian","RedHat"]
 
-- name: restart kubelet
-  service:
-    name: kubelet
-    state: restarted
-  changed_when: false

@@ -6,19 +6,15 @@
   when: debug
 
 - name: "Download Docker Executables [SLOW]"
-  get_url:
-    dest: "/tmp/docker.tgz"
-    checksum: "{{ item }}"
-    url: "https://get.docker.com/builds/Linux/x86_64/docker-{{k8s.docker.version}}.tgz"
-    validate_certs: yes
+  shell: "curl -o /tmp/docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-{{k8s.docker.version}}.tgz"
 
 - name: "Untar docker"
   shell: "cd /tmp ; tar -xvf /tmp/docker.tgz"
-  creates: /tmp/docker/docker
+#  creates: "/tmp/docker/docker"
 
 - name: Put docker files in place
   shell: "cp -p /tmp/docker/docker* /usr/bin"
-  creates: /usr/bin/docker
+#  creates: /usr/bin/docker
 
 - name: install | Write docker systemd init file
   template:

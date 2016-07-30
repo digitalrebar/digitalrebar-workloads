@@ -176,6 +176,7 @@ roles:
       - k8s-apiserver
       - k8s-scheduler
       - k8s-controller
+      - k8s-kubectl
     attribs:
       - name: k8s-master-addresses
         description: "The addresses of the Master nodes"
@@ -562,6 +563,7 @@ roles:
     requires:
       - k8s-kubelet
       - k8s-proxy
+      - k8s-kubectl
     attribs:
       - name: k8s-worker-addresses
         description: "The addresses of the Master nodes"
@@ -600,6 +602,8 @@ roles:
       - k8s-strict
       - k8s-apiserver-insecure_port
       - k8s-log-level
+      - k8s-cluster_name
+      - k8s-users
       - k8s-master-network
       - cert-key-file
       - cert-cert-file
@@ -618,6 +622,8 @@ roles:
           name: cert/key/destination
         - path: k8s/kubelet/cert_file
           name: cert/cert/destination
+        - path: k8s/kubelet/ca_file
+          name: cert/root/destination
       inventory_map:
         - path: ip
           name: eval:ipaddress(v4_only, k8s-master-network).address
@@ -661,6 +667,8 @@ roles:
       - implicit
     requires:
       - k8s-config
+    wants-attribs:
+      - k8s-docker-version
     metadata:
       role_role_map:
         k8s-docker:
@@ -670,12 +678,26 @@ roles:
           - docker
       playbook_combined_repo: true
       playbook_file: "."
-      attribute_map:
-        - path: k8s/kubelet/key_file
-          name: cert/key/destination
-        - path: k8s/kubelet/cert_file
-          name: cert/cert/destination
-      inventory_map:
-        - path: ip
-          name: eval:ipaddress(v4_only, k8s-master-network).address
+
+  - name: k8s-kubectl
+    description: 'Kubernetes Kubectl'
+    jig: ansible-playbook
+    # XXX: Need icon
+    icon: "photo_filter"
+    flags:
+      - implicit
+    requires:
+      - k8s-config
+    wants-attribs:
+      - k8s-version
+      - k8s-strict
+    metadata:
+      role_role_map:
+        k8s-kubectl:
+          - kubectl
+      role_group_map:
+        k8s-kubectl:
+          - kubectl
+      playbook_combined_repo: true
+      playbook_file: "."
 
