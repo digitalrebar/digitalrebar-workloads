@@ -4,12 +4,14 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 After=docker.service
 Requires=docker.service
 
+# Args to get right
+#  --cloud-provider=
+
 [Service]
 ExecStart={{ bin_dir }}/kubelet \
   --allow-privileged=true \
-  --api-servers=https://10.240.0.20:6443,https://10.240.0.21:6443,https://10.240.0.22:6443 \
-  --cloud-provider= \
-  --cluster-dns=10.32.0.10 \
+  --api-servers={% for host in k8s.master.addresses %}https://{{ host }}:{{ k8s.apiserver.port }}{% if not loop.last %},{% endif %}{% endfor %} \
+  --cluster-dns={{k8s.cluster_dns}} \
   --cluster-domain=cluster.local \
   --configure-cbr0=true \
   --container-runtime=docker \

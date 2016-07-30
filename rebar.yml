@@ -65,6 +65,12 @@ roles:
         schema:
           type: str
           required: true
+      - name: k8s-cluster_dns
+        description: "The IP of the cluster's DNS service"
+        default: '10.32.0.10'
+        schema:
+          type: str
+          required: true
       - name: k8s-cluster_ips
         description: "The pool of cluster IPs"
         default: '10.20.0.0/16'
@@ -600,11 +606,13 @@ roles:
     wants-attribs:
       - k8s-version
       - k8s-strict
-      - k8s-apiserver-insecure_port
       - k8s-log-level
       - k8s-cluster_name
+      - k8s-cluster_dns
       - k8s-users
       - k8s-master-network
+      - k8s-apiserver-port
+      - k8s-master-addresses
       - cert-key-file
       - cert-cert-file
       - cert-root-file
@@ -642,7 +650,8 @@ roles:
     wants-attribs:
       - k8s-version
       - k8s-strict
-      - k8s-apiserver-insecure_port
+      - k8s-apiserver-port
+      - k8s-master-addresses
       - k8s-log-level
       - k8s-master-network
     metadata:
