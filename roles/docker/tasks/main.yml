@@ -6,15 +6,21 @@
   when: debug
 
 - name: "Download Docker Executables [SLOW]"
-  shell: "curl -o /tmp/docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-{{k8s.docker.version}}.tgz"
+  command: "curl -o /tmp/docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-{{k8s.docker.version}}.tgz"
+  args:
+    creates: /tmp/docker.tgz
 
 - name: "Untar docker"
-  shell: "cd /tmp ; tar -xvf /tmp/docker.tgz"
-#  creates: "/tmp/docker/docker"
+  unarchive:
+    src: /tmp/docker.tgz
+    dest: /tmp
+    copy: no
+    creates: "/tmp/docker/docker"
 
 - name: Put docker files in place
-  shell: "cp -p /tmp/docker/docker* /usr/bin"
-#  creates: /usr/bin/docker
+  command: "cp -p /tmp/docker/docker* /usr/bin"
+  args:
+    creates: /usr/bin/docker
 
 - name: install | Write docker systemd init file
   template:

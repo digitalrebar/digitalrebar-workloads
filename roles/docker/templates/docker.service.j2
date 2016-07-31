@@ -3,6 +3,14 @@ Description=Docker Application Container Engine
 Documentation=http://docs.docker.io
 
 [Service]
+{% if http_proxy is defined %}
+Environment="HTTP_PROXY={{http_proxy}}"
+Environment="http_proxy={{http_proxy}}"
+{% endif %}
+{% if https_proxy is defined %}
+Environment="HTTPS_PROXY={{https_proxy}}"
+Environment="https_proxy={{https_proxy}}"
+{% endif %}
 ExecStart=/usr/bin/docker daemon \
   --iptables=false \
   --ip-masq=false \
