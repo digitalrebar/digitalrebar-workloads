@@ -678,6 +678,8 @@ roles:
       - k8s-config
     wants-attribs:
       - k8s-docker-version
+      - use-proxy
+      - proxy-servers
     metadata:
       role_role_map:
         k8s-docker:
@@ -687,6 +689,13 @@ roles:
           - docker
       playbook_combined_repo: true
       playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
 
   - name: k8s-kubectl
     description: 'Kubernetes Kubectl'
