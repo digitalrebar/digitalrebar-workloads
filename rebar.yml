@@ -167,6 +167,8 @@ roles:
     icon: "grid_on"
     type: "BarclampCluster::ServiceRole"
     jig: noop
+    preceeds:
+      - k8s-kubernetes
     flags:
       - milestone
     events:
@@ -570,6 +572,8 @@ roles:
       - k8s-kubelet
       - k8s-proxy
       - k8s-kubectl
+    preceeds:
+      - k8s-kubernetes
     attribs:
       - name: k8s-worker-addresses
         description: "The addresses of the Master nodes"
@@ -716,6 +720,35 @@ roles:
       role_group_map:
         k8s-kubectl:
           - kubectl
+      playbook_combined_repo: true
+      playbook_file: "."
+
+
+  - name: k8s-kubernetes
+    description: 'Kubernetes'
+    jig: noop
+    # XXX: Need icon
+    icon: "photo_filter"
+
+  - name: k8s-dns
+    description: 'Kubernetes DNS'
+    jig: ansible-playbook
+    # XXX: Need icon
+    icon: "photo_filter"
+    flags:
+      - milestone
+    requires:
+      - k8s-config
+      - k8s-kubernetes
+    wants-attribs:
+      - k8s-cluster_dns
+    metadata:
+      role_role_map:
+        k8s-dns:
+          - dns
+      role_group_map:
+        k8s-dns:
+          - dns
       playbook_combined_repo: true
       playbook_file: "."
 
