@@ -1,0 +1,25 @@
+--- 
+- debug: msg="Playbook source {{ playbook_source }} "
+
+# debugging variables
+- include: debug.yml
+  when: debug
+
+- name: install | skydns.rc
+  template:
+    src: "skydns-rc.yaml.j2"
+    dest: "/tmp/skydns-rc.yaml"
+
+- name: install | skydns.svc
+  template:
+    src: "skydns-svc.yaml.j2"
+    dest: "/tmp/skydns-svc.yaml"
+
+- name: Start service
+  shell: "{{bin_dir}}/kubectl create -f /tmp/skydns-svc.yaml"
+  changed_when: false
+
+- name: Start rc
+  shell: "{{bin_dir}}/kubectl create -f /tmp/skydns-rc.yaml"
+  changed_when: false
+
