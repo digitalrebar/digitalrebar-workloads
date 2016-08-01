@@ -45,6 +45,8 @@ roles:
     description: 'Kubernetes Config'
     icon: "group_work"
     jig: noop
+    flags:
+      - service
     attribs:
       - name: k8s-docker-version
         description: "The version of docker to use"
@@ -54,6 +56,12 @@ roles:
           required: true
       - name: k8s-master-network
         description: "The network of the Master nodes"
+        default: 'admin'
+        schema:
+          type: str
+          required: true
+      - name: k8s-worker-network
+        description: "The network of the Worker nodes"
         default: 'admin'
         schema:
           type: str
@@ -458,6 +466,7 @@ roles:
       - etcd-node
     flags:
       - milestone
+      - service
     events:
       - endpoint: inproc://role:etcd/on_active
         selectors:
@@ -486,6 +495,8 @@ roles:
     jig: role-provided
     type: "BarclampCluster::MakeCa"
     icon: account_balance
+    flags:
+      - service
     attribs:
       - name: cert-ca-label
         description: "Label of the root CA"
@@ -581,7 +592,7 @@ roles:
       - k8s-kubernetes
     attribs:
       - name: k8s-worker-addresses
-        description: "The addresses of the Master nodes"
+        description: "The addresses of the Worker nodes"
         default: []
         schema:
           type: seq
@@ -590,7 +601,7 @@ roles:
             - type: str
               pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
       - name: k8s-worker-hostnames
-        description: "All hostnames of the Master nodes"
+        description: "All hostnames of the Worker nodes"
         default: []
         schema:
           type: seq
@@ -729,6 +740,8 @@ roles:
     description: 'Kubernetes'
     jig: noop
     icon: "chrome_reader_mode"
+    flags:
+      - service
 
   - name: k8s-dns
     description: 'Kubernetes DNS'
