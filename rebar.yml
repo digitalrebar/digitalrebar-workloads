@@ -18,7 +18,11 @@ wizard:
   system_nodes: false
   create_nodes: true
   os: true
+  config_roles:
+    - k8s-config
+    - etcd-node
   services:
+    etcd: odd
     k8s-master: odd
     k8s-node: all
   create_size:
@@ -26,6 +30,7 @@ wizard:
     AwsProvider: "m4.large"
     GoogleProvider: "n1-standard-16"
   deployment_size:
+    etcd: 1
     k8ubernetes-master: 1
     k8ubernetes-node: 3
 
@@ -596,8 +601,7 @@ roles:
   - name: k8s-kubelet
     description: 'Kubernetes Kubelet'
     jig: ansible-playbook
-    # XXX: Need icon
-    icon: "photo_filter"
+    icon: "play_for_work"
     flags:
       - implicit
     requires:
@@ -643,8 +647,7 @@ roles:
   - name: k8s-proxy
     description: 'Kubernetes Proxy'
     jig: ansible-playbook
-    # XXX: Need icon
-    icon: "photo_filter"
+    icon: "settings_input_antenna"
     flags:
       - implicit
     requires:
@@ -674,8 +677,7 @@ roles:
   - name: k8s-docker
     description: 'Kubernetes Docker'
     jig: ansible-playbook
-    # XXX: Need icon
-    icon: "photo_filter"
+    icon: "settings_overscan"
     flags:
       - implicit
     requires:
@@ -704,8 +706,7 @@ roles:
   - name: k8s-kubectl
     description: 'Kubernetes Kubectl'
     jig: ansible-playbook
-    # XXX: Need icon
-    icon: "photo_filter"
+    icon: "record_voice_over"
     flags:
       - implicit
     requires:
@@ -727,14 +728,12 @@ roles:
   - name: k8s-kubernetes
     description: 'Kubernetes'
     jig: noop
-    # XXX: Need icon
-    icon: "photo_filter"
+    icon: "chrome_reader_mode"
 
   - name: k8s-dns
     description: 'Kubernetes DNS'
     jig: ansible-playbook
-    # XXX: Need icon
-    icon: "photo_filter"
+    icon: "my_library_books"
     flags:
       - milestone
     requires:
