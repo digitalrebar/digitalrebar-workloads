@@ -18,13 +18,19 @@ wizard:
   system_nodes: false
   create_nodes: true
   os: true
-  config_roles:
-    - k8s-config
-    - etcd
+  base_attribs:
+    - k8s-cluster_name
+  advanced_attribs:
+    - k8s-log-level
+    - k8s-version
+    - k8s-strict
+    - k8s-master-network
+    - k8s-worker-network
+    - k8s-apiserver-port
   services:
-    etcd: odd
-    k8s-master: odd
-    k8s-node: all
+    etcd: cluster
+    k8s-master: cluster
+    k8s-node: worker
   create_size:
     default: "16 GB"
     AwsProvider: "m4.large"
