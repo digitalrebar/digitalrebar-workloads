@@ -181,7 +181,7 @@ roles:
     type: "BarclampCluster::ServiceRole"
     jig: noop
     preceeds:
-      - k8s-kubernetes
+      - k8s-network-post-install
     flags:
       - milestone
     events:
@@ -578,7 +578,7 @@ roles:
       - k8s-proxy
       - k8s-kubectl
     preceeds:
-      - k8s-kubernetes
+      - k8s-network-post-install
     attribs:
       - name: k8s-worker-addresses
         description: "The addresses of the Worker nodes"
@@ -754,4 +754,49 @@ roles:
           - dns
       playbook_combined_repo: true
       playbook_file: "."
+
+  - name: k8s-network-post-install
+    description: 'Milestone role for post install networking to depend.'
+    jig: noop
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    preceeds:
+      - k8s-kubernetes
+    flags:
+      - service
+
+  - name: k8s-nosdn-gather-route-info
+    description: 'Kubernetes NoSDN gathers route info'
+    jig: script
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - milestone
+    preceeds:
+      - k8s-kubernetes
+    requires:
+      - k8s-network-post-install
+    attribs:
+      - name: k8s-nosdn-cidr_map
+        description: "The map of cidr to IP address"
+        schema:
+          type: map
+          mapping:
+            =:
+              type: str
+
+  - name: k8s-nosdn-install-static-routes
+    description: 'Kubernetes NoSDN install static routes'
+    jig: script
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    preceeds:
+      - k8s-kubernetes
+    requires:
+      - k8s-nosdn-gather-route-info
+    flags:
+      - implicit
+      - milestone
+    wants-attribs:
+      - k8s-nosdn-cidr_map
 
