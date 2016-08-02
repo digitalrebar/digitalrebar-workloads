@@ -20,7 +20,7 @@ wizard:
   os: true
   config_roles:
     - k8s-config
-    - etcd-node
+    - etcd
   services:
     etcd: odd
     k8s-master: odd
@@ -45,6 +45,8 @@ roles:
     description: 'Kubernetes Config'
     icon: "group_work"
     jig: noop
+    flags:
+      - service
     attribs:
       - name: k8s-docker-version
         description: "The version of docker to use"
@@ -54,6 +56,12 @@ roles:
           required: true
       - name: k8s-master-network
         description: "The network of the Master nodes"
+        default: 'admin'
+        schema:
+          type: str
+          required: true
+      - name: k8s-worker-network
+        description: "The network of the Worker nodes"
         default: 'admin'
         schema:
           type: str
@@ -341,21 +349,42 @@ roles:
         - path: ip
           name: eval:ipaddress(v4_only, k8s-master-network).address
 
-  - name: etcd-node
+  - name: etcd
     description: "etcd clustered from retr0h"
     jig: ansible-playbook
-    icon: "local_grocery_store"
     requires:
       - rebar-installed-node
       - cert-ca-install-root
       - cert-ca-signed-cert
     flags:
       - milestone
+      - cluster
     wants-attribs:
       - cert-key-file
       - cert-cert-file
       - cert-root-file
+    type: "BarclampCluster::ServiceRole"
+    icon: "store"
+    events:
+      - endpoint: inproc://role:etcd/on_active
+        selectors:
+          - event: on_active
+            obj_class: role
+            obj_id: etcd
+          - event: synch_on_delete
+            obj_class: role
+            obj_id: etcd
     attribs:
+      - name: etcd-addresses
+        description: "The addresses of the etcd nodes"
+        map: 'etcd/addresses'
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
+              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
       - name: etcd-client-port
         description: "Client Port for etcd cluster"
         map: 'etcd_client_port'
@@ -427,10 +456,10 @@ roles:
       playbook_path: "."
       playbook_file: "."
       role_role_map:
-        etcd-node:
+        etcd:
           - etcd
       role_group_map:
-        etcd-node:
+        etcd:
           - etcd
       attribute_map:
         - path: etcd_client_cert_file
@@ -449,43 +478,12 @@ roles:
         - path: ip
           name: eval:ipaddress(v4_only, etcd-network).address
 
-  - name: etcd
-    description: "etcd cluster service"
-    jig: noop
-    type: "BarclampCluster::ServiceRole"
-    icon: "store"
-    requires:
-      - etcd-node
-    flags:
-      - milestone
-    events:
-      - endpoint: inproc://role:etcd/on_active
-        selectors:
-          - event: on_active
-            obj_class: role
-            obj_id: etcd
-          - event: synch_on_delete
-            obj_class: role
-            obj_id: etcd
-    wants-attribs:
-      - etcd-client-port
-      - etcd-network
-    attribs:
-      - name: etcd-addresses
-        description: "The addresses of the etcd nodes"
-        map: 'etcd/addresses'
-        default: []
-        schema:
-          type: seq
-          required: false
-          sequence:
-            - type: str
-              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
-
   - name: cert-ca
     jig: role-provided
     type: "BarclampCluster::MakeCa"
     icon: account_balance
+    flags:
+      - service
     attribs:
       - name: cert-ca-label
         description: "Label of the root CA"
@@ -498,6 +496,7 @@ roles:
     type: "BarclampCluster::InstallRootCa"
     requires:
       - cert-ca
+      - rebar-installed-node
     flags:
       - implicit
       - milestone
@@ -523,6 +522,7 @@ roles:
     type: "BarclampCluster::InstallSignedCert"
     requires:
       - cert-ca
+      - rebar-installed-node
     flags:
       - implicit
       - milestone
@@ -581,7 +581,7 @@ roles:
       - k8s-kubernetes
     attribs:
       - name: k8s-worker-addresses
-        description: "The addresses of the Master nodes"
+        description: "The addresses of the Worker nodes"
         default: []
         schema:
           type: seq
@@ -590,7 +590,7 @@ roles:
             - type: str
               pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
       - name: k8s-worker-hostnames
-        description: "All hostnames of the Master nodes"
+        description: "All hostnames of the Worker nodes"
         default: []
         schema:
           type: seq
@@ -682,6 +682,7 @@ roles:
       - implicit
     requires:
       - k8s-config
+      - rebar-installed-node
     wants-attribs:
       - k8s-docker-version
       - use-proxy
@@ -711,6 +712,7 @@ roles:
       - implicit
     requires:
       - k8s-config
+      - rebar-installed-node
     wants-attribs:
       - k8s-version
       - k8s-strict
@@ -729,6 +731,8 @@ roles:
     description: 'Kubernetes'
     jig: noop
     icon: "chrome_reader_mode"
+    flags:
+      - service
 
   - name: k8s-dns
     description: 'Kubernetes DNS'
