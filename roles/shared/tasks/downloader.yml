@@ -25,8 +25,7 @@
     dest: "{{bin_dir}}/{{ kube_component }}"
     url: "{{ source.url }}/{{ kube_component }}"
     mode: 0755
-  with_items: "{{ vars['source']['checksum'][k8s.version][kube_component] }}"
-  when: not k8s.strict and source.checksum["{{k8s.version}}"] is not defined
+  when: not k8s.strict and source.checksum["{{k8s.version}}"][kube_component] is not defined
 
 - name: "Download {{ kube_component}} {{ k8s.version }} Kubernetes Executables [SLOW]"
   get_url:
