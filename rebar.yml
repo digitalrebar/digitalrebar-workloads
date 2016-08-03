@@ -37,8 +37,8 @@ wizard:
     GoogleProvider: "n1-standard-16"
   deployment_size:
     etcd: 1
-    k8ubernetes-master: 1
-    k8ubernetes-node: 3
+    k8s-master: 1
+    k8s-worker: 3
 
 metadata:
   playbook_scope: node
@@ -564,7 +564,7 @@ roles:
               type: str
 
   - name: k8s-worker
-    description: 'Kubernetes Worker'
+    description: 'Kubernetes Worker Node (aka minion)'
     icon: "work"
     type: "BarclampCluster::ServiceRole"
     jig: noop
