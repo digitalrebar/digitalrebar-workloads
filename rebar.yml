@@ -17,6 +17,12 @@ wizard:
   icon: "group_work"
   system_nodes: false
   create_nodes: true
+  create_size:
+    default: "16 GB"
+    AwsProvider: "m4.large"
+    GoogleProvider: "n1-standard-16"
+    PacketProvider: "type1"
+    OpenStackProvider: "16 GB"
   os: true
   base_attribs:
     - k8s-cluster_name
@@ -28,17 +34,42 @@ wizard:
     - k8s-worker-network
     - k8s-apiserver-port
   services:
-    etcd: cluster
-    k8s-master: cluster
-    k8s-node: worker
-  create_size:
-    default: "16 GB"
-    AwsProvider: "m4.large"
-    GoogleProvider: "n1-standard-16"
-  deployment_size:
-    etcd: 1
-    k8s-master: 1
-    k8s-worker: 3
+    - name: control
+      description: "Control"
+      icon: "group_work"
+      type: cluster
+      roles:
+        - k8s-master
+        - etcd
+    - name: worker
+      description: "Worker"
+      icon: "work"
+      type: worker
+      count: 3
+      roles:
+        - k8s-worker
+    - name: no_sdn
+      description: "No SDN Networking"
+      icon: "call_end"
+      type: required
+      count: -1
+      roles:
+        - k8s-nosdn-gather-route-info
+        - k8s-nosdn-install-static-routes
+    - name: open_contrail
+      description: "OpenContrail Networking"
+      icon: "ring_volume"
+      type: required
+      count: -1
+      roles:
+        - k8s-network-post-install
+    - name: calico
+      description: "Calico Networking"
+      icon: "phone"
+      type: required
+      count: -1
+      roles:
+        - k8s-network-post-install
 
 metadata:
   playbook_scope: node
@@ -764,8 +795,7 @@ roles:
   - name: k8s-network-post-install
     description: 'Milestone role for post install networking to depend.'
     jig: noop
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "call_missed"
     preceeds:
       - k8s-kubernetes
     flags:
@@ -774,8 +804,7 @@ roles:
   - name: k8s-nosdn-gather-route-info
     description: 'Kubernetes NoSDN gathers route info'
     jig: script
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "call_split"
     flags:
       - milestone
     preceeds:
@@ -794,8 +823,7 @@ roles:
   - name: k8s-nosdn-install-static-routes
     description: 'Kubernetes NoSDN install static routes'
     jig: script
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "call_merge"
     preceeds:
       - k8s-kubernetes
     requires:
