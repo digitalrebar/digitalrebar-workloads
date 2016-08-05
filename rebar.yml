@@ -38,6 +38,7 @@ wizard:
       description: "Control"
       icon: "group_work"
       type: cluster
+      count: 1
       roles:
         - k8s-master
         - etcd
