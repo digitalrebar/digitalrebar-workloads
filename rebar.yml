@@ -54,16 +54,20 @@ wizard:
       icon: "call_end"
       type: required
       count: -1
+      # A k8s-nosdn-master must be applied first
       roles:
-        - k8s-nosdn-gather-route-info
-        - k8s-nosdn-install-static-routes
+        - k8s-nosdn-master
+        - k8s-nosdn-node
     - name: open_contrail
       description: "OpenContrail Networking"
       icon: "ring_volume"
       type: required
       count: -1
       roles:
-        - k8s-network-post-install
+        - k8s-opencontrail-master
+        - k8s-opencontrail-node
+        - k8s-opencontrail-gateway
+        - k8s-opencontrail-provision
     - name: calico
       description: "Calico Networking"
       icon: "phone"
@@ -200,7 +204,7 @@ roles:
       - implicit
     requires:
       - rebar-installed-node
-      - k8s-config
+      - k8s-network-node-pre-install
     wants-attribs:
       - k8s-account
     metadata:
@@ -218,8 +222,6 @@ roles:
     icon: "grid_on"
     type: "BarclampCluster::ServiceRole"
     jig: noop
-    preceeds:
-      - k8s-network-post-install
     flags:
       - milestone
     events:
@@ -231,6 +233,8 @@ roles:
           - event: synch_on_delete
             obj_class: role
             obj_id: k8s-master
+    preceeds:
+      - k8s-network-post-install
     requires:
       - k8s-apiserver
       - k8s-scheduler
@@ -263,7 +267,6 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
-      - k8s-config
       - cert-ca-install-root
       - cert-ca-signed-cert
       - etcd
@@ -324,7 +327,6 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
-      - k8s-config
       - k8s-apiserver
       - cert-ca-install-root
       - cert-ca-signed-cert
@@ -366,7 +368,6 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
-      - k8s-config
       - k8s-apiserver
     wants-attribs:
       - k8s-version
@@ -613,7 +614,6 @@ roles:
             obj_id: k8s-worker
     requires:
       - k8s-kubelet
-      - k8s-proxy
       - k8s-kubectl
     preceeds:
       - k8s-network-post-install
@@ -644,7 +644,6 @@ roles:
       - implicit
     requires:
       - k8s-prereqs
-      - k8s-config
       - k8s-master
       - k8s-docker
       - cert-ca-install-root
@@ -688,9 +687,10 @@ roles:
     icon: "settings_input_antenna"
     flags:
       - implicit
+    preceeds:
+      - k8s-worker
     requires:
       - k8s-prereqs
-      - k8s-config
       - k8s-kubelet
     wants-attribs:
       - k8s-version
@@ -719,7 +719,6 @@ roles:
     flags:
       - implicit
     requires:
-      - k8s-config
       - rebar-installed-node
     wants-attribs:
       - k8s-docker-version
@@ -749,8 +748,8 @@ roles:
     flags:
       - implicit
     requires:
-      - k8s-config
       - rebar-installed-node
+      - k8s-prereqs
     wants-attribs:
       - k8s-version
       - k8s-strict
@@ -763,7 +762,6 @@ roles:
           - kubectl
       playbook_combined_repo: true
       playbook_file: "."
-
 
   - name: k8s-kubernetes
     description: 'Kubernetes'
@@ -779,7 +777,6 @@ roles:
     flags:
       - milestone
     requires:
-      - k8s-config
       - k8s-kubernetes
     wants-attribs:
       - k8s-cluster_dns
@@ -793,8 +790,32 @@ roles:
       playbook_combined_repo: true
       playbook_file: "."
 
+#
+# Networking Milestone roles.
+#
+  # This is a global sync point
+  - name: k8s-network-pre-install
+    description: 'Milestone role for pre-install networking to depend.'
+    jig: noop
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - service
+
+  # This is a node level pre-sync point.
+  - name: k8s-network-node-pre-install
+    description: 'Milestone role for pre-install networking on a nodeto depend.'
+    jig: noop
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    requires:
+      - k8s-network-pre-install
+    flags:
+      - implicit
+
+  # This is a global sync point
   - name: k8s-network-post-install
-    description: 'Milestone role for post install networking to depend.'
+    description: 'Milestone role for post-install networking to depend.'
     jig: noop
     icon: "call_missed"
     preceeds:
@@ -802,12 +823,383 @@ roles:
     flags:
       - service
 
+#
+# Networking Roles for OpenContrail.
+#
+
+  - name: k8s-opencontrail-config
+    description: "Opencontrail Config"
+    jig: noop
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - service
+    attribs:
+      - name: k8s-opencontrail-version
+        description: "The Version of Opencontrail to use"
+        map: "opencontrail_all_release"
+        default: "2.20"
+        schema:
+          type: str
+          required: true
+      - name: k8s-opencontrail-kube-release
+        description: "The release of opencontrail kube tools to use"
+        map: 'opencontrail_kube_release'
+        default: '1.1'
+        schema:
+          type: str
+          required: true
+      - name: k8s-opencontrail-used-systemd
+        description: "The Version of Opencontrail to use"
+        map: "opencontrail_use_systemd"
+        default: true
+        schema:
+          type: bool
+          required: true
+      - name: k8s-opencontrail_public_subnet
+        description: "The external network for opencontrail to use"
+        map: 'opencontrail_public_subnet'
+        default: '10.1.4.0/24'
+        schema:
+          type: str
+          required: true
+      - name: k8s-opencontrail_private_subnet
+        description: "The internal network for opencontrail to use"
+        map: 'opencontrail_private_subnet'
+        default: ''
+        schema:
+          type: str
+      - name: k8s-opencontrail_no_arp
+        description: "True implies that the opencontrail should use the default gw for communication"
+        map: 'opencontrail_no_arp'
+        default: false
+        schema:
+          type: bool
+
+
+  # For now, only one of these.???
+  - name: k8s-opencontrail-builder
+    description: "Opencontrail Builder Installation"
+    jig: ansible-playbook
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    preceeds:
+      - k8s-docker
+    requires:
+      - rebar-installed-node
+      - k8s-opencontrail-docker
+    wants-attribs:
+      - k8s-opencontrail-version
+      - use-proxy
+      - proxy-servers
+    metadata:
+      role_role_map:
+        k8s-opencontrail-builder:
+          - opencontrail/opencontrail_builder
+      role_group_map:
+        k8s-opencontrail-builder:
+          - builders
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: opencontrail_build_http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: opencontrail_http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+
+  - name: k8s-opencontrail-vrouter
+    description: "Opencontrail Vrouter Installation"
+    jig: ansible-playbook
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - implicit
+    preceeds:
+      - k8s-docker
+    requires:
+      - rebar-installed-node
+      - k8s-opencontrail-builder
+    wants-attribs:
+      - k8s-opencontrail-version
+      - k8s-opencontrail-kube-release
+      - k8s-master-network
+    metadata:
+      role_role_map:
+        k8s-opencontrail-vrouter:
+          - opencontrail/opencontrail_vrouter
+      role_group_map:
+        k8s-opencontrail-builder:
+          - builders
+        k8s-opencontrail-gateway:
+          - gateways
+        k8s-opencontrail-node:
+          - nodes
+        k8s-opencontrail-master:
+          - masters
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+      inventory_map:
+       - path: opencontrail_ipaddr
+         name: eval:ipaddress(v4_only, k8s-master-network).cidr
+       - path: opencontrail_interface
+         name: eval:ipaddress(v4_only, k8s-master-network).ifname
+
+  # For now, only one of these.???
+  - name: k8s-opencontrail-master
+    description: "Opencontrail Master Installation"
+    jig: ansible-playbook
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - milestone
+      - implicit
+    preceeds:
+      - k8s-network-node-pre-install
+    requires:
+      - k8s-network-pre-install
+      - k8s-docker
+    wants-attribs:
+      - k8s-master-network
+      - k8s-cluster_service_ips
+      - k8s-opencontrail_public_subnet
+      - k8s-opencontrail_private_subnet
+      - k8s-opencontrail_no_arp
+      - k8s-opencontrail-kube-release
+      - k8s-opencontrail-version
+      - k8s-opencontrail-used-systemd
+    metadata:
+      role_role_map:
+        k8s-opencontrail-master:
+          - opencontrail/opencontrail_master
+      role_group_map:
+        k8s-opencontrail-master:
+          - masters
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: opencontrail_all_service_addresses
+          name: k8s/cluster_service_ips
+        - path: opencontrail_master_host_addresses
+          name: eval:nodes_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+        - path: opencontrail_master_host_address
+          name: eval:first_node_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+      inventory_map:
+        - path: opencontrail_ipaddr
+          name: eval:ipaddress(v4_only, k8s-master-network).cidr
+        - path: opencontrail_interface
+          name: eval:ipaddress(v4_only, k8s-master-network).ifname
+
+  - name: k8s-opencontrail-node
+    description: "Opencontrail Node Installation"
+    jig: ansible-playbook
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - milestone
+      - implicit
+    preceeds:
+      - k8s-network-node-pre-install
+    requires:
+      - k8s-network-pre-install
+      - k8s-opencontrail-vrouter
+      - k8s-docker
+    wants-attribs:
+      - k8s-master-network
+      - use-proxy
+      - proxy-servers
+      - k8s-opencontrail-used-systemd
+    metadata:
+      role_role_map:
+        k8s-opencontrail-node:
+          - opencontrail/opencontrail_node
+      role_group_map:
+        k8s-opencontrail-node:
+          - nodes
+        k8s-opencontrail-master:
+          - masters
+        k8s-opencontrail-gateway:
+          - gateways
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: opencontrail_master_host_addresses
+          name: eval:nodes_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+        - path: opencontrail_master_host_address
+          name: eval:first_node_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+      inventory_map:
+        - path: opencontrail_ipaddr
+          name: eval:ipaddress(v4_only, k8s-master-network).cidr
+        - path: opencontrail_interface
+          name: eval:ipaddress(v4_only, k8s-master-network).ifname
+        - path: opencontrail_build_http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: opencontrail_http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+
+  - name: k8s-opencontrail-gateway
+    description: "Opencontrail Gateway Installation"
+    jig: ansible-playbook
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - milestone
+      - implicit
+    preceeds:
+      - k8s-network-node-pre-install
+    requires:
+      - k8s-network-pre-install
+      - k8s-opencontrail-vrouter
+      - k8s-docker
+    wants-attribs:
+      - k8s-master-network
+      - k8s-opencontrail-used-systemd
+    metadata:
+      role_role_map:
+        k8s-opencontrail-node:
+          - opencontrail/opencontrail_gateway
+      role_group_map:
+        k8s-opencontrail-gateway:
+          - gateways
+        k8s-opencontrail-master:
+          - masters
+        k8s-opencontrail-node:
+          - nodes
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: opencontrail_master_host_addresses
+          name: eval:nodes_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+        - path: opencontrail_master_host_address
+          name: eval:first_node_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+      inventory_map:
+       - path: opencontrail_ipaddr
+         name: eval:ipaddress(v4_only, k8s-master-network).cidr
+       - path: opencontrail_interface
+         name: eval:ipaddress(v4_only, k8s-master-network).ifname
+
+  - name: k8s-opencontrail-provision
+    description: "Opencontrail Post-Install Configuration Setup"
+    jig: ansible-playbook
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - milestone
+    preceeds:
+      - k8s-kubernetes
+    requires:
+      - k8s-network-post-install
+      - k8s-opencontrail-master
+    wants-attribs:
+      - k8s-master-network
+      - k8s-opencontrail-version
+      - k8s-cluster_service_ips
+      - k8s-apiserver-insecure_port
+      - k8s-apiserver-port
+    metadata:
+      role_role_map:
+        k8s-opencontrail-provision:
+          - opencontrail/opencontrail_provision
+      role_group_map:
+        k8s-opencontrail-provision:
+          - masters
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: opencontrail_all_service_addresses
+          name: k8s/cluster_service_ips
+        - path: opencontrail_master_host_addresses
+          name: eval:nodes_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+        - path: opencontrail_master_host_address
+          name: eval:first_node_with_role(k8s-master).ipaddress(v4_only, k8s-master-network).address
+        - path: opencontrail_node_host_addresses
+          name: eval:nodes_with_role(k8s-worker).ipaddress(v4_only, k8s-master-network).address
+        - path: opencontrail_gateway_host_addresses
+          name: eval:nodes_with_role(k8s-opencontrail-gateway).ipaddress(v4_only, k8s-master-network).address
+      inventory_map:
+       - path: opencontrail_ipaddr
+         name: eval:ipaddress(v4_only, k8s-master-network).cidr
+       - path: opencontrail_interface
+         name: eval:ipaddress(v4_only, k8s-master-network).ifname
+
+  - name: k8s-opencontrail-docker
+    description: 'Opencontrail Docker'
+    jig: ansible-playbook
+    icon: "settings_overscan"
+    flags:
+      - implicit
+    requires:
+      - rebar-installed-node
+    wants-attribs:
+      - k8s-docker-version
+      - use-proxy
+      - proxy-servers
+    metadata:
+      role_role_map:
+        k8s-opencontrail-docker:
+          - opencontrail/docker
+      role_group_map:
+        k8s-opencontrail-docker:
+          - opencontrail/docker
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+
+#
+# Networking Roles required for No SDN networking.
+# Uses static routes amoung nodes to direct container
+# traffic around.  This is really only viable on a
+# single L3 environment.
+#
+  - name: k8s-nosdn-master
+    description: 'Milestone role for pre-install networking to depend.'
+    jig: noop
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - milestone
+    requires:
+      - k8s-nosdn-gather-route-info
+      - k8s-nosdn-install-static-routes
+
+  - name: k8s-nosdn-node
+    description: 'Milestone role for pre-install networking to depend.'
+    jig: noop
+    # TODO: Needs Icon
+    icon: "chrome_reader_mode"
+    flags:
+      - milestone
+    requires:
+      - k8s-nosdn-gather-route-info
+      - k8s-nosdn-install-static-routes
+      - k8s-proxy
+
   - name: k8s-nosdn-gather-route-info
     description: 'Kubernetes NoSDN gathers route info'
     jig: script
     icon: "call_split"
-    flags:
-      - milestone
     preceeds:
       - k8s-kubernetes
     requires:
@@ -831,7 +1223,6 @@ roles:
       - k8s-nosdn-gather-route-info
     flags:
       - implicit
-      - milestone
     wants-attribs:
       - k8s-nosdn-cidr_map
 
