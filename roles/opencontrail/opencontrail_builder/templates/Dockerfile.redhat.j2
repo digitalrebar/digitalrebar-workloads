@@ -31,3 +31,5 @@ ADD "{{ patch }}" /src/vrouter/vrouter/
 RUN (cd vrouter && patch -p1 -i "{{ patch }}")
 {% endfor %}
 {% endif %}
+# THIS IS A HACK- It looks like linux included this fix in a backport.
+RUN sed -i -e "s/skb->rxhash/skb->hash/g" /src/vrouter/vrouter/linux/vr_host_interface.c
