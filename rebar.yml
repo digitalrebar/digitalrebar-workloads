@@ -11,12 +11,30 @@ wizard:
   version: 2
   name: "Docker Swarm"
   description: "Install Docker Swarm"
+  icon: "directions_ferry"
   system_nodes: true
   create_nodes: true
-  os: true
+  base_attribs:
+    - docker-swarm-version
+  advanced_attribs:
+    - docker-swarm-manager-port
   services:
-    docker-swarm-manager: odd
-    docker-swarm-member: all
+    - name: control
+      description: "Swarm Manager"
+      icon: "directions_ferry"
+      type: control
+      count: 1
+      roles:
+        control:
+          - docker-swarm-manager
+    - name: member
+      description: "Swarm Worker"
+      type: worker
+      icon: rowing
+      count: 3
+      roles:
+        member:
+          - docker-swarm-member
 
 rebar:
   layout: 2.0
@@ -24,6 +42,7 @@ rebar:
 roles:
   - name: docker-swarm-install
     jig: script
+    icon: "dialpad"
     requires:
       - rebar-installed-node
     flags:
@@ -37,6 +56,7 @@ roles:
           type: str
   - name: docker-swarm-member
     jig: script
+    icon: rowing
     flags:
       - cluster
       - milestone
@@ -49,6 +69,7 @@ roles:
       - consul-address
   - name: docker-swarm-manager
     jig: script
+    icon: "directions_ferry"
     requires:
       - docker-swarm-install
       - consul-master
