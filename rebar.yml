@@ -12,18 +12,11 @@ barclamp:
 
 wizard:
   version: 2
-  name: "Kompos8 K8s"
-  description: "Install Kubernetes Cluster"
+  name: "Kubernetes"
+  description: "Install Kubernetes Cluster (DR Kompos8)"
   icon: "group_work"
   system_nodes: false
   create_nodes: true
-  create_size:
-    default: "16 GB"
-    AwsProvider: "m4.large"
-    GoogleProvider: "n1-standard-16"
-    PacketProvider: "type1"
-    OpenStackProvider: "16 GB"
-  os: true
   base_attribs:
     - k8s-cluster_name
   advanced_attribs:
@@ -37,7 +30,7 @@ wizard:
     - name: control
       description: "Control"
       icon: "group_work"
-      type: cluster
+      type: control
       count: 1
       roles:
         - k8s-master
@@ -56,25 +49,30 @@ wizard:
       count: -1
       # A k8s-nosdn-master must be applied first
       roles:
-        - k8s-nosdn-master
-        - k8s-nosdn-node
+        control:
+          - k8s-nosdn-master
+        worker:
+          - k8s-nosdn-node
     - name: open_contrail
       description: "OpenContrail Networking"
       icon: "ring_volume"
       type: required
       count: -1
       roles:
-        - k8s-opencontrail-master
-        - k8s-opencontrail-node
-        - k8s-opencontrail-gateway
-        - k8s-opencontrail-provision
+        control:
+          - k8s-opencontrail-master
+          - k8s-opencontrail-gateway
+          - k8s-opencontrail-provision
+        worker:
+          - k8s-opencontrail-node
     - name: calico
       description: "Calico Networking"
       icon: "phone"
       type: required
       count: -1
       roles:
-        - k8s-network-post-install
+        worker:
+          - k8s-network-post-install
 
 metadata:
   playbook_scope: node
