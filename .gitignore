@@ -13,3 +13,4 @@
 # limitations under the License.
 
 *.retry
+filter_plugins/ip_filters.pyc
