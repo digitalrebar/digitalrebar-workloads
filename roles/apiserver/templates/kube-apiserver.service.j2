@@ -6,12 +6,28 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 User={{ k8s.account }}
 ExecStart={{ bin_dir }}/kube-apiserver \
 		--admission-control=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota \
-		--advertise-address={{ ip }} \
+{% if variant == 'aws' or variant == 'google' -%}
+		--advertise-address={{ private_ip }} \
+{%- elif k8s.scope == 'internal' -%}
+		--advertise-address={{ private_ip }} \
+{%- elif k8s.scope == 'external' -%}
+		--advertise-address={{ public_ip }} \
+{%- elif k8s.scope == 'everything' -%}
+		--advertise-address={{ public_ip }} \
+{%- endif %}
 		--apiserver-count={{ k8s.apiserver.count }} \
 		--allow-privileged=true \
 		--authorization-mode=ABAC \
 		--authorization-policy-file={{k8s.token_dir}}/authorization-policy.jsonl \
+{% if variant == 'aws' or variant == 'google' -%}
+		--bind-address={{ private_ip }} \
+{%- elif k8s.scope == 'internal' -%}
+		--bind-address={{ private_ip }} \
+{%- elif k8s.scope == 'external' -%}
+		--bind-address={{ public_ip }} \
+{%- elif k8s.scope == 'everything' -%}
 		--bind-address=0.0.0.0 \
+{%- endif %}
 		--enable-swagger-ui=true \
 		--logtostderr=true \
 		--secure-port={{ k8s.apiserver.port }} \
