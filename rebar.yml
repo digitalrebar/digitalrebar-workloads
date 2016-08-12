@@ -33,15 +33,17 @@ wizard:
       type: control
       count: 1
       roles:
-        - k8s-master
-        - etcd
+        control:
+          - k8s-master
+          - etcd
     - name: worker
       description: "Worker"
       icon: "work"
       type: worker
       count: 3
       roles:
-        - k8s-worker
+        worker:
+          - k8s-worker
     - name: no_sdn
       description: "No SDN Networking"
       icon: "call_end"
