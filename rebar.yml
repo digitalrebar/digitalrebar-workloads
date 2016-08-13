@@ -880,8 +880,7 @@ roles:
   - name: k8s-network-pre-install
     description: 'Milestone role for pre-install networking to depend.'
     jig: noop
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "brightness_7"
     flags:
       - service
 
@@ -889,8 +888,7 @@ roles:
   - name: k8s-network-node-pre-install
     description: 'Milestone role for pre-install networking on a nodeto depend.'
     jig: noop
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "brightness_5"
     requires:
       - k8s-network-pre-install
     flags:
@@ -900,7 +898,7 @@ roles:
   - name: k8s-network-post-install
     description: 'Milestone role for post-install networking to depend.'
     jig: noop
-    icon: "call_missed"
+    icon: "brightness_4"
     preceeds:
       - k8s-kubernetes
     flags:
@@ -913,8 +911,7 @@ roles:
   - name: k8s-opencontrail-config
     description: "Opencontrail Config"
     jig: noop
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "blur_linear"
     flags:
       - service
     attribs:
@@ -964,8 +961,7 @@ roles:
   - name: k8s-opencontrail-builder
     description: "Opencontrail Builder Installation"
     jig: ansible-playbook
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "blur_linear"
     preceeds:
       - k8s-docker
     requires:
@@ -1001,8 +997,7 @@ roles:
   - name: k8s-opencontrail-vrouter
     description: "Opencontrail Vrouter Installation"
     jig: ansible-playbook
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "blur_off"
     flags:
       - implicit
     preceeds:
@@ -1047,8 +1042,7 @@ roles:
   - name: k8s-opencontrail-master
     description: "Opencontrail Master Installation"
     jig: ansible-playbook
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "blur_on"
     flags:
       - milestone
       - implicit
@@ -1092,8 +1086,7 @@ roles:
   - name: k8s-opencontrail-node
     description: "Opencontrail Node Installation"
     jig: ansible-playbook
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "blur_circular"
     flags:
       - milestone
       - implicit
@@ -1147,8 +1140,7 @@ roles:
   - name: k8s-opencontrail-gateway
     description: "Opencontrail Gateway Installation"
     jig: ansible-playbook
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "adjust"
     flags:
       - milestone
       - implicit
@@ -1192,8 +1184,7 @@ roles:
   - name: k8s-opencontrail-provision
     description: "Opencontrail Post-Install Configuration Setup"
     jig: ansible-playbook
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "camera"
     flags:
       - milestone
     preceeds:
@@ -1272,8 +1263,7 @@ roles:
   - name: k8s-nosdn-master
     description: 'Milestone role for pre-install networking to depend.'
     jig: noop
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "call_end"
     flags:
       - milestone
     requires:
@@ -1283,8 +1273,7 @@ roles:
   - name: k8s-nosdn-node
     description: 'Milestone role for pre-install networking to depend.'
     jig: noop
-    # TODO: Needs Icon
-    icon: "chrome_reader_mode"
+    icon: "call_made"
     flags:
       - milestone
     requires:
