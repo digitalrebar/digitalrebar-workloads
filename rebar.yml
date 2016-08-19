@@ -26,6 +26,17 @@ wizard:
     - k8s-master-network
     - k8s-worker-network
     - k8s-apiserver-port
+  role_apply_order:
+    - etcd
+    - k8s-master
+    - k8s-worker
+    - k8s-dns
+    - k8s-opencontrail-provision
+    - k8s-opencontrail-master
+    - k8s-opencontrail-node
+    - k8s-opencontrail-gateway
+    - k8s-nosdn-master
+    - k8s-nosdn-node
   services:
     - name: control
       description: "Control"
@@ -44,12 +55,19 @@ wizard:
       roles:
         worker:
           - k8s-worker
+    - name: gateway
+      description: "OpenContrail Gateway"
+      icon: "adjust"
+      type: optional
+      count: -1
+      roles:
+        gateway:
+          - k8s-opencontrail-gateway
     - name: no_sdn
       description: "No SDN Networking"
       icon: "call_end"
       type: required
       count: -1
-      # A k8s-nosdn-master must be applied first
       roles:
         control:
           - k8s-nosdn-master
@@ -62,11 +80,12 @@ wizard:
       count: -1
       roles:
         control:
-          - k8s-opencontrail-master
-          - k8s-opencontrail-gateway
           - k8s-opencontrail-provision
+          - k8s-opencontrail-master
         worker:
           - k8s-opencontrail-node
+        gateway:
+          - k8s-opencontrail-gateway
     - name: calico
       description: "Calico Networking"
       icon: "phone"
