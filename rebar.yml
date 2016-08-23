@@ -26,6 +26,7 @@ wizard:
     - k8s-master-network
     - k8s-worker-network
     - k8s-apiserver-port
+    - k8s-opencontrail_no_arp
   role_apply_order:
     - etcd
     - k8s-master
@@ -1029,6 +1030,7 @@ roles:
       - k8s-opencontrail-kube-release
       - k8s-master-network
       - k8s-scope
+      - k8s-opencontrail_no_arp
     metadata:
       role_role_map:
         k8s-opencontrail-vrouter:
@@ -1122,6 +1124,7 @@ roles:
       - k8s-opencontrail-used-systemd
       - k8s-scope
       - k8s-cluster_service_ips
+      - k8s-opencontrail_no_arp
     metadata:
       role_role_map:
         k8s-opencontrail-node:
@@ -1174,6 +1177,7 @@ roles:
       - k8s-opencontrail-used-systemd
       - k8s-scope
       - k8s-cluster_service_ips
+      - k8s-opencontrail_no_arp
     metadata:
       role_role_map:
         k8s-opencontrail-gateway:

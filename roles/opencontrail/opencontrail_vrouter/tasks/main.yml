@@ -2,6 +2,17 @@
 
 - file: path="~/.ansible/files" state=directory
 
+- name: Update package management cache (YUM)
+  yum: update_cache=yes name='*'
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Install packages requirements [SLOW]
+  action:
+    module: "{{ ansible_pkg_mgr }}"
+    name: "libselinux-python"
+    state: latest
+  when: ansible_pkg_mgr == 'yum'
+
 - name: Fetch tarball
   fetch: src="{{ opencontrail_host_kernel_artifact_tar }}" dest="/tmp/.ansible/artifacts/" flat=yes
   delegate_to: "{{ groups['builders'][0] }}"

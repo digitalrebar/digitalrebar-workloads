@@ -5,6 +5,17 @@
 - include: debug.yml
   when: debug
 
+- name: Update package management cache (YUM)
+  yum: update_cache=yes name='*'
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Install packages requirements [SLOW]
+  action:
+    module: "{{ ansible_pkg_mgr }}"
+    name: "libselinux-python"
+    state: latest
+  when: ansible_pkg_mgr == 'yum'
+
 - name: "Download Docker Executables [SLOW]"
   command: "curl -o /tmp/docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-{{k8s.docker.version}}.tgz"
   args:
