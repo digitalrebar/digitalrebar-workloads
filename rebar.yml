@@ -15,7 +15,7 @@ wizard:
   name: "Kubernetes"
   description: "Install Kubernetes Cluster (DR Kompos8)"
   icon: "group_work"
-  system_nodes: false
+  system_nodes: true
   create_nodes: true
   base_attribs:
     - k8s-cluster_name
