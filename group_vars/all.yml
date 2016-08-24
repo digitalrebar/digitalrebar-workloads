@@ -19,6 +19,7 @@ config_dir: /etc/kubernetes
 log_dir: /var/log/kubernetes
 
 # locations of downloads
+# This section must be last in the file.
 source:
   url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s.version }}/bin/linux/amd64"
   checksum:
@@ -29,3 +30,10 @@ source:
       kubelet: "sha256:be44ccebb75ffa0db269d788b993b15d5f6f885d00fd7593d0602686cf59fa87"
       kube-proxy: "sha256:828b50dfa6fe3df4b658b9ccfcda00cec73cb422f5a1ed2d0af6b47d02252fae"
       kubectl: "sha256:7ecb4ce0af38d847cdc4976f72530c73b4533a8b973489b92508363566dcfd61"
+    v1.3.5:
+      kube-apiserver: "sha256:4f0535f326b2518d0ad7d97f7c7e5fc52c5647947c4cb4ff2ca82393dd943908"
+      kube-controller-manager: "sha256:394e470070f7f1e974bb121c6814b4c2299c9fd1888cb360913b3d7087393f45"
+      kube-scheduler: "sha256:5ad37c70e4903531d26d657b8650120c2cb988be4b2c67b4ceaca0b7d161f469"
+      kubelet: "sha256:d2a0fe0d8a58ecbc0325f0f7cd4be7e73f4485190ec13ca19bc2ce7230b3c8af"
+      kube-proxy: "sha256:d4fbe776f1c42b29a541e1c9654f6d824728693f25d6f6de0bd6fa54e731d879"
+      kubectl: "sha256:43e299098a0faef74d2100285325911e8e118c64f5a734b590779ef62ab6a0bb"
