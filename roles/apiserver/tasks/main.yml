@@ -32,6 +32,15 @@
   notify:
     - restart kube-apiserver
 
+- name: Populate users for basic auth in API
+  lineinfile:
+    dest: "{{ k8s.token_dir }}/known_users.csv"
+    create: yes
+    line: '{{ item.value.pass }},{{ item.key }},{{ item.value.role }}'
+  with_dict: "{{ k8s.users }}"
+  notify:
+    - restart kube-apiserver
+
 - name: Allow apiserver to bind on both secure and insecure ports
   shell: setcap cap_net_bind_service+ep {{ bin_dir }}/kube-apiserver
   changed_when: false
