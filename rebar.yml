@@ -32,6 +32,7 @@ wizard:
     - k8s-master
     - k8s-worker
     - k8s-dns
+    - k8s-dashboard
     - k8s-opencontrail-provision
     - k8s-opencontrail-master
     - k8s-opencontrail-node
@@ -48,6 +49,7 @@ wizard:
         control:
           - k8s-master
           - etcd
+          - k8s-addons
     - name: worker
       description: "Worker"
       icon: "work"
@@ -146,6 +148,12 @@ roles:
         schema:
           type: str
           required: true
+      - name: k8s-cluster_dns_domain
+        description: "The Domain for this cluster"
+        default: 'cluster.local'
+        schema:
+          type: str
+          required: true
       - name: k8s-cluster_ips
         description: "The pool of cluster IPs"
         default: '10.20.0.0/16'
@@ -160,7 +168,7 @@ roles:
           required: true
       - name: k8s-version
         description: "The Kubernetes Version"
-        default: v1.3.3
+        default: v1.3.5
         schema:
           type: str
           required: true
@@ -214,6 +222,13 @@ roles:
         default: 8080
         schema:
           type: int
+          required: true
+      - name: k8s-dashboard_version
+        description: "The version of the Kubernetes Dashboard"
+        default: 'v1.1.1'
+        map: 'dashboard_version'
+        schema:
+          type: str
           required: true
       #
       # This variable is used to change what programs bind to.
@@ -729,6 +744,7 @@ roles:
       - k8s-log-level
       - k8s-cluster_name
       - k8s-cluster_dns
+      - k8s-cluster_dns_domain
       - k8s-users
       - k8s-master-network
       - k8s-apiserver-port
@@ -873,6 +889,17 @@ roles:
     flags:
       - service
 
+  - name: k8s-addons
+    description: 'Milestone role to include all the default add-ons.'
+    jig: noop
+# GREG: Need ICON
+    icon: "my_library_books"
+    flags:
+      - milestone
+    requires:
+      - k8s-dns
+      - k8s-dashboard
+
   - name: k8s-dns
     description: 'Kubernetes DNS'
     jig: ansible-playbook
@@ -883,6 +910,7 @@ roles:
       - k8s-kubernetes
     wants-attribs:
       - k8s-cluster_dns
+      - k8s-cluster_dns_domain
     metadata:
       role_role_map:
         k8s-dns:
@@ -890,6 +918,27 @@ roles:
       role_group_map:
         k8s-dns:
           - dns
+      playbook_combined_repo: true
+      playbook_file: "."
+
+  - name: k8s-dashboard
+    description: 'Kubernetes Dashboard'
+    jig: ansible-playbook
+# GREG: Need ICON
+    icon: "my_library_books"
+    flags:
+      - milestone
+    requires:
+      - k8s-kubernetes
+    wants-attribs:
+      - k8s-dashboard_version
+    metadata:
+      role_role_map:
+        k8s-dashboard:
+          - dashboard
+      role_group_map:
+        k8s-dashboard:
+          - dashboard
       playbook_combined_repo: true
       playbook_file: "."
 
