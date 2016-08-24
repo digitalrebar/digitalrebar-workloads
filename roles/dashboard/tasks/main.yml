@@ -1,0 +1,11 @@
+--- 
+
+- name: install | dashboard.yaml
+  template:
+    src: "kubernetes-dashboard.yml.j2"
+    dest: "/tmp/kubernetes-dashboard.yml"
+
+- name: Start Dashboard
+  shell: "{{bin_dir}}/kubectl create -f /tmp/kubernetes-dashboard.yml"
+  changed_when: false
+

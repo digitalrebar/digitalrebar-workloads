@@ -42,6 +42,7 @@ ExecStart={{ bin_dir }}/kube-apiserver \
 		--service-cluster-ip-range={{ k8s.cluster_service_ips }} \
 		--service-node-port-range=30000-32767 \
 		--token-auth-file={{ k8s.token_dir }}/known_tokens.csv \
+		--basic-auth-file={{ k8s.token_dir }}/known_users.csv \
 		--tls-cert-file={{ k8s.apiserver.tls_cert_file }} \
 		--tls-private-key-file={{ k8s.apiserver.tls_key_file }} \
 		--v={{ k8s.log.level }}
@@ -55,7 +56,6 @@ WantedBy=multi-user.target
 
 # TODO: THINK ABOUT TURNING THIS ON - KARGO
 # 		--client-ca-file={ { k8s.cert_dir } }/ca.pem \
-# 		--basic-auth-file={ { k8s.users_dir } }/known_users.csv \
 # 		{% if k8s.api_runtime_config is defined %}{% for conf in k8s.api_runtime_config %}--runtime-config={{ conf }} {% endfor %}{% endif %} \
 #
 
