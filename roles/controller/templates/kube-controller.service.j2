@@ -4,14 +4,11 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
 [Service]
 ExecStart=/opt/kubernetes/server/bin/kube-controller-manager \
-  --allocate-node-cidrs=true \
-  --cluster-cidr={{k8s.cluster_ips}} \
-  --cluster-name={{k8s.cluster_name}} \
+  $SCHEDULER_OPTS \
   --leader-elect=true \
   --master=http://127.0.0.1:{{k8s.apiserver.insecure_port}} \
   --root-ca-file={{k8s.controller.root_ca_file}} \
   --service-account-private-key-file={{k8s.controller.service_account_key_file}} \
-  --service-cluster-ip-range={{k8s.cluster_service_ips}} \
   --v={{k8s.log.level}}
 Restart=on-failure
 RestartSec=5

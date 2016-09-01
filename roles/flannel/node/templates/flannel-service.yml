@@ -1,0 +1,23 @@
+[Unit]
+Description=Flanneld overlay address etcd agent
+After=network.target
+After=network-online.target
+Wants=network-online.target
+After=etcd.service
+Before=docker.service
+
+[Service]
+Type=notify
+ExecStart={{flannel_bin_dir}}/flanneld \
+            --etcd-endpoints={% for host in etcd.addresses %}https://{{ host }}:{{ etcd.port }}{% if not loop.last %},{% endif %}{% endfor %} \
+            --etcd-keyfile={{ flannel.etcd_key_file }} \
+            --etcd-certfile={{ flannel.etcd_cert_file }} \
+            --etcd-cafile={{ flannel.etcd_ca_file }} \
+            --etcd-prefix=/{{ k8s.cluster_name }}/network \
+            --iface={{ flannel_interface }} \
+            --public-ip={{ flannel_public_ip }}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+RequiredBy=docker.service
