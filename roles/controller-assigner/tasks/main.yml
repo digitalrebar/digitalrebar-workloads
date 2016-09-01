@@ -1,0 +1,16 @@
+---
+
+- name: "Scheduler config dir exists"
+  file:
+    path: "/etc/systemd/system/kube-controller.service.d"
+    state: directory
+    recurse: yes
+
+- name: Set schduler network options
+  template:
+    src: scheduler
+    dest: "/etc/systemd/system/kube-controller.service.d/network.conf"
+    owner: root
+    group: root
+    mode: 0644
+

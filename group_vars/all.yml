@@ -18,6 +18,13 @@ bin_dir: /opt/kubernetes/server/bin
 config_dir: /etc/kubernetes
 log_dir: /var/log/kubernetes
 
+flannel_bin_dir: /opt/flannel/bin
+flannel_source:
+  url: "https://github.com/coreos/flannel/releases/download/{{ flannel.version }}/flanneld-amd64"
+  checksum:
+    v0.6.1:
+      flanneld: "sha256:a1b65184df097383af686ed100df17d12a7ae48b78bc12fbba66727caba76e50"
+
 # locations of downloads
 # This section must be last in the file.
 source:

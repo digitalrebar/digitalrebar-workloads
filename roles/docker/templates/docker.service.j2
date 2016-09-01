@@ -12,8 +12,7 @@ Environment="HTTPS_PROXY={{https_proxy}}"
 Environment="https_proxy={{https_proxy}}"
 {% endif %}
 ExecStart=/usr/bin/docker daemon \
-  --iptables=false \
-  --ip-masq=false \
+  $DOCKER_NETWORK_OPTS \
   --host=unix:///var/run/docker.sock \
   --log-level=error \
   --storage-driver=overlay
