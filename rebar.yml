@@ -61,14 +61,14 @@ wizard:
       roles:
         worker:
           - k8s-worker
-    - name: gateway
-      description: "OpenContrail Gateway"
-      icon: "adjust"
-      type: optional
-      count: -1
-      roles:
-        gateway:
-          - k8s-opencontrail-gateway
+#    - name: gateway
+#      description: "OpenContrail Gateway"
+#      icon: "adjust"
+#      type: optional
+#      count: -1
+#      roles:
+#        gateway:
+#          - k8s-opencontrail-gateway
     - name: flannel
       description: "Flannel Networking"
       icon: "filter_list"
@@ -905,8 +905,7 @@ roles:
   - name: k8s-addons
     description: 'Milestone role to include all the default add-ons.'
     jig: noop
-# GREG: Need ICON
-    icon: "my_library_books"
+    icon: "new_releases"
     flags:
       - milestone
     requires:
@@ -916,7 +915,7 @@ roles:
   - name: k8s-dns
     description: 'Kubernetes DNS'
     jig: ansible-playbook
-    icon: "my_library_books"
+    icon: "recent_actors"
     flags:
       - milestone
     requires:
@@ -937,8 +936,7 @@ roles:
   - name: k8s-dashboard
     description: 'Kubernetes Dashboard'
     jig: ansible-playbook
-# GREG: Need ICON
-    icon: "my_library_books"
+    icon: "web"
     flags:
       - milestone
     requires:
