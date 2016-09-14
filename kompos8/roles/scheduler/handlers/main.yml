@@ -1,0 +1,9 @@
+---
+- name: reload kube-scheduler systemd
+  command: systemctl daemon-reload
+
+- name: restart kube-scheduler
+  service:
+    name: kube-scheduler
+    state: restarted
+

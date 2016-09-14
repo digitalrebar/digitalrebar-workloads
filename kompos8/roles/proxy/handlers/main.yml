@@ -1,0 +1,9 @@
+---
+- name: reload proxy systemd
+  command: systemctl daemon-reload
+
+- name: restart proxy
+  service:
+    name: kube-proxy
+    state: restarted
+

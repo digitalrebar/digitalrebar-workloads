@@ -1,0 +1,26 @@
+--- 
+- debug: msg="Playbook source {{ playbook_source }} "
+
+# debugging variables
+- include: debug.yml
+  when: debug
+
+- include: ../shared/tasks/downloader.yml kube_component=kube-proxy
+
+- name: install | Write kube-proxy systemd init file
+  template:
+    src: kube-proxy.service.j2
+    dest: /etc/systemd/system/kube-proxy.service
+  when: ansible_service_mgr == "systemd"
+  notify:
+    - reload proxy systemd
+    - restart proxy
+
+# reload-systemd
+- meta: flush_handlers
+
+- name: Enable proxy
+  service:
+    name: kube-proxy
+    enabled: yes
+

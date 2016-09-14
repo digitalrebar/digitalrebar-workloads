@@ -1,0 +1,20 @@
+--- 
+- debug: msg="Playbook source {{ playbook_source }} "
+
+# debugging variables
+- include: debug.yml
+  when: debug
+# main script
+
+- include: ../shared/tasks/downloader.yml kube_component=kubectl
+
+# Put the kubectl in a reasonable place to be found by script and such.
+- name: Copy kubectl to /usr/local/bin
+  copy: remote_src=True src="{{bin_dir}}/kubectl" dest=/usr/local/bin/kubectl mode=0755
+
+- name: Copy kubectl bash completion
+  copy:
+    src: kubectl_bash_completion.sh
+    dest: /etc/bash_completion.d/kubectl.sh
+  when: ansible_os_family in ["Debian","RedHat"]
+

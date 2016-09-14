@@ -1,0 +1,16 @@
+[Unit]
+Description=Kubernetes Kube Proxy
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+ExecStart={{bin_dir}}/kube-proxy \
+  --master={% for host in k8s.master.addresses %}https://{{ host }}:{{ k8s.apiserver.port }}{% if not loop.last %},{% endif %}{% endfor %} \
+  --kubeconfig=/var/lib/kubelet/kubeconfig \
+  --proxy-mode=iptables \
+  --v=2
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

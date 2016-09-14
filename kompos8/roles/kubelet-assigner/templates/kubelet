@@ -1,0 +1,2 @@
+[Service]
+Environment="KUBELET_NETWORK_PLUGIN_OPTIONS=--configure-cbr0=true --network-plugin=kubenet --reconcile-cidr=true"

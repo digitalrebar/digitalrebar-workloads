@@ -1,0 +1,4 @@
+---
+dependencies:
+  - { role: opencontrail/opencontrail_facts }
+

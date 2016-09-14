@@ -1,0 +1,27 @@
+[Unit]
+Description=Kubernetes Kubelet Server
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=docker.service
+Requires=docker.service
+
+# Args to get right
+#  --cloud-provider=
+
+[Service]
+ExecStart={{ bin_dir }}/kubelet \
+  $KUBELET_NETWORK_PLUGIN_OPTIONS \
+  --allow-privileged=true \
+  --api-servers={% for host in k8s.master.addresses %}https://{{ host }}:{{ k8s.apiserver.port }}{% if not loop.last %},{% endif %}{% endfor %} \
+  --cluster-dns={{k8s.cluster_dns}} \
+  --cluster-domain={{k8s.cluster_dns_domain}} \
+  --container-runtime=docker \
+  --docker=unix:///var/run/docker.sock \
+  --kubeconfig=/var/lib/kubelet/kubeconfig \
+  --serialize-image-pulls=false \
+  --tls-cert-file={{k8s.kubelet.cert_file}} \
+  --tls-private-key-file={{k8s.kubelet.key_file}} \
+  --v=2
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

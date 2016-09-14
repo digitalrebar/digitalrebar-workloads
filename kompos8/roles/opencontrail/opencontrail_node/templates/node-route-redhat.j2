@@ -1,0 +1,3 @@
+{% if opencontrail_gateway_host_address is defined %}
+{{ opencontrail_all_service_addresses }} via {{ opencontrail_gateway_host_address }}
+{% endif %}
