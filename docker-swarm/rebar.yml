@@ -1,0 +1,89 @@
+barclamp:
+  name: docker_swarm
+  display: Docker Swarm
+  license: "apache2"
+  copyright: "RackN, Inc 2015"
+  os_support:
+    - ubuntu-15.04
+    - ubuntu-16.04
+    - centos-6.7
+    - centos-7.1.1503
+    - centos-7.2.1511
+
+wizard:
+  version: 2
+  name: "Docker Swarm"
+  description: "Install Docker Swarm"
+  icon: "directions_ferry"
+  system_nodes: true
+  create_nodes: true
+  base_attribs:
+    - docker-swarm-version
+  advanced_attribs:
+    - docker-swarm-manager-port
+  services:
+    - name: control
+      description: "Swarm Manager"
+      icon: "directions_ferry"
+      type: control
+      count: 1
+      roles:
+        control:
+          - docker-swarm-manager
+    - name: worker
+      description: "Swarm Worker"
+      type: worker
+      icon: rowing
+      count: 3
+      roles:
+        member:
+          - docker-swarm-member
+
+rebar:
+  layout: 2.0
+
+roles:
+  - name: docker-swarm-install
+    jig: script
+    icon: "dialpad"
+    requires:
+      - rebar-installed-node
+    flags:
+      - implicit
+    attribs: 
+      - name: docker-swarm-version
+        description: 'The version of swarm to install'
+        map: 'docker_swarm/version'
+        default: 'v1.2.2'
+        schema:
+          type: str
+  - name: docker-swarm-member
+    jig: script
+    icon: rowing
+    flags:
+      - cluster
+      - milestone
+    requires:
+      - docker-ready
+      - docker-swarm-install
+      - consul-member
+    wants-attribs:
+      - docker-port
+      - consul-address
+  - name: docker-swarm-manager
+    jig: script
+    icon: "directions_ferry"
+    requires:
+      - docker-swarm-install
+      - consul-master
+    flags:
+      - milestone
+    wants-attribs:
+      - consul-address
+    attribs:
+      - name: docker-swarm-manager-port
+        description: 'The port that swarm maangers will listen on'
+        map: 'docker_swarm/manager_port'
+        default: 2475
+        schema:
+          type: int
