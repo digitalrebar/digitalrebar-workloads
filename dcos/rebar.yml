@@ -1,0 +1,148 @@
+# Copyright 2015, RackN, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+barclamp:
+  name: "dcos"
+  parent: "core"
+  description: "Cookbooks for installing DC/OS"
+  display: "DC/OS"
+  version: "2.E"
+  source_url: "https://github.com/rackn/dcos"
+  license: "Proprietary"
+  license_url: ""
+
+os_support:
+  - centos-7.2-1511
+
+roles:
+  - name: dcos-prereqs
+    jig: script
+    description: "Install prerequisites needed for a node to participate in a DCOS cluster."
+    flags:
+      - implicit
+    requires:
+      - rebar-installed-node
+  - name: dcos-config
+    jig: noop
+    description: "Common settings for Mesosphere clusters"
+    flags:
+      - implicit
+    requires:
+      - dcos-prereqs
+    attribs:
+      - name: dcos-cluster-name
+        description: "The name of the Mesos cluster"
+        map: 'dcos/config/cluster_name'
+        default: 'DCOS'
+        schema:
+          type: str
+          required: true
+      - name: dcos-exhibitor-storage-backend
+        description: 'The backend that Exhibitor should use for Zookeeper. We recommend static'
+        map: 'dcos/config/exhibitor_storage_backend'
+        default: 'static'
+        schema:
+          type: str
+          required: true
+          enum:
+            - static
+            - zookeeper
+            - aws_s3
+            - shared_filesystem
+      - name: dcos-master-list
+        description: 'The FQDN or IP of the load balancer for the master nodes'
+        map: 'dcos/config/master_list'
+        default: ''
+        schema:
+          type: seq
+          sequence:
+            - type: str
+      - name: dcos-master-discovery
+        description: 'The master discovery mode to use.'
+        map: 'dcos/config/master_discovery'
+        default: 'static'
+        schema:
+          type: str
+          required: true
+      - name: dcos-roles
+        description: 'The roles that Mesosphere should run on this particular node'
+        map: 'dcos/config/roles'
+        default: 'slave_public'
+        schema:
+          type: str
+          required: true
+          enum: ["master","slave","slave-public"]
+  - name: dcos-genconf
+    jig: script
+    description: 'Generate a DCOS cluster configuration'
+    requires:
+      - dcos-config
+    wants-attribs:
+      - dns_servers
+      - dcos-cluster-name
+      - dcos-exhibitor-storage-backend
+      - dcos-master-list
+      - dcos-roles
+      - dcos-master-discovery
+    attribs:
+      - name: dcos-docker-genconf-installer
+        description: 'The DCOS genconf installer to use to generate the cluster config.'
+        map: 'dcos/genconf/installer'
+        schema:
+          type: str
+          required: true
+        default: 'https://downloads.dcos.io/dcos/EarlyAccess/dcos_generate_config.sh'
+      - name: dcos-docker-genconf-installer-sha1sum
+        description: 'The DCOS genconf installer SHA1 checksum'
+        map: 'dcos/genconf/sha1sum'
+        schema:
+          type: str
+          required: true
+        default: '492f5be5cfd2b7e8a3ab5be3bbcad26b96d93bae'
+      - name: dcos-bootstrap-url
+        description: "The URL that the DCOS nodes will bootstrap from"
+        map: 'dcos/config/bootstrap_url'
+        schema:
+          type: str
+          required: true
+  - name: dcos-install
+    description: "Prepares a node to be a member of a DCOS cluster"
+    jig: script
+    flags:
+      - implicit
+    requires:
+      - dcos-config
+      - dcos-genconf
+    wants-attribs:
+      - dcos-bootstrap-url
+  - name: dcos-master
+    description: 'A DCOS master node'
+    jig: script
+    flags:
+      - cluster
+    requires:
+      - dcos-install
+  - name: dcos-slave-public
+    description: 'A DCOS slave that is publically accessible'
+    jig: script
+    requires:
+      - dcos-install
+      - dcos-master
+  - name: dcos-slave
+    description: 'A DCOS slave that is not publically accessible'
+    jig: script
+    requires:
+      - dcos-install
+      - dcos-master
+    
