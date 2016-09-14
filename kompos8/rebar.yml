@@ -114,8 +114,8 @@ wizard:
 metadata:
   playbook_scope: node
   playbook_src_paths:
-    k8: https://github.com/digitalrebar/kompos8.git
-  playbook_path: k8
+    k8: https://github.com/digitalrebar/digitalrebar-workloads.git
+  playbook_path: k8/kompos8
 
 roles:
   - name: k8s-config
