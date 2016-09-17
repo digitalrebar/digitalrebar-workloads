@@ -284,6 +284,7 @@ roles:
     jig: noop
     flags:
       - milestone
+      - replace_node_icon
     events:
       - endpoint: inproc://role:k8s-master/on_active
         selectors:
@@ -706,6 +707,7 @@ roles:
     jig: noop
     flags:
       - milestone
+      - replace_node_icon
     events:
       - endpoint: inproc://role:k8s-worker/on_active
         selectors:
