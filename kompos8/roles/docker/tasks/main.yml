@@ -16,6 +16,13 @@
     state: latest
   when: ansible_pkg_mgr == 'yum'
 
+- name: Install packages requirements [SLOW]
+  action:
+    module: "{{ ansible_pkg_mgr }}"
+    name: "cgroup-lite"
+    state: latest
+  when: ansible_pkg_mgr == 'apt'
+
 - name: "Download Docker Executables [SLOW]"
   command: "curl -o /tmp/docker.tgz https://get.docker.com/builds/Linux/x86_64/docker-{{k8s.docker.version}}.tgz"
   args:
@@ -32,6 +39,21 @@
   shell: "cp -p /tmp/docker/docker* /usr/bin"
   args:
     creates: /usr/bin/docker
+
+- name: install | Write docker initd script
+  template: src=docker.initd.j2 dest=/etc/init.d/docker owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart docker
+
+- name: install | Write docker conf script
+  template: src=docker.conf.j2 dest=/etc/init/docker.conf owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart docker
+
+- name: install | Write docker default file
+  template: src=docker.defaults.j2 dest=/etc/default/docker owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart docker
 
 - name: install | Write docker systemd init file
   template:

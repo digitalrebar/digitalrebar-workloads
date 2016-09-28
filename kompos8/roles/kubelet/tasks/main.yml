@@ -42,6 +42,21 @@
     dest: "/var/lib/kubelet/kubeconfig"
   notify: restart kubelet
 
+- name: install | Write kubelet initd script
+  template: src=kubelet.initd.j2 dest=/etc/init.d/kubelet owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart kubelet
+
+- name: install | Write kubelet conf script
+  template: src=kubelet.conf.j2 dest=/etc/init/kubelet.conf owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart kubelet
+
+- name: install | Write kubelet default file
+  template: src=kubelet.defaults.j2 dest=/etc/default/kubelet owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart kubelet
+
 - name: install | Write kubelet systemd init file
   template:
     src: kubelet.service.j2

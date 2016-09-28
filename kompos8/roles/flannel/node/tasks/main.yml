@@ -26,10 +26,24 @@
     mode: 0755
   with_items: "{{ vars['flannel_source']['checksum'][flannel.version]['flanneld'] }}"
 
+- name: install | Write flannel initd script
+  template: src=flannel.initd.j2 dest=/etc/init.d/flannel owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: delete default docker bridge
+
+- name: install | Write flannel conf script
+  template: src=flannel.conf.j2 dest=/etc/init/flannel.conf owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+
+- name: install | Write flannel default file
+  template: src=flannel.defaults.j2 dest=/etc/default/flannel owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+
 - name: Create flannel service
   template:
     src: flannel-service.yml
     dest: /etc/systemd/system/flannel.service
+  when: ansible_service_mgr in "systemd"
   notify: delete default docker bridge
 
 - name: Start Flannel
@@ -77,6 +91,13 @@
     owner: root
     group: root
     mode: 0644
+  notify:
+    - restart docker
+  when: ansible_service_mgr in "systemd"
+
+- name: Set docker daemon options network
+  template: src=docker-network.defaults.j2 dest=/etc/default/docker-network owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
   notify:
     - restart docker
 
