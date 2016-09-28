@@ -1,0 +1,6 @@
+DOCKER=/usr/bin/docker
+DOCKER_OPTS="daemon \
+  --host=unix:///var/run/docker.sock \
+  --log-level=error \
+  --storage-driver=overlay"
+

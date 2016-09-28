@@ -1,0 +1,6 @@
+KUBE_CONTROLLER_MANAGER=/opt/kubernetes/server/bin/kube-controller-manager
+KUBE_CONTROLLER_MANAGER_OPTS="--leader-elect=true \
+  --master=http://127.0.0.1:{{k8s.apiserver.insecure_port}} \
+  --root-ca-file={{k8s.controller.root_ca_file}} \
+  --service-account-private-key-file={{k8s.controller.service_account_key_file}} \
+  --v={{k8s.log.level}}"

@@ -7,6 +7,21 @@
 
 - include: ../shared/tasks/downloader.yml kube_component=kube-proxy
 
+- name: install | Write kube-proxy initd script
+  template: src=kube-proxy.initd.j2 dest=/etc/init.d/kube-proxy owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart proxy
+
+- name: install | Write kube-proxy conf script
+  template: src=kube-proxy.conf.j2 dest=/etc/init/kube-proxy.conf owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart proxy
+
+- name: install | Write kube-proxy default file
+  template: src=kube-proxy.defaults.j2 dest=/etc/default/kube-proxy owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart proxy
+
 - name: install | Write kube-proxy systemd init file
   template:
     src: kube-proxy.service.j2

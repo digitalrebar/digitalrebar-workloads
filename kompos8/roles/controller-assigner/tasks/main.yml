@@ -5,6 +5,7 @@
     path: "/etc/systemd/system/kube-controller.service.d"
     state: directory
     recurse: yes
+  when: ansible_service_mgr == "systemd"
 
 - name: Set schduler network options
   template:
@@ -13,4 +14,9 @@
     owner: root
     group: root
     mode: 0644
+  when: ansible_service_mgr == "systemd"
+
+- name: Scheduler network options default file
+  template: src=scheduler.defaults.j2 dest=/etc/default/kube-controller-network owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
 

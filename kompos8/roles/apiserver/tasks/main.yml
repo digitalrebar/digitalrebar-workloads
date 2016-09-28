@@ -16,6 +16,21 @@
     - reload kube-apiserver systemd
     - restart kube-apiserver
 
+- name: install | Write kube-apiserver initd script
+  template: src=kube-apiserver.initd.j2 dest=/etc/init.d/kube-apiserver owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart kube-apiserver
+
+- name: install | Write kube-apiserver conf script
+  template: src=kube-apiserver.conf.j2 dest=/etc/init/kube-apiserver.conf owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart kube-apiserver
+
+- name: install | Write kube-apiserver default file
+  template: src=kube-apiserver.defaults.j2 dest=/etc/default/kube-apiserver owner=root mode=0755
+  when: ansible_service_mgr in ["sysvinit","upstart"] and ansible_os_family == "Debian"
+  notify: restart kube-apiserver
+
 - name: install | Authorization config file
   template:
     src: "authorization-policy.jsonl.j2"

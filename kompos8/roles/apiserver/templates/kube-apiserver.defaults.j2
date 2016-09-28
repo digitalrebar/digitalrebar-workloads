@@ -1,0 +1,43 @@
+KUBE_APISERVER={{ bin_dir }}/kube-apiserver
+KUBE_APISERVER_OPTS="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota \
+{% if variant == 'aws' or variant == 'google' -%}
+		--advertise-address={{ private_ip }} \
+{%- elif k8s.scope == 'internal' -%}
+		--advertise-address={{ private_ip }} \
+{%- elif k8s.scope == 'external' -%}
+		--advertise-address={{ public_ip }} \
+{%- elif k8s.scope == 'everything' -%}
+		--advertise-address={{ public_ip }} \
+{%- endif %}
+		--apiserver-count={{ k8s.apiserver.count }} \
+		--allow-privileged=true \
+		--authorization-mode=ABAC \
+		--authorization-policy-file={{k8s.token_dir}}/authorization-policy.jsonl \
+{% if variant == 'aws' or variant == 'google' -%}
+		--bind-address={{ private_ip }} \
+{%- elif k8s.scope == 'internal' -%}
+		--bind-address={{ private_ip }} \
+{%- elif k8s.scope == 'external' -%}
+		--bind-address={{ public_ip }} \
+{%- elif k8s.scope == 'everything' -%}
+		--bind-address=0.0.0.0 \
+{%- endif %}
+		--enable-swagger-ui=true \
+		--logtostderr=true \
+		--secure-port={{ k8s.apiserver.port }} \
+		--etcd-cafile={{ k8s.apiserver.etcd_ca_file }} \
+		--etcd-certfile={{ k8s.apiserver.etcd_cert_file }} \
+		--etcd-keyfile={{ k8s.apiserver.etcd_key_file }} \
+		--etcd-servers={% for host in etcd.addresses %}https://{{ host }}:{{ etcd.port }}{% if not loop.last %},{% endif %}{% endfor %} \
+		--insecure-port={{k8s.apiserver.insecure_port}} \
+		--insecure-bind-address=127.0.0.1 \
+		--kubelet-certificate-authority={{ k8s.apiserver.kubelet_cert_auth }} \
+		--service-account-key-file={{ k8s.apiserver.service_account_key_file }} \
+		--service-cluster-ip-range={{ k8s.cluster_service_ips }} \
+		--service-node-port-range=30000-32767 \
+		--token-auth-file={{ k8s.token_dir }}/known_tokens.csv \
+		--basic-auth-file={{ k8s.token_dir }}/known_users.csv \
+		--tls-cert-file={{ k8s.apiserver.tls_cert_file }} \
+		--tls-private-key-file={{ k8s.apiserver.tls_key_file }} \
+		--v={{ k8s.log.level }}"
+
