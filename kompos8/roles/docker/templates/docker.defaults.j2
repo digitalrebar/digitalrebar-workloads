@@ -2,5 +2,8 @@ DOCKER=/usr/bin/docker
 DOCKER_OPTS="daemon \
   --host=unix:///var/run/docker.sock \
   --log-level=error \
+{% if k8s.insecure_registry is defined  %}
+    {% for registry in k8s.insecure_registry %}--insecure-registry {{ registry }} {% endfor %} \
+{% endif %}
   --storage-driver=overlay"
 

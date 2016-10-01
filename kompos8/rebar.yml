@@ -238,11 +238,25 @@ roles:
           required: true
       - name: k8s-dashboard_version
         description: "The version of the Kubernetes Dashboard"
-        default: 'v1.1.1'
+        default: 'v1.4.0'
         map: 'dashboard_version'
         schema:
           type: str
           required: true
+      - name: k8s-insecure_registry
+        description: "A list of insecure registries to add to docker"
+        default: []
+        schema:
+          type: seq
+          sequence:
+            - type: str
+      - name: k8s-container_load_list
+        description: "A list of files to pull and load into docker"
+        default: []
+        schema:
+          type: seq
+          sequence:
+            - type: str
       #
       # This variable is used to change what programs bind to.
       #
@@ -854,6 +868,8 @@ roles:
       - rebar-installed-node
     wants-attribs:
       - k8s-docker-version
+      - k8s-insecure_registry
+      - k8s-container_load_list
       - use-proxy
       - proxy-servers
     metadata:

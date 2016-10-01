@@ -71,3 +71,19 @@
     name: docker
     enabled: yes
 
+- name: Get load items
+  command: >
+    curl -o "/tmp/{{ item }}" "http://192.168.99.100:8091/files/docker/{{item}}"
+  with_items: k8s.container_load_list
+
+- name: import load items
+  command: >
+    docker load -i "/tmp/{{ item }}"
+  with_items: k8s.container_load_list
+  ignore_errors: true
+
+- name: rm load items
+  command: >
+    rm -f "/tmp/{{ item }}"
+  with_items: k8s.container_load_list
+
