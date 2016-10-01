@@ -73,17 +73,17 @@
 
 - name: Get load items
   command: >
-    curl -o "/tmp/{{ item }}" "http://192.168.99.100:8091/files/docker/{{item}}"
+    curl -o "/tmp/{{ item | basename }}" "{{ item }}"
   with_items: k8s.container_load_list
 
 - name: import load items
   command: >
-    docker load -i "/tmp/{{ item }}"
+    docker load -i "/tmp/{{ item | basename }}"
   with_items: k8s.container_load_list
   ignore_errors: true
 
 - name: rm load items
   command: >
-    rm -f "/tmp/{{ item }}"
+    rm -f "/tmp/{{ item | basename }}"
   with_items: k8s.container_load_list
 
