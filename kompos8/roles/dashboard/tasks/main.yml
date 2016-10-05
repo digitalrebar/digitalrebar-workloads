@@ -8,4 +8,5 @@
 - name: Start Dashboard
   shell: "{{bin_dir}}/kubectl create -f /tmp/kubernetes-dashboard.yml"
   changed_when: false
+  ignore_errors: true
 
