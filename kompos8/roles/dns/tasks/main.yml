@@ -18,8 +18,10 @@
 - name: Start service
   shell: "{{bin_dir}}/kubectl create -f /tmp/skydns-svc.yaml"
   changed_when: false
+  ignore_errors: true
 
 - name: Start rc
   shell: "{{bin_dir}}/kubectl create -f /tmp/skydns-rc.yaml"
   changed_when: false
+  ignore_errors: true
 
