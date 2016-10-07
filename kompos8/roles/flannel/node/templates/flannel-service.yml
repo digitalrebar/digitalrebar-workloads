@@ -15,7 +15,7 @@ ExecStart={{flannel_bin_dir}}/flanneld \
             --etcd-cafile={{ flannel.etcd_ca_file }} \
             --etcd-prefix=/{{ k8s.cluster_name }}/network \
             --iface={{ flannel_interface }} \
-            --public-ip={{ flannel_public_ip }}
+            --public-ip={{ flannel_private_ip }}
 Restart=on-failure
 
 [Install]
