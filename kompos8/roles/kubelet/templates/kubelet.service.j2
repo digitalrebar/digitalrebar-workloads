@@ -6,6 +6,8 @@ Requires=docker.service
 
 # Args to get right
 #  --cloud-provider=
+#  --hostname-override as an option
+#  --docker endpoint by network option or plugin
 
 [Service]
 ExecStart={{ bin_dir }}/kubelet \
