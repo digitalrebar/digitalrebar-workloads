@@ -15,5 +15,8 @@
 - name: "DEBUG: https_proxy"
   debug: var=https_proxy
 
+- name: "DEBUG: k8s.container_load_list"
+  debug: var=k8s.container_load_list
+
 #- name: "DEBUG: Variable"
 #  debug: var=rebar

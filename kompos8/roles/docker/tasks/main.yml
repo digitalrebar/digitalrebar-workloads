@@ -75,15 +75,18 @@
   command: >
     curl -o "/tmp/{{ item | basename }}" "{{ item }}"
   with_items: k8s.container_load_list
+  when: k8s.container_load_list is defined and k8s.container_load_list|length > 0
 
 - name: import load items
   command: >
     docker load -i "/tmp/{{ item | basename }}"
   with_items: k8s.container_load_list
   ignore_errors: true
+  when: k8s.container_load_list is defined and k8s.container_load_list|length > 0
 
 - name: rm load items
   command: >
     rm -f "/tmp/{{ item | basename }}"
   with_items: k8s.container_load_list
+  when: k8s.container_load_list is defined and k8s.container_load_list|length > 0
 
