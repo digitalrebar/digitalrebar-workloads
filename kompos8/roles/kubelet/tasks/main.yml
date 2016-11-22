@@ -26,16 +26,6 @@
 - name: Explode tarball
   shell: "tar -xvf /tmp/cni-c864f0e1ea73719b8f4582402b0847064f9883b0.tar.gz -C /opt/cni"
 
-- name: "Download Kubernetes Executables [SLOW]"
-  get_url:
-    dest: "{{bin_dir}}/kubelet"
-    checksum: "{{ item }}"
-    url: "{{ source.url }}/kubelet"
-    validate_certs: yes
-    mode: 0755
-  with_items: "{{ vars['source']['checksum'][k8s.version]['kubelet'] }}"
-  when: source.checksum["{{k8s.version}}"] is defined and k8s.strict|default(true)
-
 - name: install | Write kubeconfig
   template:
     src: "kubeconfig.j2"
