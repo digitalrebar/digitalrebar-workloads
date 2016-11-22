@@ -36,3 +36,4 @@
     mode: 0755
   with_items: "{{ vars['source']['checksum'][k8s.version][kube_component] }}"
   when: source.checksum["{{k8s.version}}"][kube_component] is defined and k8s.strict|default(true)
+  ignore_errors: not k8s.strict|default(true)
