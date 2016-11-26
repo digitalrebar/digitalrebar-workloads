@@ -17,9 +17,6 @@
 - name: "DEBUG: K8s users"
   debug: var=k8s.users
 
-- name: "DEBUG: Version"
-  debug: var=k8s.version
-
 - name: "DEBUG: K8s Master"
   debug: var=k8s.master
 
