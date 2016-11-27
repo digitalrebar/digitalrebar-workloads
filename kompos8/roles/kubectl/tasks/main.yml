@@ -1,15 +1,15 @@
 --- 
 - debug: msg="Playbook source {{ playbook_source }} "
 
-- debug: msg="NOTE Staging Kubernetes Version {{k8s.version.stage}} for Upgrade from {{k8s.version}}"
-  when:  not k8s.version == "{{k8s.version.stage | default(k8s.version)}}"
+- debug: msg="NOTE Staging Kubernetes Version {{k8s.version_stage}} for Upgrade from {{k8s.version}}"
+  when:  not k8s.version == "{{k8s.version_stage | default(k8s.version)}}"
 
 # debugging variables
 - include: debug.yml
   when: debug
 # main script
 
-- include: ../shared/tasks/downloader.yml kube_component=kubectl kube_version={{k8s.version.stage | default(k8s.version)}}
+- include: ../shared/tasks/downloader.yml kube_component=kubectl kube_version={{k8s.version_stage | default(k8s.version)}}
 
 # Put the kubectl in a reasonable place to be found by script and such.
 - name: Copy kubectl to /usr/local/bin

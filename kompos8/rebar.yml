@@ -185,7 +185,7 @@ roles:
         schema:
           type: str
           required: true
-      - name: k8s-version-stage
+      - name: k8s-version_stage
         description: "Stage Next Kubernetes Version (Clients)"
         default: v1.4.5
         schema:
@@ -786,7 +786,7 @@ roles:
       - cert-ca-signed-cert
     wants-attribs:
       - k8s-version
-      - k8s-version-stage
+      - k8s-version_stage
       - k8s-strict
       - k8s-log-level
       - k8s-cluster_name
@@ -847,7 +847,7 @@ roles:
       - k8s-kubelet
     wants-attribs:
       - k8s-version
-      - k8s-version-stage
+      - k8s-version_stage
       - k8s-strict
       - k8s-apiserver-port
       - k8s-master-addresses
@@ -922,7 +922,7 @@ roles:
       - k8s-prereqs
     wants-attribs:
       - k8s-version
-      - k8s-version-stage
+      - k8s-version_stage
       - k8s-strict
     metadata:
       role_role_map:

@@ -9,7 +9,7 @@
   when: debug
 
 - name: "DEBUG: Version Staged"
-  debug: var=k8s.version.stage
+  debug: var=k8s.version_stage
 
 - name: "DEBUG: Version Passed from Caller"
   debug: var=kube_version
