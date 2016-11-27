@@ -1,30 +1,38 @@
 ---
 
-- name: "DEBUG: Version"
+- name: "DOWNLOAD DEBUG VAR: Version"
   debug: var=k8s.version
   when: debug
 
-- name: "VAR: Strict Checksum"
+- name: "DOWNLOAD DEBUG VAR: Strict Checksum"
   debug: var=k8s.strict
   when: debug
 
-- name: "DEBUG: Version Staged"
+- name: "DOWNLOAD DEBUG VAR: Version Staged"
   debug: var=k8s.version_stage
 
-- name: "DEBUG: Version Passed from Caller"
+- name: "DOWNLOAD DEBUG: Version Passed from Caller"
   debug: var=kube_version
 
-- name: "VAR: Download Source"
+- name: "DOWNLOAD DEBUG VAR: Download Source"
   debug: var=source.url
   when: debug
 
-- name: "VAR: Component"
+- name: "DOWNLOAD DEBUG VAR: Component"
   debug: var=kube_component
   when: debug
 
-- name: "VAR: Checksum"
+- name: "DOWNLOAD DEBUG VAR: Checksum"
   debug: var=source.checksum["{{ kube_version | default(k8s.version) }}"]["{{ kube_component }}"]
   when: debug
+
+- name: "Ensure Version Defined (use {{ k8s.version }} if not)"
+  set_fact: kube_version="{{ k8s.version }}"
+  when: kube_version is not defined
+
+- name: "Ensure Version Set (use {{ k8s.version }} if not)"
+  set_fact: kube_version="{{ k8s.version }}"
+  when: kube_version == ""
 
 - name: "Download {{ kube_component }} {{ kube_version | default(k8s.version) }} Kubernetes Executable WITHOUT CHECKSUM [SLOW]"
   get_url:

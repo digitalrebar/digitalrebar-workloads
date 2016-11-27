@@ -26,7 +26,6 @@ wizard:
     - k8s-master-network
     - k8s-worker-network
     - k8s-apiserver-port
-    - k8s-opencontrail_no_arp
   role_apply_order:
     - etcd
     - k8s-master
@@ -187,10 +186,9 @@ roles:
           required: true
       - name: k8s-version_stage
         description: "Stage Next Kubernetes Version (Clients)"
-        default: v1.4.4
         schema:
           type: str
-          required: true
+          required: false
       - name: k8s-strict
         description: "The Kubernetes Checksum Required"
         default: true
