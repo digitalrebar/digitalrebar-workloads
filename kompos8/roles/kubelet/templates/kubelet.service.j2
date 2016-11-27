@@ -22,6 +22,8 @@ ExecStart={{ bin_dir }}/kubelet \
   --serialize-image-pulls=false \
   --tls-cert-file={{k8s.kubelet.cert_file}} \
   --tls-private-key-file={{k8s.kubelet.key_file}} \
+  --bootstrap \
+  --lock-file={{ lock_file }} \
   --v=2
 Restart=on-failure
 

@@ -29,15 +29,17 @@
 - name: "DEBUG: K8s"
   debug: var=k8s
 
-- name: "VAR: Strict Checksum"
+- name: "DEBUG: Strict Checksum"
   debug: var=k8s.strict
 
-- name: "VAR: Download Source"
+- name: "DEBUG: Download Source"
   debug: var=source.url
 
-- name: "VAR: Checksum"
+- name: "DEBUG: Checksum"
   debug: var=source.checksum["{{ k8s.version }}"]
 
+- name: "DEBUG: Bootstrap Lock File"
+  debug: var=lock_file
 
 #- name: "DEBUG: Variable"
 #  debug: var=rebar

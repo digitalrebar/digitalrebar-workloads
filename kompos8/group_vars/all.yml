@@ -15,6 +15,7 @@ debug: true
 
 # common paths
 bin_dir: /opt/kubernetes/server/bin
+lock_file: /opt/kubernetes/bootstrap.lock
 config_dir: /etc/kubernetes
 log_dir: /var/log/kubernetes
 
