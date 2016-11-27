@@ -28,7 +28,7 @@ flannel_source:
 # locations of downloads
 # This section must be last in the file.
 source:
-  url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s.version }}/bin/linux/amd64"
+  url: "https://storage.googleapis.com/kubernetes-release/release/{{ kube_version|default(k8s.version) }}/bin/linux/amd64"
   checksum:
     v1.3.3:
       kube-apiserver: "sha256:a4816d0cde65368ce211464b2e85932e963caac54bcc12911b945b75d11366fc"
