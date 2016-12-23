@@ -180,7 +180,7 @@ roles:
           required: true
       - name: k8s-version
         description: "The Kubernetes Version"
-        default: v1.4.4
+        default: v1.5.1
         schema:
           type: str
           required: true

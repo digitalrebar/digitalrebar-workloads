@@ -73,3 +73,10 @@ source:
       kubelet: "sha256:c11ad67415a0caababfcc2fbbd9c553ec20967b4fc757ff32fda2874a0067c07"
       kube-proxy: "sha256:727f791968cd7aac381484d69e0c83b66b827c03f2fa29f5a1e7fda0d8801838"
       kubectl: "sha256:561630980ee05ab822caa160b99198cb43186ccf1bb4fda8aa6888fc96b0ee81"
+    v1.5.1:
+      kube-apiserver: "sha256:f1f36855dc0cd3f9b7706f8904feccdeccca2f90b053445b9f01ed7d8859ed70"
+      kube-controller-manager: "sha256:bde9c2949e64d059c18d8f93566a64dafc6d2e8e259a70322fb804831dfd0b5b"
+      kube-scheduler: "sha256:2d1d87d321e01af4dc02096b5dafd1190ec65e9fe26cdee7e2bf8b2e85d58cbf"
+      kubelet: "sha256:dd70f395b1a796df6adba03d6964e0e37522a9a1ee841a3f2a941dea84a5b511"
+      kube-proxy: "sha256:2fecd3c05d31f5918d5980463d91ac5253b7cdd56e863509dbe4de98fc8b0f96"
+      kubectl: "sha256:4d56b8fbec4a274a61893d244bfce532cadf313632a31a065a0edf7130066ac6"
