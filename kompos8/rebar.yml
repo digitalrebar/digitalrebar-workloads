@@ -26,7 +26,6 @@ wizard:
     - k8s-master-network
     - k8s-worker-network
     - k8s-apiserver-port
-    - k8s-opencontrail_no_arp
   role_apply_order:
     - etcd
     - k8s-master
@@ -181,10 +180,15 @@ roles:
           required: true
       - name: k8s-version
         description: "The Kubernetes Version"
-        default: v1.3.5
+        default: v1.5.1
         schema:
           type: str
           required: true
+      - name: k8s-version_stage
+        description: "Stage Next Kubernetes Version (Clients)"
+        schema:
+          type: str
+          required: false
       - name: k8s-strict
         description: "The Kubernetes Checksum Required"
         default: true
@@ -238,7 +242,7 @@ roles:
           required: true
       - name: k8s-dashboard_version
         description: "The version of the Kubernetes Dashboard"
-        default: 'v1.4.0'
+        default: '1.5.0-beta1'
         map: 'dashboard_version'
         schema:
           type: str
@@ -780,6 +784,7 @@ roles:
       - cert-ca-signed-cert
     wants-attribs:
       - k8s-version
+      - k8s-version_stage
       - k8s-strict
       - k8s-log-level
       - k8s-cluster_name
@@ -840,6 +845,7 @@ roles:
       - k8s-kubelet
     wants-attribs:
       - k8s-version
+      - k8s-version_stage
       - k8s-strict
       - k8s-apiserver-port
       - k8s-master-addresses
@@ -914,6 +920,7 @@ roles:
       - k8s-prereqs
     wants-attribs:
       - k8s-version
+      - k8s-version_stage
       - k8s-strict
     metadata:
       role_role_map:

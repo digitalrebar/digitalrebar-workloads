@@ -1,11 +1,14 @@
 --- 
 - debug: msg="Playbook source {{ playbook_source }} "
 
+- debug: msg="NOTE Staging Kubernetes Version {{k8s.version_stage}} for Upgrade from {{k8s.version}}"
+  when:  not k8s.version == "{{k8s.version_stage | default(k8s.version)}}"
+
 # debugging variables
 - include: debug.yml
   when: debug
 
-- include: ../shared/tasks/downloader.yml kube_component=kube-proxy
+- include: ../shared/tasks/downloader.yml kube_component=kube-proxy kube_version={{k8s.version_stage | default(k8s.version)}}
 
 - name: install | Write kube-proxy initd script
   template: src=kube-proxy.initd.j2 dest=/etc/init.d/kube-proxy owner=root mode=0755
