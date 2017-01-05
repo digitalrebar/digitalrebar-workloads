@@ -242,7 +242,7 @@ roles:
           required: true
       - name: k8s-dashboard_version
         description: "The version of the Kubernetes Dashboard"
-        default: 'v1.4.0'
+        default: '1.5.0-beta1'
         map: 'dashboard_version'
         schema:
           type: str
