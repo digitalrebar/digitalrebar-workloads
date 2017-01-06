@@ -180,7 +180,7 @@ roles:
           required: true
       - name: k8s-version
         description: "The Kubernetes Version"
-        default: v1.5.1
+        default: v1.4.5
         schema:
           type: str
           required: true
@@ -242,7 +242,7 @@ roles:
           required: true
       - name: k8s-dashboard_version
         description: "The version of the Kubernetes Dashboard"
-        default: '1.5.0-beta1'
+        default: 'v1.5.0'
         map: 'dashboard_version'
         schema:
           type: str
