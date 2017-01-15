@@ -1,3 +1,0 @@
----
-# host variables
-opencontrail_host_interface: "{{ opencontrail_interface | default('eth0') }}"

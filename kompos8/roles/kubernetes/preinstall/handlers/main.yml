@@ -1,0 +1,35 @@
+- name: Preinstall | restart network
+  command: /bin/true
+  notify:
+    - Preinstall | reload network
+    - Preinstall | reload kubelet
+  when: not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+
+  # FIXME(bogdando) https://github.com/projectcalico/felix/issues/1185
+- name: Preinstall | reload network
+  service:
+    name: >-
+      {% if ansible_os_family == "RedHat" -%}
+      network
+      {%- elif ansible_os_family == "Debian" -%}
+      networking
+      {%- endif %}
+    state: restarted
+  when: not ansible_os_family in ["CoreOS", "Container Linux by CoreOS"] and kube_network_plugin not in ['canal', 'calico']
+
+- name: Preinstall | update resolvconf for Container Linux by CoreOS
+  command: /bin/true
+  notify:
+    - Preinstall | apply resolvconf cloud-init
+    - Preinstall | reload kubelet
+  when: ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+
+- name: Preinstall | apply resolvconf cloud-init
+  command: /usr/bin/coreos-cloudinit --from-file {{ resolveconf_cloud_init_conf }}
+  when: ansible_os_family in ["CoreOS", "Container Linux by CoreOS"]
+
+- name: Preinstall | reload kubelet
+  service:
+    name: kubelet
+    state: restarted
+  when: "{{ inventory_hostname in groups['kube-master'] and not dns_early|bool }}"

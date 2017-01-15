@@ -1,82 +1,208 @@
----
-# file: group_vars/all
-# file contains shared variables for all playbooks
-
-# DESIGN NOTE: We are minimizing the number of variables declared here!
-# Use the debug.yml page to name & test that variables are injected correctly
-# Please DO DRY your code with variables
-# Please do NOT create variables for things that are really hardcoded.
-
-# documentation of source for troubleshooting
 playbook_source: "https://github.com/digitalrebar/kompos8"
 
-# show variables during runs
-debug: true
+# Valid bootstrap options (required): ubuntu, coreos, centos, none
+bootstrap_os: none
 
-# common paths
-bin_dir: /opt/kubernetes/server/bin
-lock_file: /opt/kubernetes/bootstrap.lock
-config_dir: /etc/kubernetes
-log_dir: /var/log/kubernetes
+# Directory where the binaries will be installed
+bin_dir: /usr/local/bin
 
-flannel_bin_dir: /opt/flannel/bin
-flannel_source:
-  url: "https://github.com/coreos/flannel/releases/download/{{ flannel.version }}/flanneld-amd64"
-  checksum:
-    v0.6.1:
-      flanneld: "sha256:a1b65184df097383af686ed100df17d12a7ae48b78bc12fbba66727caba76e50"
+# Kubernetes configuration dirs and system namespace.
+# Those are where all the additional config stuff goes
+# the kubernetes normally puts in /srv/kubernets.
+# This puts them in a sane location and namespace.
+# Editting those values will almost surely break something.
+kube_config_dir: /etc/kubernetes
+kube_script_dir: "{{ bin_dir }}/kubernetes-scripts"
+kube_manifest_dir: "{{ kube_config_dir }}/manifests"
+system_namespace: kube-system
 
-# locations of downloads
-# This section must be last in the file.
-source:
-  url: "https://storage.googleapis.com/kubernetes-release/release/{{ kube_version|default(k8s.version) }}/bin/linux/amd64"
-  checksum:
-    v1.3.3:
-      kube-apiserver: "sha256:a4816d0cde65368ce211464b2e85932e963caac54bcc12911b945b75d11366fc"
-      kube-controller-manager: "sha256:16aefb8facdaf98e348b5c83e7972c6786aad326c9cae5846b66c87a174e55c5"
-      kube-scheduler: "sha256:9047e0f76ce615b2c9c83bf798470d0356536dd460f31be6cddff7b3ecf14a12"
-      kubelet: "sha256:be44ccebb75ffa0db269d788b993b15d5f6f885d00fd7593d0602686cf59fa87"
-      kube-proxy: "sha256:828b50dfa6fe3df4b658b9ccfcda00cec73cb422f5a1ed2d0af6b47d02252fae"
-      kubectl: "sha256:7ecb4ce0af38d847cdc4976f72530c73b4533a8b973489b92508363566dcfd61"
-    v1.3.5:
-      kube-apiserver: "sha256:4f0535f326b2518d0ad7d97f7c7e5fc52c5647947c4cb4ff2ca82393dd943908"
-      kube-controller-manager: "sha256:394e470070f7f1e974bb121c6814b4c2299c9fd1888cb360913b3d7087393f45"
-      kube-scheduler: "sha256:5ad37c70e4903531d26d657b8650120c2cb988be4b2c67b4ceaca0b7d161f469"
-      kubelet: "sha256:d2a0fe0d8a58ecbc0325f0f7cd4be7e73f4485190ec13ca19bc2ce7230b3c8af"
-      kube-proxy: "sha256:d4fbe776f1c42b29a541e1c9654f6d824728693f25d6f6de0bd6fa54e731d879"
-      kubectl: "sha256:43e299098a0faef74d2100285325911e8e118c64f5a734b590779ef62ab6a0bb"
-    v1.3.7:
-      kube-apiserver: "sha256:1967d97ee41ba47b5d17943ec38020dcc43f84ded3a94903a30d5ff7329eaa88"
-      kube-controller-manager: "sha256:0dd65cb64037266481e4bad05131f027401d125d64fa49273cac4db74989a64f"
-      kube-scheduler: "sha256:8466abc73c1939c66a466ec7604e394c4ead78305d21dd806302738398fffa3a"
-      kubelet: "sha256:c672901c79be3964ded08171837d10ca2f3ddf42b93bd95d015b680a7a1bfa93"
-      kube-proxy: "sha256:00c40234e18a7f331effd50dadd3ce56657d4a463bd8088ad29e94b7e25d02d6"
-      kubectl: "sha256:eee068f554e55cd7656c2f012ca8e97458ac60194f44bf21e3f6b1d476fedc18"
-    v1.4.0:
-      kube-apiserver: "sha256:1638e88dec8e33e7099006638507916f889087a98790a3e485db03204291ec9a"
-      kube-controller-manager: "sha256:5ad2703a4fbd2b554ff857252ec5e28f9259cabd75786e0606d15fcae85b6322"
-      kube-scheduler: "sha256:81c58a78e25ddfa3273ed2cef89c567f759efd5c5f1489cef267b0ded856c4c7"
-      kubelet: "sha256:531dad0b316d214923d3e928f6ebc3c6be3a7f37c3f5a453e02807c22d7c0fd4"
-      kube-proxy: "sha256:3cebe9f93af9fa7a2351012cc209b6793d251b3679fe8e7d344a9eb79f9e6a2e"
-      kubectl: "sha256:28664207ceb5c93403f264f714c4007579455b2c4a1eb0b7f9ad43b113a1902a"
-    v1.4.4:
-      kube-apiserver: "sha256:4dc4ae9f30ce1ff3243219e1e5003d4b5d1b96d401d5f2b88871144880c0f029"
-      kube-controller-manager: "sha256:712018dae5a489ee4d3aa1cd4dc4b3d765617454edb7b2efd9c0bb9c2fa8904a"
-      kube-scheduler: "sha256:ad44b82460772772c7018eeab5a2d230a90c02f5f1d5b3fbb2b7a5b9d3760fb5"
-      kubelet: "sha256:069c7aee42cc0a664937cbb8b483f0bc6feb00af3eb29d7376e5fd432dbbde4d"
-      kube-proxy: "sha256:8002cf670abac75c948f5aef60a7393c9bc98929cdf1851ed95a48bb3563cac1"
-      kubectl: "sha256:1ffbcfdec9961093b5fb1eec0b65f37af71a825dafff733de90d6ed6db647729"
-    v1.4.5:
-      kube-apiserver: "sha256:b7fea2657ae8b680a0790a2493cd72f00f6eb93399678f1ca4c0601bac27c074"
-      kube-controller-manager: "sha256:4a8620e27989c0dd502e54a759f422f407ec7dd0b6f03056d1e3147d6cb23944"
-      kube-scheduler: "sha256:95e9650ef06cede50f5786734968adee21461112eaa573262f5c0557a08b31e4"
-      kubelet: "sha256:c11ad67415a0caababfcc2fbbd9c553ec20967b4fc757ff32fda2874a0067c07"
-      kube-proxy: "sha256:727f791968cd7aac381484d69e0c83b66b827c03f2fa29f5a1e7fda0d8801838"
-      kubectl: "sha256:561630980ee05ab822caa160b99198cb43186ccf1bb4fda8aa6888fc96b0ee81"
-    v1.5.1:
-      kube-apiserver: "sha256:f1f36855dc0cd3f9b7706f8904feccdeccca2f90b053445b9f01ed7d8859ed70"
-      kube-controller-manager: "sha256:bde9c2949e64d059c18d8f93566a64dafc6d2e8e259a70322fb804831dfd0b5b"
-      kube-scheduler: "sha256:2d1d87d321e01af4dc02096b5dafd1190ec65e9fe26cdee7e2bf8b2e85d58cbf"
-      kubelet: "sha256:dd70f395b1a796df6adba03d6964e0e37522a9a1ee841a3f2a941dea84a5b511"
-      kube-proxy: "sha256:2fecd3c05d31f5918d5980463d91ac5253b7cdd56e863509dbe4de98fc8b0f96"
-      kubectl: "sha256:4d56b8fbec4a274a61893d244bfce532cadf313632a31a065a0edf7130066ac6"
+# This is where all the cert scripts and certs will be located
+kube_cert_dir: "{{ kube_config_dir }}/ssl"
+
+# This is where all of the bearer tokens will be stored
+kube_token_dir: "{{ kube_config_dir }}/tokens"
+
+# This is where to save basic auth file
+kube_users_dir: "{{ kube_config_dir }}/users"
+
+## Change this to use another Kubernetes version, e.g. a current beta release
+kube_version: v1.5.1
+
+# Where the binaries will be downloaded.
+# Note: ensure that you've enough disk space (about 1G)
+local_release_dir: "/tmp/releases"
+# Random shifts for retrying failed ops like pushing/downloading
+retry_stagger: 5
+
+# Uncomment this line for CoreOS only.
+# Directory where python binary is installed
+# ansible_python_interpreter: "/opt/bin/python"
+
+# This is the group that the cert creation scripts chgrp the
+# cert files to. Not really changable...
+kube_cert_group: kube-cert
+
+# Cluster Loglevel configuration
+kube_log_level: 2
+
+# Kubernetes 1.5 added a new flag to the apiserver to disable anonymous auth. In previos versions, anonymous auth was
+# not implemented. As the new flag defaults to true, we have to explicetely disable it. Change this line if you want the
+# 1.5 default behavior. The flag is actually only added if the used kubernetes version is >= 1.5
+kube_api_anonymous_auth: false
+
+# Users to create for basic auth in Kubernetes API via HTTP
+kube_api_pwd: "changeme"
+kube_users:
+  kube:
+    pass: "{{kube_api_pwd}}"
+    role: admin
+  root:
+    pass: "changeme"
+    role: admin
+
+# Kubernetes cluster name, also will be used as DNS domain
+cluster_name: cluster.local
+# Subdomains of DNS domain to be resolved via /etc/resolv.conf for hostnet pods
+ndots: 2
+# Deploy netchecker app to verify DNS resolve as an HTTP service
+deploy_netchecker: false
+
+# For some environments, each node has a pubilcally accessible
+# address and an address it should bind services to.  These are
+# really inventory level variables, but described here for consistency.
+#
+# When advertising access, the access_ip will be used, but will defer to
+# ip and then the default ansible ip when unspecified.
+#
+# When binding to restrict access, the ip variable will be used, but will
+# defer to the default ansible ip when unspecified.
+#
+# The ip variable is used for specific address binding, e.g. listen address
+# for etcd.  This is use to help with environments like Vagrant or multi-nic
+# systems where one address should be preferred over another.
+# ip: 10.2.2.2
+#
+# The access_ip variable is used to define how other nodes should access
+# the node.  This is used in flannel to allow other flannel nodes to see
+# this node for example.  The access_ip is really useful AWS and Google
+# environments where the nodes are accessed remotely by the "public" ip,
+# but don't know about that address themselves.
+# access_ip: 1.1.1.1
+
+# Etcd access modes:
+# Enable multiaccess to configure clients to access all of the etcd members directly
+# as the "http://hostX:port, http://hostY:port, ..." and ignore the proxy loadbalancers.
+# This may be the case if clients support and loadbalance multiple etcd servers  natively.
+etcd_multiaccess: true
+
+# Assume there are no internal loadbalancers for apiservers exist and listen on
+# kube_apiserver_port (default 443)
+loadbalancer_apiserver_localhost: true
+
+# Choose network plugin (calico, weave or flannel)
+# Can also be set to 'cloud', which lets the cloud provider setup appropriate routing
+kube_network_plugin: flannel
+
+# Kubernetes internal network for services, unused block of space.
+kube_service_addresses: 10.233.0.0/18
+
+# internal network. When used, it will assign IP
+# addresses from this range to individual pods.
+# This network must be unused in your network infrastructure!
+kube_pods_subnet: 10.233.64.0/18
+
+# internal network total size (optional). This is the prefix of the
+# entire network. Must be unused in your environment.
+# kube_network_prefix: 18
+
+# internal network node size allocation (optional). This is the size allocated
+# to each node on your network.  With these defaults you should have
+# room for 4096 nodes with 254 pods per node.
+kube_network_node_prefix: 24
+
+# With calico it is possible to distributed routes with border routers of the datacenter.
+peer_with_router: false
+# Warning : enabling router peering will disable calico's default behavior ('node mesh').
+# The subnets of each nodes will be distributed by the datacenter router
+
+# The port the API Server will be listening on.
+kube_apiserver_ip: "{{ kube_service_addresses|ipaddr('net')|ipaddr(1)|ipaddr('address') }}"
+kube_apiserver_port: 443 # (https)
+kube_apiserver_insecure_port: 8080 # (http)
+# local loadbalancer should use this port instead - default to kube_apiserver_port
+nginx_kube_apiserver_port: "{{ kube_apiserver_port }}"
+
+# Internal DNS configuration.
+# Kubernetes can create and mainatain its own DNS server to resolve service names
+# into appropriate IP addresses. It's highly advisable to run such DNS server,
+# as it greatly simplifies configuration of your applications - you can use
+# service names instead of magic environment variables.
+
+# Can be dnsmasq_kubedns, kubedns or none
+dns_mode: dnsmasq_kubedns
+
+# Can be docker_dns, host_resolvconf or none
+resolvconf_mode: docker_dns
+
+## Upstream dns servers used by dnsmasq
+#upstream_dns_servers:
+#  - 8.8.8.8
+#  - 8.8.4.4
+
+dns_domain: "{{ cluster_name }}"
+
+# Ip address of the kubernetes skydns service
+skydns_server: "{{ kube_service_addresses|ipaddr('net')|ipaddr(3)|ipaddr('address') }}"
+dns_server: "{{ kube_service_addresses|ipaddr('net')|ipaddr(2)|ipaddr('address') }}"
+
+# There are some changes specific to the cloud providers
+# for instance we need to encapsulate packets with some network plugins
+# If set the possible values are either 'gce', 'aws', 'azure' or 'openstack'
+# When openstack is used make sure to source in the openstack credentials
+# like you would do when using nova-client before starting the playbook.
+# When azure is used, you need to also set the following variables.
+# cloud_provider:
+
+# see docs/azure.md for details on how to get these values
+#azure_tenant_id:
+#azure_subscription_id:
+#azure_aad_client_id:
+#azure_aad_client_secret:
+#azure_resource_group:
+#azure_location:
+#azure_subnet_name:
+#azure_security_group_name:
+#azure_vnet_name:
+#azure_route_table_name:
+
+
+## Set these proxy values in order to update docker daemon to use proxies
+# http_proxy: ""
+# https_proxy: ""
+# no_proxy: ""
+
+# Path used to store Docker data
+docker_daemon_graph: "/var/lib/docker"
+
+## A string of extra options to pass to the docker daemon.
+## This string should be exactly as you wish it to appear.
+## An obvious use case is allowing insecure-registry access
+## to self hosted registries like so:
+docker_options: "--insecure-registry={{ kube_service_addresses }} --graph={{ docker_daemon_graph }}"
+docker_bin_dir: "/usr/bin"
+
+## Uncomment this if you want to force overlay/overlay2 as docker storage driver
+## Please note that overlay2 is only supported on newer kernels
+#docker_storage_options: -s overlay2
+
+# K8s image pull policy (imagePullPolicy)
+k8s_image_pull_policy: IfNotPresent
+
+# default packages to install within the cluster
+kpm_packages: []
+#  - name: kube-system/grafana
+
+# Settings for containerized control plane (etcd/kubelet)
+rkt_version: 1.21.0
+etcd_deployment_type: docker
+kubelet_deployment_type: docker

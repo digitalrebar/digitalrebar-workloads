@@ -1,9 +1,0 @@
----
-- name: reload kube-apiserver systemd
-  command: systemctl daemon-reload
-
-- name: restart kube-apiserver
-  service:
-    name: kube-apiserver
-    state: restarted
-

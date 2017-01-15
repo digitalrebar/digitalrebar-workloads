@@ -1,0 +1,17 @@
+- name: Create canal ConfigMap
+  run_once: true
+  kube:
+    name: "canal-config"
+    kubectl: "{{bin_dir}}/kubectl"
+    filename: "{{kube_config_dir}}/canal-config.yaml"
+    resource: "configmap"
+    namespace: "{{system_namespace}}"
+
+- name: Start flannel and calico-node
+  run_once: true
+  kube:
+    name: "canal-node"
+    kubectl: "{{bin_dir}}/kubectl"
+    filename: "{{kube_config_dir}}/canal-node.yaml"
+    resource: "ds"
+    namespace: "{{system_namespace}}"
