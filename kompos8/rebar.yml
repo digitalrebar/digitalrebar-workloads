@@ -516,6 +516,7 @@ roles:
       - k8s-master-network
       - k8s-worker-network
       - k8s-scope
+      - k8s-nginx_kube_apiserver_port
     metadata:
       role_role_map:
         k8s-master:
@@ -626,6 +627,7 @@ roles:
       - k8s-master-network
       - k8s-worker-network
       - k8s-scope
+      - k8s-nginx_kube_apiserver_port
     icon: "store"
     metadata:
       role_role_map:
@@ -753,6 +755,7 @@ roles:
       - k8s-master-network
       - k8s-worker-network
       - k8s-scope
+      - k8s-nginx_kube_apiserver_port
     metadata:
       role_role_map:
         k8s-worker:
@@ -872,6 +875,7 @@ roles:
       - k8s-master-network
       - k8s-worker-network
       - k8s-scope
+      - k8s-nginx_kube_apiserver_port
     metadata:
       role_role_map:
         k8s-dns:
@@ -942,6 +946,7 @@ roles:
       - k8s-master-network
       - k8s-worker-network
       - k8s-scope
+      - k8s-nginx_kube_apiserver_port
     metadata:
       role_role_map:
         k8s-dashboard:
