@@ -55,7 +55,7 @@ wizard:
 metadata:
   playbook_scope: node
   playbook_src_paths:
-    k8: https://github.com/digitalrebar/digitalrebar-workloads.git
+    k8: https://github.com/digitalrebar/digitalrebar-workloads.git kargo-change
   playbook_path: k8/kompos8
 
 roles:
@@ -261,7 +261,7 @@ roles:
       - name: k8s-kube_pod_subnet
         description: "Pod address space"
         map: "kube_pod_subnet"
-        default: 10.233.0.0/18
+        default: 10.233.64.0/18
         schema:
           type: str
           required: true
@@ -890,6 +890,7 @@ roles:
           - kube-master
         etcd:
           - etcd
+      playbook_scope: k8s-master
       playbook_combined_repo: true
       playbook_file: "."
 
