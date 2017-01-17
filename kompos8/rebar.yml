@@ -17,14 +17,14 @@ wizard:
   system_nodes: true
   create_nodes: true
   base_attribs:
+    - k8s-version
+    - k8s-cloud_provider
+    - k8s-kube_network_plugin
     - k8s-cluster_name
   advanced_attribs:
-    - k8s-cloud_provider
-    - k8s-version
     - k8s-dashboard_version
     - k8s-docker_version
     - k8s-rkt_version
-    - k8s-kube_network_plugin
     - k8s-kube_service_addresses
     - k8s-kube_pod_subnet
   role_apply_order:
@@ -241,7 +241,7 @@ roles:
       - name: k8s-kube_network_plugin
         description: "Which network plugin should be used"
         map: "kube_network_plugin"
-        default: flannel
+        default: calico
         schema:
           type: str
           required: true
@@ -529,7 +529,6 @@ roles:
           - kubernetes/master
           - kubernetes-apps/lib
           - kubernetes-apps/network_plugin
-          - { role: "dnsmasq", when: "dns_mode == 'dnsmasq_kubedns'" }
       role_group_map:
         k8s-worker:
           - k8s-cluster
@@ -580,6 +579,7 @@ roles:
       - etcd-sync
     flags:
       - milestone
+    icon: "store"
     wants-attribs:
       - use-proxy
       - proxy-servers
@@ -628,7 +628,6 @@ roles:
       - k8s-worker-network
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
-    icon: "store"
     metadata:
       role_role_map:
         etcd-install:
@@ -679,6 +678,7 @@ roles:
   - name: etcd
     description: "Etcd Cluster"
     jig: noop
+    icon: "store"
     requires:
       - etcd-install
       - etcd-sync
@@ -688,6 +688,7 @@ roles:
   - name: etcd-sync
     description: "Etcd Cluster SyncPoint"
     jig: noop
+    icon: "store"
     requires:
       - rebar-installed-node
     flags:
@@ -765,7 +766,6 @@ roles:
           - etcd
           - kubernetes/node
           - network_plugin
-          - { role: "dnsmasq", when: "dns_mode == 'dnsmasq_kubedns'" }
       role_group_map:
         k8s-worker:
           - k8s-cluster
@@ -812,25 +812,15 @@ roles:
     flags:
       - service
 
-  - name: k8s-addons
-    description: 'Milestone role to include all the default add-ons.'
-    jig: noop
-    icon: "new_releases"
-    flags:
-      - milestone
-    requires:
-      - k8s-dns
-      - k8s-dashboard
-
   - name: k8s-dns
-    description: 'Kubernetes DNS'
+    description: 'Kubernetes DNS Masq setup'
     jig: ansible-playbook
     icon: "recent_actors"
-    flags:
-      - milestone
     requires:
       - k8s-kubernetes
     wants-attribs:
+      - use-proxy
+      - proxy-servers
       - k8s-bootstrap_os
       - k8s-bin_dir
       - k8s-kube_config_dir
@@ -879,6 +869,8 @@ roles:
     metadata:
       role_role_map:
         k8s-dns:
+          - kubernetes/preinstall
+          - { role: "dnsmasq", when: "dns_mode == 'dnsmasq_kubedns'" }
           - kubernetes-apps/lib
           - kubernetes-apps
       role_group_map:
@@ -890,9 +882,46 @@ roles:
           - kube-master
         etcd:
           - etcd
-      playbook_scope: k8s-master
       playbook_combined_repo: true
+      playbook_scope: deployment
       playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+      inventory_map:
+        # IP Map is a challenge.
+        # We are trying to handle the addressing of the nodes.
+        # For Physical, we want the etcd-network for everything.
+        # For Packet and OpenStack nodes, we want the public interface.
+        # For Google and AWS, we want private for bind actions and public IP for access.
+        #
+        # access_ip is the address of the network OR public IP address
+        # ip is the address of the network OR private IP address
+        #
+        # The usage should use scope and variant to decided what to bind and when
+        #
+        - path: access_ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_default_ipv4/address
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_hostname
+          name: eval:field(name)
+
+  - name: k8s-addons
+    description: 'Milestone role to include all the default add-ons.'
+    jig: noop
+    icon: "new_releases"
+    flags:
+      - milestone
+    requires:
+      - k8s-dns
+      - k8s-dashboard
 
   - name: k8s-dashboard
     description: 'Kubernetes Dashboard'
