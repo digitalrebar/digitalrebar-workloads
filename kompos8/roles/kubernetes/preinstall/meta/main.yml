@@ -1,5 +1,0 @@
----
-dependencies:
-  - role: adduser
-    user: "{{ addusers.kube }}"
-    tags: kubelet
