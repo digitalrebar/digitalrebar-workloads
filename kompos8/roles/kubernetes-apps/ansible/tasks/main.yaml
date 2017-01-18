@@ -5,8 +5,7 @@
   until: result.status == 200
   retries: 10
   delay: 6
-  run_once: true
-  delegate_to: "{{groups['kube-master'][0]}}"
+  when: inventory_hostname == groups['kube-master'][0]
 
 - name: Kubernetes Apps | Lay Down KubeDNS Template
   template: src={{item.file}} dest={{kube_config_dir}}/{{item.file}}
