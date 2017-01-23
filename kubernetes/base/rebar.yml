@@ -316,7 +316,7 @@ roles:
       - name: k8s-resolvconf_mode
         description: "Which resolv.conf managements should be used"
         map: "resolvconf_mode"
-        default: docker_dns
+        default: host_resolvconf
         schema:
           type: str
           required: true
