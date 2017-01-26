@@ -55,7 +55,7 @@ wizard:
 metadata:
   playbook_scope: node
   playbook_src_paths:
-    kargo: https://github.com/galthaus/setup-kubernetes.git rebar
+    kargo: https://github.com/galthaus/setup-kubernetes.git
   playbook_path: kargo
   playbook_src_setup:
     - cp -r kargo/inventory/group_vars kargo
@@ -316,7 +316,7 @@ roles:
       - name: k8s-resolvconf_mode
         description: "Which resolv.conf managements should be used"
         map: "resolvconf_mode"
-        default: docker_dns
+        default: host_resolvconf
         schema:
           type: str
           required: true
@@ -324,6 +324,13 @@ roles:
             - docker_dns
             - host_resolvconf
             - none
+      - name: k8s-dns_forward_max
+        description: "Maximum requests for dnsmasq to forward a second"
+        map: "dns_forward_max"
+        default: 15000
+        schema:
+          type: int
+          required: true
       - name: k8s-dns_domain
         description: "The Domain for this cluster - defaults to cluster name"
         map: "dns_domain"
@@ -519,6 +526,7 @@ roles:
       - k8s-worker-network
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
     metadata:
       role_role_map:
         k8s-master:
@@ -630,6 +638,7 @@ roles:
       - k8s-worker-network
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
     metadata:
       role_role_map:
         etcd-install:
@@ -759,6 +768,7 @@ roles:
       - k8s-worker-network
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
     metadata:
       role_role_map:
         k8s-worker:
@@ -868,6 +878,7 @@ roles:
       - k8s-worker-network
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
     metadata:
       role_role_map:
         k8s-dns:
