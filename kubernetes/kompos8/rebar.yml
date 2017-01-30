@@ -537,7 +537,6 @@ roles:
           - kubernetes/node
           - network_plugin
           - kubernetes/master
-          - kubernetes-apps/lib
           - kubernetes-apps/network_plugin
       role_group_map:
         k8s-worker:
@@ -884,7 +883,6 @@ roles:
         k8s-dns:
           - kubernetes/preinstall
           - { role: "dnsmasq", when: "dns_mode == 'dnsmasq_kubedns'" }
-          - kubernetes-apps/lib
           - kubernetes-apps
       role_group_map:
         k8s-worker:
