@@ -1,1 +1,0 @@
-{ "Network": "{{ k8s.cluster_ips }}", "SubnetLen": {{ flannel_subnet_bits }}, "Backend": { "Type": "{{ flannel_backend_type }}" } }

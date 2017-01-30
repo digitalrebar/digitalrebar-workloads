@@ -1,2 +1,0 @@
-# Deployed by Ansible
-DOCKER_NETWORK_OPTIONS=--iptables=false --ip-masq=false

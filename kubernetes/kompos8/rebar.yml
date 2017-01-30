@@ -1,0 +1,938 @@
+barclamp:
+  name: kompos8
+  display: Kubernetes Composed
+  license: APLv2
+  copyright: "RackN, 2016"
+  os_support:
+    - ubuntu-16.04
+    - centos-7.3.1611
+    - centos-7.2.1511
+    - redhat-7.1
+
+wizard:
+  version: 2
+  name: "Kubernetes"
+  description: "Install Kubernetes Cluster (DR Kompos)"
+  icon: "group_work"
+  system_nodes: true
+  create_nodes: true
+  base_attribs:
+    - k8s-version
+    - k8s-cloud_provider
+    - k8s-kube_network_plugin
+    - k8s-cluster_name
+  advanced_attribs:
+    - k8s-dashboard_version
+    - k8s-docker_version
+    - k8s-rkt_version
+    - k8s-kube_service_addresses
+    - k8s-kube_pod_subnet
+  role_apply_order:
+    - etcd
+    - k8s-worker
+    - k8s-master
+    - k8s-addons
+  services:
+    - name: control
+      description: "Control"
+      icon: "group_work"
+      type: control
+      count: 1
+      roles:
+        control:
+          - etcd
+          - k8s-master
+          - k8s-addons
+    - name: worker
+      description: "Worker"
+      icon: "work"
+      type: worker
+      count: 3
+      roles:
+        worker:
+          - k8s-worker
+
+metadata:
+  playbook_scope: node
+  playbook_src_paths:
+    kargo: https://github.com/galthaus/setup-kubernetes.git
+  playbook_path: kargo
+  playbook_src_setup:
+    - cp -r kargo/inventory/group_vars kargo
+
+roles:
+  - name: k8s-config
+    description: 'Kubernetes Config'
+    icon: "group_work"
+    jig: noop
+    flags:
+      - service
+    attribs:
+      - name: k8s-bootstrap_os
+        description: "What OS to bootstrap for - this is a node override"
+        map: "bootstrap_os"
+        default: none
+        schema:
+          type: str
+          required: true
+          enum:
+            - none
+            - ubuntu
+            - coreos
+            - centos
+# GREG: Add the bootstrap-os role into the mix
+      - name: k8s-bin_dir
+        description: "The binary directory for k8s install"
+        map: "bin_dir"
+        default: /usr/local/bin
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_config_dir
+        description: "The Kubernetes Configuration Directory"
+        map: "kube_config_dir"
+        default: /etc/kubernetes
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_script_dir
+        description: "The Kubernetes Script Directory"
+        map: "kube_script_dir"
+        default: "{{ bin_dir }}/kubernetes-scripts"
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_manifest_dir
+        description: "The Kubernetes Manifest Directory"
+        map: "kube_manifest_dir"
+        default: "{{ kube_config_dir }}/manifests"
+        schema:
+          type: str
+          required: true
+      - name: k8s-system_namespace
+        description: "The Kubernetes System Namespace Name"
+        map: "system_namespace"
+        default: kube-system
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_cert_dir
+        description: "The Kubernetes Cert Directory"
+        map: "kube_cert_dir"
+        default: "{{ kube_config_dir }}/ssl"
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_token_dir
+        description: "The Kubernetes Token Directory"
+        map: "kube_token_dir"
+        default: "{{ kube_config_dir }}/tokens"
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_users_dir
+        description: "The Kubernetes Users Directory"
+        map: "kube_users_dir"
+        default: "{{ kube_config_dir }}/users"
+        schema:
+          type: str
+          required: true
+      - name: k8s-version
+        description: "The Kubernetes Version"
+        map: "kube_version"
+        default: v1.5.1
+        schema:
+          type: str
+          required: true
+      - name: k8s-local_release_dir
+        description: "Directory for release download cachine"
+        map: "local_release_dir"
+        default: /tmp/releases
+        schema:
+          type: str
+          required: true
+      - name: k8s-retry_stagger
+        description: "Random factor for retry delay"
+        map: "retry_stagger"
+        default: 5
+        schema:
+          type: int
+          required: true
+      - name: k8s-kube_cert_group
+        description: "Certs are placed into this group"
+        map: "kube_cert_group"
+        default: kube-cert
+        schema:
+          type: str
+          required: true
+      - name: k8s-log_level
+        description: "The kubernetes logging level"
+        map: "kube_log_level"
+        default: 2
+        schema:
+          type: int
+          required: true
+      - name: k8s-kube_api_anonymous_auth
+        description: "Should kubernetes allow anonymous auth for k8s>1.5"
+        map: "kube_api_anonymous_auth"
+        default: false
+        schema:
+          type: bool
+          required: true
+      - name: k8s-kube_api_pwd
+        description: "Password for the kubernetes api user"
+        map: "kube_api_pwd"
+        default: "changeme"
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_users
+        description: "The default set of users for kubernetes API"
+        map: "kube_users"
+        default:
+          root:
+            pass: changeme
+            role: admin
+          kube:
+            pass: "{{kube_api_pwd}}"
+            role: admin
+        schema:
+          type: map
+          mapping:
+            =:
+              type: map
+              mapping:
+                =:
+                  type: str
+          required: true
+      - name: k8s-cluster_name
+        description: "Kubernetes Cluster Name"
+        map: "cluster_name"
+        default: "cluster.local"
+        schema:
+          type: str
+          required: true
+      - name: k8s-ndots
+        description: "The number of subdomains to resolve"
+        map: "ndots"
+        default: 2
+        schema:
+          type: int
+          required: true
+      - name: k8s-deploy_netchecker
+        description: "Should kubernetes deploy the network checker"
+        map: "deploy_netchecker"
+        default: true
+        schema:
+          type: bool
+          required: true
+      - name: k8s-etcd_multiaccess
+        description: "Should all etcd address be given to the components"
+        map: "etcd_multiaccess"
+        default: true
+        schema:
+          type: bool
+          required: true
+      - name: k8s-loadbalancer_apiserver_localhost
+        description: "Use the localhost internal loadbalancer for internal API server HA"
+        map: "loadbalancer_apiserver_localhost"
+        default: true
+        schema:
+          type: bool
+          required: true
+      - name: k8s-kube_network_plugin
+        description: "Which network plugin should be used"
+        map: "kube_network_plugin"
+        default: calico
+        schema:
+          type: str
+          required: true
+          enum:
+            - flannel
+            - canal
+            - calico
+            - weave
+            - cloud
+      - name: k8s-kube_service_addresses
+        description: "Internal service address pool"
+        map: "kube_service_addresses"
+        default: 10.233.0.0/18
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_pod_subnet
+        description: "Pod address space"
+        map: "kube_pod_subnet"
+        default: 10.233.64.0/18
+        schema:
+          type: str
+          required: true
+      - name: k8s-kube_network_node_prefix
+        description: "The network space from within the pod space"
+        map: "kube_network_node_prefix"
+        default: 24
+        schema:
+          type: int
+          required: true
+      - name: k8s-kube_apiserver_port
+        description: "The secure port for the API server"
+        map: "kube_apiserver_port"
+        default: 443
+        schema:
+          type: int
+          required: true
+      - name: k8s-kube_apiserver_insecure_port
+        description: "The insecure port for the API server"
+        map: "kube_apiserver_insecure_port"
+        default: 8080
+        schema:
+          type: int
+          required: true
+      - name: k8s-nginx_kube_apiserver_port
+        description: "The secure port for the NGINX local loadbalancer"
+        map: "nginx_kube_apiserver_port"
+        default: 5443
+        schema:
+          type: int
+          required: true
+      - name: k8s-dashboard_version
+        description: "The version of the Kubernetes Dashboard"
+        default: 'v1.5.0'
+        map: 'dashboard_version'
+        schema:
+          type: str
+          required: true
+      - name: k8s-dns_mode
+        description: "Which DNS stacks to enable"
+        map: "dns_mode"
+        default: dnsmasq_kubedns
+        schema:
+          type: str
+          required: true
+          enum:
+            - dnsmasq_kubedns
+            - kubedns
+            - none
+      - name: k8s-resolvconf_mode
+        description: "Which resolv.conf managements should be used"
+        map: "resolvconf_mode"
+        default: host_resolvconf
+        schema:
+          type: str
+          required: true
+          enum:
+            - docker_dns
+            - host_resolvconf
+            - none
+      - name: k8s-dns_forward_max
+        description: "Maximum requests for dnsmasq to forward a second"
+        map: "dns_forward_max"
+        default: 15000
+        schema:
+          type: int
+          required: true
+      - name: k8s-dns_domain
+        description: "The Domain for this cluster - defaults to cluster name"
+        map: "dns_domain"
+        default: "{{ cluster_name }}"
+        schema:
+          type: str
+          required: true
+      - name: k8s-docker_version
+        description: "The version of docker to use"
+        map: "docker_version"
+        default: "1.12"
+        schema:
+          type: str
+          required: true
+      - name: k8s-rkt_version
+        description: "The version of Rkt to use if needed"
+        map: "rkt_version"
+        default: "1.21.0"
+        schema:
+          type: str
+          required: true
+      - name: k8s-etcd_deployment_type
+        description: "The method to run etcd container under (rkt or docker)"
+        map: "etcd_deployment_type"
+        default: "docker"
+        schema:
+          type: str
+          required: true
+          enum:
+            - docker
+            - rkt
+      - name: k8s-kubelet_deployment_type
+        description: "The method to run kubelet container under (rkt or docker)"
+        map: "kubelet_deployment_type"
+        default: "docker"
+        schema:
+          type: str
+          required: true
+          enum:
+            - docker
+      - name: k8s-docker_daemon_graph
+        description: "Where to look for the docker daemon graph"
+        map: "docker_daemon_graph"
+        default: "/var/lib/docker"
+        schema:
+          type: str
+          required: true
+      - name: k8s-docker_options
+        description: "Pass docker options to pass to docker"
+        map: "docker_options"
+        default: "--insecure-registry={{ kube_service_addresses }} --graph={{ docker_daemon_graph }}"
+        schema:
+          type: str
+          required: true
+      - name: k8s-docker_storage_options
+        description: "Pass docker storage options to pass to docker"
+        map: "docker_storage_options"
+        #default: "-s overlay2"
+        default: ""
+        schema:
+          type: str
+          required: true
+      - name: k8s-image_pull_policy
+        description: "Image pull policy for Kubernetes"
+        map: "k8s_image_pull_policy"
+        default: "IfNotPresent"
+        schema:
+          type: str
+          required: true
+      - name: k8s-cloud_provider
+        description: "Which cloud is this running in"
+        map: "cloud_provider"
+        default: generic
+        schema:
+          type: str
+          required: true
+          enum:
+            - generic
+            - aws
+            - gce
+            - azure
+            - openstack
+      - name: k8s-master-network
+        description: "The network of the Master nodes"
+        default: 'admin'
+        schema:
+          type: str
+          required: true
+      - name: k8s-worker-network
+        description: "The network of the Worker nodes"
+        default: 'admin'
+        schema:
+          type: str
+          required: true
+      #
+      # GREG: Not hooked up currently
+      # This variable is used to change what programs bind to.
+      #
+      # It is mostly used for cloud providers to handle the case 
+      # where nodes don't have their public address on as an Ip address.
+      #
+      - name: k8s-scope
+        description: "The scope of this Kubernetes cluster.  internal means a single provider. external means multiple providers.  everything means that binds will be done with 0.0.0.0"
+        default: 'internal'
+        schema:
+          type: str
+          required: true
+     #
+     # TODO- one day azure and openstack vars
+     #  azure_tenant_id:
+     #  azure_subscription_id:
+     #  azure_aad_client_id:
+     #  azure_aad_client_secret:
+     #  azure_resource_group:
+     #  azure_location:
+     #  azure_subnet_name:
+     #  azure_security_group_name:
+     #  azure_vnet_name:
+     #  azure_route_table_name:
+     # Additional ones
+     #  download_run_once: False
+     #  download_localhost: False
+     #  download_always_pull: False
+     #  etcd_version: v3.0.6
+     #  calico_version: "v1.0.0"
+     #  calico_cni_version: "v1.5.5"
+     #  weave_version: v1.6.1
+     #  flannel_version: v0.6.2
+     #  pod_infra_version: 3.0
+     #  weave_checksum: "9bf9d6e5a839e7bcbb28cc00c7acae9d09284faa3e7a3720ca9c2b9e93c68580"
+     #  etcd_checksum: "385afd518f93e3005510b7aaa04d38ee4a39f06f5152cd33bb86d4f0c94c7485"
+     #
+
+  - name: k8s-master
+    description: 'Kubernetes Master'
+    jig: ansible-playbook
+    icon: "grid_on"
+    flags:
+      - implicit
+      - milestone
+      - replace_node_icon
+    preceeds:
+      - k8s-kubernetes
+    requires:
+      - rebar-installed-node
+      - etcd
+      - k8s-config
+    wants-attribs:
+      - use-proxy
+      - proxy-servers
+      - k8s-bootstrap_os
+      - k8s-bin_dir
+      - k8s-kube_config_dir
+      - k8s-kube_script_dir
+      - k8s-kube_manifest_dir
+      - k8s-system_namespace
+      - k8s-kube_cert_dir
+      - k8s-kube_token_dir
+      - k8s-kube_users_dir
+      - k8s-version
+      - k8s-local_release_dir
+      - k8s-retry_stagger
+      - k8s-kube_cert_group
+      - k8s-log_level
+      - k8s-kube_api_anonymous_auth
+      - k8s-kube_api_pwd
+      - k8s-kube_users
+      - k8s-cluster_name
+      - k8s-ndots
+      - k8s-deploy_netchecker
+      - k8s-etcd_multiaccess
+      - k8s-loadbalancer_apiserver_localhost
+      - k8s-kube_network_plugin
+      - k8s-kube_service_addresses
+      - k8s-kube_pod_subnet
+      - k8s-kube_network_node_prefix
+      - k8s-kube_apiserver_port
+      - k8s-kube_apiserver_insecure_port
+      - k8s-dashboard_version
+      - k8s-dns_mode
+      - k8s-resolvconf_mode
+      - k8s-dns_domain
+      - k8s-docker_version
+      - k8s-rkt_version
+      - k8s-etcd_deployment_type
+      - k8s-kubelet_deployment_type
+      - k8s-docker_daemon_graph
+      - k8s-docker_options
+      - k8s-docker_storage_options
+      - k8s-image_pull_policy
+      - k8s-cloud_provider
+      - k8s-master-network
+      - k8s-worker-network
+      - k8s-scope
+      - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
+    metadata:
+      role_role_map:
+        k8s-master:
+          - kubernetes/preinstall
+          - docker
+          - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type ]" }
+          - etcd
+          - kubernetes/node
+          - network_plugin
+          - kubernetes/master
+          - kubernetes-apps/lib
+          - kubernetes-apps/network_plugin
+      role_group_map:
+        k8s-worker:
+          - k8s-cluster
+          - kube-node
+        k8s-master:
+          - k8s-cluster
+          - kube-master
+        etcd:
+          - etcd
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: etcd/port
+          name: etcd_client_port
+      inventory_map:
+        # IP Map is a challenge.
+        # We are trying to handle the addressing of the nodes.
+        # For Physical, we want the etcd-network for everything.
+        # For Packet and OpenStack nodes, we want the public interface.
+        # For Google and AWS, we want private for bind actions and public IP for access.
+        #
+        # access_ip is the address of the network OR public IP address
+        # ip is the address of the network OR private IP address
+        #
+        # The usage should use scope and variant to decided what to bind and when
+        #
+        - path: access_ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_default_ipv4/address
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_hostname
+          name: eval:field(name)
+
+  - name: etcd-install
+    description: "Etcd Cluster - Install"
+    jig: ansible-playbook
+    requires:
+      - rebar-installed-node
+      - k8s-config
+      - etcd-sync
+    flags:
+      - milestone
+    icon: "store"
+    wants-attribs:
+      - use-proxy
+      - proxy-servers
+      - k8s-bootstrap_os
+      - k8s-bin_dir
+      - k8s-kube_config_dir
+      - k8s-kube_script_dir
+      - k8s-kube_manifest_dir
+      - k8s-system_namespace
+      - k8s-kube_cert_dir
+      - k8s-kube_token_dir
+      - k8s-kube_users_dir
+      - k8s-version
+      - k8s-local_release_dir
+      - k8s-retry_stagger
+      - k8s-kube_cert_group
+      - k8s-log_level
+      - k8s-kube_api_anonymous_auth
+      - k8s-kube_api_pwd
+      - k8s-kube_users
+      - k8s-cluster_name
+      - k8s-ndots
+      - k8s-deploy_netchecker
+      - k8s-etcd_multiaccess
+      - k8s-loadbalancer_apiserver_localhost
+      - k8s-kube_network_plugin
+      - k8s-kube_service_addresses
+      - k8s-kube_pod_subnet
+      - k8s-kube_network_node_prefix
+      - k8s-kube_apiserver_port
+      - k8s-kube_apiserver_insecure_port
+      - k8s-dashboard_version
+      - k8s-dns_mode
+      - k8s-resolvconf_mode
+      - k8s-dns_domain
+      - k8s-docker_version
+      - k8s-rkt_version
+      - k8s-etcd_deployment_type
+      - k8s-kubelet_deployment_type
+      - k8s-docker_daemon_graph
+      - k8s-docker_options
+      - k8s-docker_storage_options
+      - k8s-image_pull_policy
+      - k8s-cloud_provider
+      - k8s-master-network
+      - k8s-worker-network
+      - k8s-scope
+      - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
+    metadata:
+      role_role_map:
+        etcd-install:
+          - kubernetes/preinstall
+          - docker
+          - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type ]" }
+          - etcd
+      role_group_map:
+        k8s-worker:
+          - k8s-cluster
+          - kube-node
+        k8s-master:
+          - k8s-cluster
+          - kube-master
+        etcd:
+          - etcd
+      playbook_scope: etcd
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+      inventory_map:
+        # IP Map is a challenge.
+        # We are trying to handle the addressing of the nodes.
+        # For Physical, we want the etcd-network for everything.
+        # For Packet and OpenStack nodes, we want the public interface.
+        # For Google and AWS, we want private for bind actions and public IP for access.
+        #
+        # access_ip is the address of the network OR public IP address
+        # ip is the address of the network OR private IP address
+        #
+        # The usage should use scope and variant to decided what to bind and when
+        #
+        - path: access_ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_default_ipv4/address
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_hostname
+          name: eval:field(name)
+
+  - name: etcd
+    description: "Etcd Cluster"
+    jig: noop
+    icon: "store"
+    requires:
+      - etcd-install
+      - etcd-sync
+    flags:
+      - milestone
+
+  - name: etcd-sync
+    description: "Etcd Cluster SyncPoint"
+    jig: noop
+    icon: "store"
+    requires:
+      - rebar-installed-node
+    flags:
+      - cluster
+      - implicit
+
+  - name: k8s-worker
+    description: 'Kubernetes Worker Node (aka minion)'
+    jig: ansible-playbook
+    icon: "work"
+    flags:
+      - implicit
+      - milestone
+      - replace_node_icon
+    preceeds:
+      - k8s-kubernetes
+    requires:
+      - rebar-installed-node
+      - etcd
+      - k8s-config
+    wants-attribs:
+      - use-proxy
+      - proxy-servers
+      - k8s-bootstrap_os
+      - k8s-bin_dir
+      - k8s-kube_config_dir
+      - k8s-kube_script_dir
+      - k8s-kube_manifest_dir
+      - k8s-system_namespace
+      - k8s-kube_cert_dir
+      - k8s-kube_token_dir
+      - k8s-kube_users_dir
+      - k8s-version
+      - k8s-local_release_dir
+      - k8s-retry_stagger
+      - k8s-kube_cert_group
+      - k8s-log_level
+      - k8s-kube_api_anonymous_auth
+      - k8s-kube_api_pwd
+      - k8s-kube_users
+      - k8s-cluster_name
+      - k8s-ndots
+      - k8s-deploy_netchecker
+      - k8s-etcd_multiaccess
+      - k8s-loadbalancer_apiserver_localhost
+      - k8s-kube_network_plugin
+      - k8s-kube_service_addresses
+      - k8s-kube_pod_subnet
+      - k8s-kube_network_node_prefix
+      - k8s-kube_apiserver_port
+      - k8s-kube_apiserver_insecure_port
+      - k8s-dashboard_version
+      - k8s-dns_mode
+      - k8s-resolvconf_mode
+      - k8s-dns_domain
+      - k8s-docker_version
+      - k8s-rkt_version
+      - k8s-etcd_deployment_type
+      - k8s-kubelet_deployment_type
+      - k8s-docker_daemon_graph
+      - k8s-docker_options
+      - k8s-docker_storage_options
+      - k8s-image_pull_policy
+      - k8s-cloud_provider
+      - k8s-master-network
+      - k8s-worker-network
+      - k8s-scope
+      - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
+    metadata:
+      role_role_map:
+        k8s-worker:
+          - kubernetes/preinstall
+          - docker
+          - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type ]" }
+          - etcd
+          - kubernetes/node
+          - network_plugin
+      role_group_map:
+        k8s-worker:
+          - k8s-cluster
+          - kube-node
+        k8s-master:
+          - k8s-cluster
+          - kube-master
+        etcd:
+          - etcd
+      playbook_combined_repo: true
+      playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+      inventory_map:
+        # IP Map is a challenge.
+        # We are trying to handle the addressing of the nodes.
+        # For Physical, we want the etcd-network for everything.
+        # For Packet and OpenStack nodes, we want the public interface.
+        # For Google and AWS, we want private for bind actions and public IP for access.
+        #
+        # access_ip is the address of the network OR public IP address
+        # ip is the address of the network OR private IP address
+        #
+        # The usage should use scope and variant to decided what to bind and when
+        #
+        - path: access_ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_default_ipv4/address
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_hostname
+          name: eval:field(name)
+
+  - name: k8s-kubernetes
+    description: 'Kubernetes'
+    jig: noop
+    icon: "chrome_reader_mode"
+    flags:
+      - service
+
+  - name: k8s-dns
+    description: 'Kubernetes DNS Masq setup'
+    jig: ansible-playbook
+    icon: "recent_actors"
+    requires:
+      - k8s-kubernetes
+    wants-attribs:
+      - use-proxy
+      - proxy-servers
+      - k8s-bootstrap_os
+      - k8s-bin_dir
+      - k8s-kube_config_dir
+      - k8s-kube_script_dir
+      - k8s-kube_manifest_dir
+      - k8s-system_namespace
+      - k8s-kube_cert_dir
+      - k8s-kube_token_dir
+      - k8s-kube_users_dir
+      - k8s-version
+      - k8s-local_release_dir
+      - k8s-retry_stagger
+      - k8s-kube_cert_group
+      - k8s-log_level
+      - k8s-kube_api_anonymous_auth
+      - k8s-kube_api_pwd
+      - k8s-kube_users
+      - k8s-cluster_name
+      - k8s-ndots
+      - k8s-deploy_netchecker
+      - k8s-etcd_multiaccess
+      - k8s-loadbalancer_apiserver_localhost
+      - k8s-kube_network_plugin
+      - k8s-kube_service_addresses
+      - k8s-kube_pod_subnet
+      - k8s-kube_network_node_prefix
+      - k8s-kube_apiserver_port
+      - k8s-kube_apiserver_insecure_port
+      - k8s-dashboard_version
+      - k8s-dns_mode
+      - k8s-resolvconf_mode
+      - k8s-dns_domain
+      - k8s-docker_version
+      - k8s-rkt_version
+      - k8s-etcd_deployment_type
+      - k8s-kubelet_deployment_type
+      - k8s-docker_daemon_graph
+      - k8s-docker_options
+      - k8s-docker_storage_options
+      - k8s-image_pull_policy
+      - k8s-cloud_provider
+      - k8s-master-network
+      - k8s-worker-network
+      - k8s-scope
+      - k8s-nginx_kube_apiserver_port
+      - k8s-dns_forward_max
+    metadata:
+      role_role_map:
+        k8s-dns:
+          - kubernetes/preinstall
+          - { role: "dnsmasq", when: "dns_mode == 'dnsmasq_kubedns'" }
+          - kubernetes-apps/lib
+          - kubernetes-apps
+      role_group_map:
+        k8s-worker:
+          - k8s-cluster
+          - kube-node
+        k8s-master:
+          - k8s-cluster
+          - kube-master
+        etcd:
+          - etcd
+      playbook_combined_repo: true
+      playbook_scope: deployment
+      playbook_file: "."
+      attribute_map:
+        - path: http_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: https_proxy
+          name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+      inventory_map:
+        # IP Map is a challenge.
+        # We are trying to handle the addressing of the nodes.
+        # For Physical, we want the etcd-network for everything.
+        # For Packet and OpenStack nodes, we want the public interface.
+        # For Google and AWS, we want private for bind actions and public IP for access.
+        #
+        # access_ip is the address of the network OR public IP address
+        # ip is the address of the network OR private IP address
+        #
+        # The usage should use scope and variant to decided what to bind and when
+        #
+        - path: access_ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ip
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_default_ipv4/address
+          name: eval:ipaddress(v4_only, k8s-master-network, private).address
+        - path: ansible_hostname
+          name: eval:field(name)
+
+  - name: k8s-addons
+    description: 'Milestone role to include all the default add-ons.'
+    jig: noop
+    icon: "new_releases"
+    flags:
+      - milestone
+    requires:
+      - k8s-dns
+      - k8s-dashboard
+
