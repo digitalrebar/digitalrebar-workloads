@@ -883,6 +883,7 @@ roles:
         k8s-dns:
           - kubernetes/preinstall
           - { role: "dnsmasq", when: "dns_mode == 'dnsmasq_kubedns'" }
+          - { role: kubernetes/preinstall, when: "dns_mode != 'none' and resolvconf_mode == 'host_resolvconf'" }
           - kubernetes-apps
       role_group_map:
         k8s-worker:
