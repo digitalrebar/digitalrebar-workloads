@@ -45,3 +45,48 @@ Variables in the workload should be nested and generally follow:
   * rebar. for rebar specific items
   * user. for Kubernetes user items (account is the service account)
 
+
+Kubernetes Add-ons
+==================
+
+DigitalRebar provides the additional Kubernetes services and add-ons.
+The following barclamps enhance and extend an existing Kubernetes
+deployment.
+
+#  ElasticSearch, Fluentd, Kibana logging (efk-logging)
+
+This is a log search and aggregation system for all containers in the 
+system including the Kuberenetes components.  Remaining production
+concern is persistent storage for ES.
+
+#  Prometheus-based Monitoring (prometheus-monitoring)
+
+This is a monitoring system using Prometheus.  This deploys Prometheus and
+sets up some initial dashboards in Grafana as well.
+
+**NOTE**: Choose either Prometheus or Heapster, not both.  Both can run.
+
+#  Heapster-based Monitoring (heapster-monitoring)
+
+This is a monitoring system using Heapster.  This deploys Heapster and
+sets up some initial dashboards in Grafana as well.
+
+**NOTE**: Choose either Prometheus or Heapster, not both.  Both can run.
+
+# Helm
+
+This deploys the Helm management system (non-classic).  This sets up
+the helm client on the master and starts the Tiller system in the 
+cluster.
+
+# DEIS
+
+Using Helm, this will deploy and start the Deis Workflow components.
+
+
+# Openstack 
+
+Using https://github.com/att-comdev/openstack-helm, the system will
+deploy a ceph cluster and other components inside a running Kubernetes
+cluster.
+

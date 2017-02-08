@@ -1,0 +1,136 @@
+
+barclamp:
+  name: openstack
+  display: OpenStack on K8S
+  license: "restricted"
+  copyright: "RackN, 2016"
+  os_support:
+    - ubuntu-16.04
+    - centos-6.6
+    - redhat-6.6
+    - centos-7.3-1611
+    - centos-7.2-1511
+    - redhat-7.1
+
+wizard:
+  version: 2
+  name: "Openstack"
+  description: "Install Openstack on Kubernetes Cluster"
+  icon: "cloud"
+  system_nodes: true
+  create_nodes: true
+  base_attribs:
+    - k8s-version
+    - k8s-cloud_provider
+    - k8s-kube_network_plugin
+    - k8s-cluster_name
+  advanced_attribs:
+    - k8s-kube_service_addresses
+    - k8s-kube_pod_subnet
+  role_apply_order:
+    - etcd
+    - k8s-worker
+    - k8s-master
+    - k8s-addons
+    - openstack-base
+    - openstack-deploy
+    - openstack-control
+    - openstack-storage
+    - openstack-compute
+  services:
+    - name: k8s-control
+      description: "K8S Control Plane"
+      icon: "group_work"
+      type: control
+      count: 1
+      roles:
+        k8s-control:
+          - etcd
+          - k8s-master
+          - k8s-addons
+          - openstack-base
+          - openstack-deploy
+    - name: os-control
+      description: "Openstack Control Plane"
+      icon: "cloud_done"
+      type: control
+      count: 3
+      roles:
+        os-control:
+          - openstack-control
+    - name: os-storage
+      description: "Cluster Storage"
+      icon: "cloud_download"
+      type: worker
+      count: 3
+      roles:
+        os-storage:
+          - openstack-storage
+    - name: os-compute
+      description: "Openstack Compute"
+      icon: "cloud_circle"
+      type: worker
+      count: 3
+      roles:
+        os-compute:
+          - openstack-compute
+
+roles:
+  - name: openstack-base
+    description: 'Basic tools - ceph pieces mostly'
+    icon: "cloud"
+    jig: script
+    flags:
+      - milestone
+      - implicit
+    requires:
+      - rebar-installed-node
+      - k8s-addons
+  - name: openstack-control
+    icon: "cloud_done"
+    jig: noop
+    flags:
+      - implicit
+    preceeds:
+      - openstack-prep
+    requires:
+      - k8s-worker
+      - openstack-base
+  - name: openstack-compute
+    icon: "cloud_circle"
+    jig: noop
+    flags:
+      - implicit
+    preceeds:
+      - openstack-prep
+    requires:
+      - k8s-worker
+      - openstack-base
+  - name: openstack-storage
+    icon: "cloud_download"
+    jig: noop
+    flags:
+      - implicit
+    preceeds:
+      - openstack-prep
+    requires:
+      - k8s-worker
+      - openstack-base
+  - name: openstack-prep
+    icon: "cloud"
+    jig: noop
+    flags:
+      - service
+  - name: openstack-deploy
+    icon: "cloud"
+    description: 'Deploys OpenStack'
+    jig: script
+    flags:
+      - milestone
+    requires:
+      - helm
+      - openstack-prep
+      - openstack-base
+    wants-attribs:
+      - k8s-kube_pod_subnet
+

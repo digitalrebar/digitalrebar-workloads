@@ -1,0 +1,37 @@
+
+All nodes need:
+yum/apt-get install ceph-common
+mkdir -p /var/lib/openstack-helm/ceph
+
+replace controller container with:
+sed -i "s|gcr.io/google_containers/kube-controller-manager-amd64:'$kube_version'|quay.io/attcomdev/kube-controller-manager:'$kube_version'|g" /etc/kubernetes/manifests/kube-controller-manager.json
+
+
+On one master:
+
+kubectl label nodes openstack-control-plane=enabled --all
+kubectl label nodes ceph-storage=enabled --all
+
+git clone https://github.com/att-comdev/openstack-helm.git
+cd openstack-helm
+
+curl -L https://github.com/gliderlabs/sigil/releases/download/v0.4.0/sigil_0.4.0_Linux_x86_64.tgz | tar -zxC /usr/local/bin
+cd common/utils/secret-generator
+./generate_secrets.sh all `./generate_secrets.sh fsid`
+cd ../../..
+
+helm serve . &
+helm repo add local http://localhost:8879/charts
+
+make
+
+helm install --name=ceph local/ceph --namespace=ceph
+helm install --name=bootstrap-ceph local/bootstrap --namespace=ceph
+helm install --name=bootstrap-openstack local/bootstrap --namespace=openstack
+helm install --name=mariadb local/mariadb --namespace=openstack
+helm install --name=memcached local/memcached --namespace=openstack
+helm install --name=rabbitmq local/rabbitmq --namespace=openstack
+helm install --name=keystone local/keystone --namespace=openstack
+helm install --name=horizon local/horizon --namespace=openstack
+helm install --name=glance local/glance --namespace=openstack
+

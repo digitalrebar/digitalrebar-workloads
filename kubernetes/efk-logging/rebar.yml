@@ -1,0 +1,23 @@
+
+barclamp:
+  name: efklogging
+  display: Elastic Search, Fluentd, and Kibana based logging
+  license: "restricted"
+  copyright: "RackN, 2016"
+  os_support:
+    - ubuntu-14.04
+    - ubuntu-15.04
+    - centos-6.6
+    - redhat-6.6
+    - centos-7.1-1503
+    - redhat-7.1
+
+roles:
+  - name: efk-logging
+    description: 'Start efk-logging components'
+    jig: script
+    flags:
+      - milestone
+      - implicit
+    requires:
+      - k8s-addons
