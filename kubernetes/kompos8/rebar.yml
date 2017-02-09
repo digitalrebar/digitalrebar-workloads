@@ -24,7 +24,6 @@ wizard:
   advanced_attribs:
     - k8s-dashboard_version
     - k8s-docker_version
-    - k8s-rkt_version
     - k8s-kube_service_addresses
     - k8s-kube_pod_subnet
   role_apply_order:
@@ -176,6 +175,13 @@ roles:
         description: "Should kubernetes allow anonymous auth for k8s>1.5"
         map: "kube_api_anonymous_auth"
         default: false
+        schema:
+          type: bool
+          required: true
+      - name: k8s-kubelet_load_modules
+        description: "Should kubelet be allowed to load kernel modules"
+        map: "kubelet_load_modules"
+        default: true
         schema:
           type: bool
           required: true
@@ -527,6 +533,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         k8s-master:
@@ -638,6 +645,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         etcd-install:
@@ -768,6 +776,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         k8s-worker:
@@ -878,6 +887,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         k8s-dns:
