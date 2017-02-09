@@ -8,3 +8,6 @@ esac
 
 mkdir -p /var/lib/openstack-helm/ceph
 
+# This seems to be a hack for an openstack-helm bug
+mkdir -p /var/lib/nova/instances
+
