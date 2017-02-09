@@ -47,6 +47,15 @@ helm install \
 helm install --name=bootstrap-ceph local/bootstrap --namespace=ceph
 helm install --name=bootstrap-openstack local/bootstrap --namespace=openstack
 
+while ! kubectl exec -n ceph -it ceph-mon-0 ceph status | grep health | grep HEALTH_OK
+do
+    echo "Waiting for Ceph to come up"
+    sleep 30
+done
+
+# Create ceph volumes pool for cinder
+kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create volumes 128
+
 helm install --name mariadb local/mariadb --namespace=openstack
 helm install --name=memcached local/memcached --namespace=openstack
 helm install --name=rabbitmq local/rabbitmq --namespace=openstack
