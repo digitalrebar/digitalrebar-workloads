@@ -63,7 +63,7 @@ roles:
       - name: dcos-master-list
         description: 'The FQDN or IP of the load balancer for the master nodes'
         map: 'dcos/config/master_list'
-        default: ''
+        default: []
         schema:
           type: seq
           sequence:
@@ -78,7 +78,7 @@ roles:
       - name: dcos-roles
         description: 'The roles that Mesosphere should run on this particular node'
         map: 'dcos/config/roles'
-        default: 'slave_public'
+        default: 'slave-public'
         schema:
           type: str
           required: true
