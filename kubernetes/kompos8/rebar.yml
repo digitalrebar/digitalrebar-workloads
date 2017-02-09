@@ -179,6 +179,13 @@ roles:
         schema:
           type: bool
           required: true
+      - name: k8s-kubelet_load_modules
+        description: "Should kubelet be allowed to load kernel modules"
+        map: "kubelet_load_modules"
+        default: true
+        schema:
+          type: bool
+          required: true
       - name: k8s-kube_api_pwd
         description: "Password for the kubernetes api user"
         map: "kube_api_pwd"
@@ -527,6 +534,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         k8s-master:
@@ -638,6 +646,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         etcd-install:
@@ -768,6 +777,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         k8s-worker:
@@ -878,6 +888,7 @@ roles:
       - k8s-scope
       - k8s-nginx_kube_apiserver_port
       - k8s-dns_forward_max
+      - k8s-kubelet_load_modules
     metadata:
       role_role_map:
         k8s-dns:
