@@ -56,6 +56,8 @@ done
 # Create ceph volumes pool for cinder
 kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create volumes 128
 kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create images 128
+# Optionally, ceph can provide nova with a vm pool
+# kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create vms 128
 
 helm install --name mariadb local/mariadb --namespace=openstack
 helm install --name=memcached local/memcached --namespace=openstack
