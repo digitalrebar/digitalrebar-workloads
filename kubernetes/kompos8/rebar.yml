@@ -24,7 +24,6 @@ wizard:
   advanced_attribs:
     - k8s-dashboard_version
     - k8s-docker_version
-    - k8s-rkt_version
     - k8s-kube_service_addresses
     - k8s-kube_pod_subnet
   role_apply_order:
