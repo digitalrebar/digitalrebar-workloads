@@ -54,19 +54,19 @@ do
 done
 
 # Create ceph volumes pool for cinder
-kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create volumes 128
-kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create images 128
+kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create volumes 64
+kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create images 64
 # Optionally, ceph can provide nova with a vm pool
-# kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create vms 128
+# kubectl exec -n ceph -it ceph-mon-0 ceph osd pool create vms 64
 
 helm install --name mariadb local/mariadb --namespace=openstack
 helm install --name=memcached local/memcached --namespace=openstack
 helm install --name=rabbitmq local/rabbitmq --namespace=openstack
-helm install --name=keystone local/keystone --namespace=openstack
-helm install --name=cinder local/cinder --namespace=openstack
-helm install --name=glance local/glance --namespace=openstack
+helm install --name=keystone local/keystone --set replicas=2 --namespace=openstack
+helm install --name=cinder local/cinder --set replicas.api=2 --namespace=openstack
+helm install --name=glance local/glance --set replicas.api=2,replicas.registry=2 --namespace=openstack
 helm install --name=heat local/heat --namespace=openstack
-helm install --set network.dns.servers={$DNSIP} --name=nova local/nova --namespace=openstack
-helm install --set network.dns.servers={$DNSIP} --name=neutron local/neutron --namespace=openstack
-helm install --name=horizon local/horizon --namespace=openstack
+helm install --set network.dns.servers={$DNSIP},control_replicas=2 --name=nova local/nova --namespace=openstack
+helm install --set network.dns.servers={$DNSIP},replicas.server=2 --name=neutron local/neutron --namespace=openstack
+helm install --name=horizon local/horizon --set network.enable_node_port=true --namespace=openstack
 
