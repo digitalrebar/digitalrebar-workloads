@@ -29,15 +29,15 @@ if [[ ! -f /etc/systemd/system/docker.service ]]; then
 [Unit]
 Description=Docker Application Container Engine
 Documentation=https://docs.docker.com
-After=network.target docker.socket
-Requires=docker.socket
+After=network-online.target
+Requires=network-online.target
 
 [Service]
 Type=notify
 # the default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required
 # for containers run by docker
-ExecStart=/usr/bin/docker daemon -H fd:// --storage-opt dm.fs=xfs --storage-opt dm.thinpooldev=/dev/mapper/docker-pool --storage-opt dm.use_deferred_removal=true
+ExecStart=/bin/dockerd --storage-driver=devicemapper --storage-opt=dm.fs=xfs --storage-opt=dm.thinpooldev=/dev/mapper/docker-pool --storage-opt=dm.use_deferred_deletion=true --storage-opt=dm.use_deferred_removal=true
 MountFlags=slave
 LimitNOFILE=1048576
 LimitNPROC=1048576
@@ -55,5 +55,6 @@ if [[ ! -x /usr/bin/docker ]]; then
     yum -y install wget unzip ipset docker-engine
 fi
 
+systemctl daemon-reload
 systemctl enable docker
 systemctl status docker || systemctl start docker
