@@ -102,14 +102,14 @@ roles:
         schema:
           type: str
           required: true
-        default: 'https://downloads.dcos.io/dcos/EarlyAccess/dcos_generate_config.sh'
+        default: 'https://downloads.dcos.io/dcos/stable/dcos_generate_config.sh'
       - name: dcos-docker-genconf-installer-sha1sum
         description: 'The DCOS genconf installer SHA1 checksum'
         map: 'dcos/genconf/sha1sum'
         schema:
           type: str
           required: true
-        default: '492f5be5cfd2b7e8a3ab5be3bbcad26b96d93bae'
+        default: '2d6bd0cf90c801e9ac7efacb202d76241c96bd25'
       - name: dcos-bootstrap-url
         description: "The URL that the DCOS nodes will bootstrap from"
         map: 'dcos/config/bootstrap_url'

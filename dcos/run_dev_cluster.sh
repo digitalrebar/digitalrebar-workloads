@@ -11,9 +11,11 @@ else
     exit 1
 fi
 
+ip_re='^(([0-9]+\.){3}[0-9]+)/[0-9]+$'
+
 [[ $MASTER_NODES ]] || MASTER_NODES=3
 [[ $SLAVE_NODES ]] ||SLAVE_NODES=0
- [[ $SLAVE_PUBLIC_NODES ]] || SLAVE_PUBLIC_NODES=2
+[[ $SLAVE_PUBLIC_NODES ]] || SLAVE_PUBLIC_NODES=2
 
 mountdir="${mountdir%/*}"
 
@@ -39,6 +41,16 @@ cleanup() {
     pkill kvm-slave
     tear_down_admin_containers
     exit $res
+}
+
+pick_first_ipv4() {
+    local addr
+    for addr in $(rebar nodes addresses "$1" on admin-internal |jq -r -c '.addresses | .[]'); do
+        [[ $addr =~ $ip_re ]] || continue
+        printf '%s' "$addr"
+        return 0
+    done
+    return 1
 }
 
 trap cleanup 0 INT QUIT TERM
@@ -76,7 +88,7 @@ done
 
 echo "Configuring genconf node"
 gc_node="$spawned_nodes"
-gc_node_addr="$(rebar nodes addresses "$gc_node" on admin-internal |jq -r '.addresses | .[0]')"
+gc_node_addr="$(pick_first_ipv4 "$gc_node")"
 rebar nodes bind "$gc_node" to dcos-genconf
 
 masters=()
@@ -85,7 +97,7 @@ for idx in "${!spawned_nodes[@]}"; do
     role=slave
     if ((idx < MASTER_NODES)); then
         role=master
-        addr="$(rebar nodes addresses "$node" on admin-internal |jq -r '.addresses | .[0]')"
+        addr="$(pick_first_ipv4 "$node")"
         if [[ $addr ]]; then
             masters+=("${addr%/*}")
         else
