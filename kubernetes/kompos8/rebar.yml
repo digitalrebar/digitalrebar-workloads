@@ -155,7 +155,7 @@ roles:
       - name: k8s-version
         description: "The Kubernetes Version"
         map: "kube_version"
-        default: v1.5.1
+        default: v1.5.3
         schema:
           type: str
           required: true
