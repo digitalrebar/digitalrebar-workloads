@@ -563,6 +563,9 @@ roles:
         - path: https_proxy
           name: rebar/proxy/servers[0]/url
           when: rebar/providers/use_proxy == true
+        - path: no_proxy
+          name: rebar/providers/use_proxy
+          when: rebar/providers/use_proxy == true
         - path: etcd/port
           name: etcd_client_port
       inventory_map:
@@ -671,6 +674,9 @@ roles:
           when: rebar/providers/use_proxy == true
         - path: https_proxy
           name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: no_proxy
+          name: rebar/providers/use_proxy
           when: rebar/providers/use_proxy == true
       inventory_map:
         # IP Map is a challenge.
@@ -804,6 +810,9 @@ roles:
         - path: https_proxy
           name: rebar/proxy/servers[0]/url
           when: rebar/providers/use_proxy == true
+        - path: no_proxy
+          name: rebar/providers/use_proxy
+          when: rebar/providers/use_proxy == true
       inventory_map:
         # IP Map is a challenge.
         # We are trying to handle the addressing of the nodes.
@@ -913,6 +922,9 @@ roles:
           when: rebar/providers/use_proxy == true
         - path: https_proxy
           name: rebar/proxy/servers[0]/url
+          when: rebar/providers/use_proxy == true
+        - path: no_proxy
+          name: rebar/providers/use_proxy
           when: rebar/providers/use_proxy == true
       inventory_map:
         # IP Map is a challenge.
