@@ -70,7 +70,7 @@ wizard:
 metadata:
   playbook_scope: node
   playbook_src_paths:
-    kargo: https://github.com/galthaus/setup-kubernetes.git
+    kargo: https://github.com/digitalrebar/setup-kubernetes
   playbook_path: kargo
   playbook_src_setup:
     - cp -r kargo/inventory/group_vars kargo
