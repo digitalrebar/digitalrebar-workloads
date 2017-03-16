@@ -50,6 +50,22 @@ wizard:
       roles:
         worker:
           - k8s-worker
+    - name: deis
+      description: "Helm+Deis"
+      icon: "looks"
+      type: optional
+      roles:
+        deis:
+          - helm
+          - deis
+    - name: monitoring
+      description: "Monitoring Suites"
+      icon: "network_check"
+      type: optional
+      roles:
+        monitoring:
+          - prometheus-monitoring
+          - heapster-monitoring
 
 metadata:
   playbook_scope: node

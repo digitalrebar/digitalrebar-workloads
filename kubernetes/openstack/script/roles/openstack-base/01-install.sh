@@ -1,7 +1,7 @@
 #!/bin/bash
 
 case $OS_FAMILY in
-  rhel) yum -y install ceph;;
+  rhel) yum -y install ceph --skip-broken;;
   debian) apt-get install -y ceph-common ceph-fs-common;;
   *) echo "No idea how to install packages on $OS_NAME"; exit 1;;
 esac
