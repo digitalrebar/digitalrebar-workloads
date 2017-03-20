@@ -213,7 +213,7 @@ roles:
         map: "kube_users"
         default:
           root:
-            pass: changeme
+            pass: "{{kube_api_pwd}}"
             role: admin
           kube:
             pass: "{{kube_api_pwd}}"
@@ -299,7 +299,7 @@ roles:
       - name: k8s-kube_apiserver_port
         description: "The secure port for the API server"
         map: "kube_apiserver_port"
-        default: 443
+        default: 6443
         schema:
           type: int
           required: true
@@ -313,7 +313,7 @@ roles:
       - name: k8s-nginx_kube_apiserver_port
         description: "The secure port for the NGINX local loadbalancer"
         map: "nginx_kube_apiserver_port"
-        default: 5443
+        default: 6443
         schema:
           type: int
           required: true
@@ -553,14 +553,17 @@ roles:
     metadata:
       role_role_map:
         k8s-master:
+          - kargo-defaults
+          - bootstrap-os
           - kubernetes/preinstall
           - docker
-          - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type ]" }
+          - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type, vault_deployment_type ]" }
           - etcd
           - kubernetes/node
           - network_plugin
           - kubernetes/master
           - kubernetes-apps/network_plugin
+          - kubernetes-apps/policy_controller
       role_group_map:
         k8s-worker:
           - k8s-cluster
@@ -668,9 +671,12 @@ roles:
     metadata:
       role_role_map:
         etcd-install:
+          - kargo-defaults
+          - bootstrap-os
+          - { role: kernel-upgrade, when: kernel_upgrade is defined and kernel_upgrade }
           - kubernetes/preinstall
           - docker
-          - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type ]" }
+          - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type, vault_deployment_type ]" }
           - etcd
       role_group_map:
         k8s-worker:
@@ -802,6 +808,9 @@ roles:
     metadata:
       role_role_map:
         k8s-worker:
+          - kargo-defaults
+          - bootstrap-os
+          - { role: kernel-upgrade, when: kernel_upgrade is defined and kernel_upgrade }
           - kubernetes/preinstall
           - docker
           - { role: "rkt", when: "'rkt' in [ etcd_deployment_type, kubelet_deployment_type ]" }
@@ -916,6 +925,8 @@ roles:
     metadata:
       role_role_map:
         k8s-dns:
+          - kargo-defaults
+          - bootstrap-os
           - kubernetes/preinstall
           - { role: "dnsmasq", when: "dns_mode == 'dnsmasq_kubedns'" }
           - { role: kubernetes/preinstall, when: "dns_mode != 'none' and resolvconf_mode == 'host_resolvconf'" }

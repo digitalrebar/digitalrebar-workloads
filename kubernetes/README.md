@@ -15,8 +15,7 @@ Decompose Kubernetes installation into composable units so that each role is sta
 
 The goal of the decomposition is to isolate individual services as much as possible.  Variables passed into each role should be specific to those needed for that function.
 
-Defaults: see group_vars/all.yml - many of these vars are injected
-through attributes.
+Defaults: see group_vars/*.yml - many of these vars are injected through attributes.
 
 Design Decisions
 ----------------
