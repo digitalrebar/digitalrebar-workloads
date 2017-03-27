@@ -24,6 +24,37 @@ barclamp:
 
 os_support:
   - centos-7.2-1511
+  - centos-7.3-1611
+
+wizard:
+  version: 2
+  name: "DC/OS"
+  description: "Install DC/OS Cluster"
+  icon: "radio"
+  system_nodes: true
+  create_nodes: true
+  base_attribs:
+    - dcos-cluster-name
+  advanced_attribs:
+    - dcos-exhibitor-storage-backend
+  services:
+    - name: control
+      description: "Control"
+      icon: "radio"
+      type: control
+      count: 1
+      roles:
+        control:
+          - dcos-master
+          - dcos-control
+    - name: worker
+      description: "Worker"
+      icon: "video_label"
+      type: worker
+      count: 3
+      roles:
+        worker:
+          - dcos-slave
 
 roles:
   - name: dcos-prereqs
@@ -33,6 +64,7 @@ roles:
       - implicit
     requires:
       - rebar-installed-node
+      - ntp-client
   - name: dcos-config
     jig: noop
     description: "Common settings for Mesosphere clusters"
@@ -60,14 +92,6 @@ roles:
             - zookeeper
             - aws_s3
             - shared_filesystem
-      - name: dcos-master-list
-        description: 'The FQDN or IP of the load balancer for the master nodes'
-        map: 'dcos/config/master_list'
-        default: []
-        schema:
-          type: seq
-          sequence:
-            - type: str
       - name: dcos-master-discovery
         description: 'The master discovery mode to use.'
         map: 'dcos/config/master_discovery'
@@ -92,7 +116,7 @@ roles:
       - dns_servers
       - dcos-cluster-name
       - dcos-exhibitor-storage-backend
-      - dcos-master-list
+      - dcos-control-addresses
       - dcos-roles
       - dcos-master-discovery
     attribs:
@@ -102,14 +126,14 @@ roles:
         schema:
           type: str
           required: true
-        default: 'https://downloads.dcos.io/dcos/stable/dcos_generate_config.sh'
+        default: 'https://downloads.dcos.io/dcos/EarlyAccess/dcos_generate_config.sh'
       - name: dcos-docker-genconf-installer-sha1sum
         description: 'The DCOS genconf installer SHA1 checksum'
         map: 'dcos/genconf/sha1sum'
         schema:
           type: str
           required: true
-        default: '2d6bd0cf90c801e9ac7efacb202d76241c96bd25'
+        default: 'e44203b53d15922f9d4b73fdf0d7676d92c05704'
       - name: dcos-bootstrap-url
         description: "The URL that the DCOS nodes will bootstrap from"
         map: 'dcos/config/bootstrap_url'
@@ -133,6 +157,7 @@ roles:
       - cluster
     requires:
       - dcos-install
+      - dcos-control
   - name: dcos-slave-public
     description: 'A DCOS slave that is publically accessible'
     jig: script
@@ -145,4 +170,48 @@ roles:
     requires:
       - dcos-install
       - dcos-master
-    
+  - name: dcos-control
+    description: "DC/OS Control Servers"
+    jig: noop
+    requires:
+      - dcos-prereqs
+    icon: 'radio'
+    type: "BarclampCluster::ServiceRole"
+    flags:
+      - milestone
+    events:
+      - endpoint: inproc://role:dcos-control/on_active
+        selectors:
+          - event: on_active
+            obj_class: role
+            obj_id: dcos-control
+      - endpoint: inproc://role:dcos-control/on_todo
+        selectors:
+          - event: on_todo
+            obj_class: role
+            obj_id: dcos-control
+      - endpoint: inproc://role:dcos-control/sync_on_destroy
+        selectors:
+          - event: synch_on_destroy
+            obj_class: role
+            obj_id: dcos-control
+    attribs:
+      - name: dcos-control-addresses
+        description: "All addresses of the Cluster nodes"
+        map: 'dcos/config/master_list'
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
+              pattern: /\[?[0-9a-f:.]*\]?:?[0-9]*/
+      - name: dcos-control-hostnames
+        description: "All hostnames of the Cluster nodes"
+        map: 'cluster/hostnames'
+        default: []
+        schema:
+          type: seq
+          required: false
+          sequence:
+            - type: str
