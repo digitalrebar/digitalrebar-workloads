@@ -88,31 +88,18 @@ done
 
 echo "Configuring genconf node"
 gc_node="$spawned_nodes"
-gc_node_addr="$(pick_first_ipv4 "$gc_node")"
 rebar nodes bind "$gc_node" to dcos-genconf
 
-masters=()
 for idx in "${!spawned_nodes[@]}"; do
     node="${spawned_nodes[idx]}"
     role=slave
     if ((idx < MASTER_NODES)); then
         role=master
-        addr="$(pick_first_ipv4 "$node")"
-        if [[ $addr ]]; then
-            masters+=("${addr%/*}")
-        else
-            echo "Node $node has no IPv4 admin address!"
-            exit 1
-        fi
     elif ((idx < (MASTER_NODES + SLAVE_PUBLIC_NODES) )); then
         role=slave-public
     fi
     rebar nodes bind "$node" to "dcos-$role"
 done
-
-masters="$(printf '\"%s\",' "${masters[@]}")"
-masters="[${masters%,}]"
-rebar deployments set dcos attrib dcos-master-list to "{\"value\": $masters}"
 
 echo "Waiting for nodes to deploy"
 rebar deployments commit dcos

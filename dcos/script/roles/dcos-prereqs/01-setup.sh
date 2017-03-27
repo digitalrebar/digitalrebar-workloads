@@ -10,8 +10,9 @@ gpgkey=https://yum.dockerproject.org/gpg
 EOF
 
 if ! [[ -b /dev/mapper/docker-pool ]]; then
-    pvcreate /dev/sdb /dev/sdc /dev/sdd
-    vgcreate docker /dev/sdb /dev/sdc /dev/sdd
+    DISKS=$(ls -d /sys/block/sd* | grep -v "sda$" | while read diskpath ; do echo "/dev/$(basename $diskpath)"; done)
+    pvcreate $DISKS
+    vgcreate docker $DISKS
     lvcreate -l 90%FREE -n pool docker
     lvconvert -y --zero n -c 512K --type thin-pool docker/pool
     cat >/etc/lvm/profile/docker-pool.profile <<EOF
