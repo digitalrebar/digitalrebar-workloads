@@ -26,6 +26,7 @@ wizard:
     - k8s-docker_version
     - k8s-kube_service_addresses
     - k8s-kube_pod_subnet
+    - k8s-bootstrap_os
   role_apply_order:
     - etcd
     - k8s-worker
