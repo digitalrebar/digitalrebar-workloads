@@ -27,6 +27,7 @@ wizard:
   advanced_attribs:
     - k8s-kube_service_addresses
     - k8s-kube_pod_subnet
+    - k8s-bootstrap_os
   role_apply_order:
     - etcd
     - k8s-worker
@@ -86,6 +87,7 @@ roles:
     requires:
       - rebar-installed-node
       - k8s-addons
+      - k8s-config
   - name: openstack-control
     icon: "cloud_done"
     jig: noop
